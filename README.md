@@ -1,2 +1,1 @@
-# api.ffpsoft.yojuego
-api.ffpsoft.yojuego
+# com.ffpsoft.restifyservicedemo

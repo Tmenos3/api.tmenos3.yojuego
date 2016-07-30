@@ -1,0 +1,31 @@
+{
+  "name": "api.ffpsoft.yojuego",
+  "subdomain": "api.ffpsoft.yojuego",
+  "scripts": {
+    "start": "server.js",
+    "test": "jest"
+  },
+  "version": "0.0.0-13",
+  "engines": {
+    "node": "0.8.x"
+  },
+  "dependencies": {
+    "restify": "4.1.x"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.11.4",
+    "babel-jest": "^14.0.2",
+    "jest": "^14.0.1"
+  },
+  "jest": {
+    "testFileExtensions": [
+      "es6",
+      "js"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "es6"
+    ]
+  }
+}
