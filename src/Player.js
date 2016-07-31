@@ -7,6 +7,10 @@ export default class Player {
         this.username = username; 
     }
 
+    equal(otherPlayer) {
+        return this.username == otherPlayer.username;
+    }
+
     static INVALID_USERNAME() {
         return "El nombre de usuario debe tener un valor.";
     }
