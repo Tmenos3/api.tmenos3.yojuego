@@ -33,10 +33,21 @@
         }
     }
 
-    insert(document){
+    insert(rootDocument, childDocument){
         if (!this.isConnected()){
             throw new Error(MongoRepository.CONNECTION_NOT_ESTABLISHED());
         }
+
+        if (rootDocument === undefined || rootDocument === null){
+            throw new Error(MongoRepository.INVALID_DOCUMENT());
+        }
+
+        if (childDocument === undefined || childDocument === null){
+            throw new Error(MongoRepository.INVALID_CHILD_DOCUMENT());
+        }
+
+        var collection = _db.collection(rootDocument);
+        collection.insert(childDocument);
     }
 
     update(document){
@@ -82,6 +93,10 @@
 
     static INVALID_CRITERIA() {
         return "Debe proporcionar un criterio valido.";
+    }
+
+    static INVALID_CHILD_DOCUMENT() {
+        return "El elemento a insertar no es válido.";
     }
 }
 

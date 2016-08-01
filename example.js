@@ -1,23 +1,33 @@
 var restify = require('restify');
 var paramReceived = null;
+var MongoRepository = require('./repositories/MongoRepository');
  
 function testMondoDB() {
-  console.log('2');
-  var mongodb = require('mongodb');
-  console.log('3');
+  //console.log('2');
+  //var mongodb = require('mongodb');
+  //console.log('3');
  
   //We need to work with "MongoClient" interface in order to connect to a mongodb server.
-  var MongoClient = mongodb.MongoClient;
-  console.log('4');
+  //var MongoClient = mongodb.MongoClient;
+  //console.log('4');
 
   // Connection URL. This is where your mongodb server is running.
   var url = 'mongodb://localhost:27017/yojuego';
-  console.log('5');
+  var repo = new MongoRepository(url);
+  if (repo.connect()){
+    var user = {name: 'facundo', surname:'la rocca'};
+    repo.insert(user);
+
+    console.log("insert realizado");
+  }else{
+    console.log("No su pudo conectar con el server");
+  }
+  //console.log('5');
 
 
 
   // Use connect method to connect to the Server
-  MongoClient.connect(url, function (err, db) {
+  /*MongoClient.connect(url, function (err, db) {
     console.log('6 - err: ' + err);
     if (err) {
       console.log('7 - Unable to connect to the mongoDB server. Error:', err);
@@ -59,7 +69,7 @@ function testMondoDB() {
       db.close();
     }
     console.log('9');
-  });
+  });*/
 
   console.log('10');
 }

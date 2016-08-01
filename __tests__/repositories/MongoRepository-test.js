@@ -1,4 +1,4 @@
-//jest.unmock('../../repositories/MongoRepository');
+jest.mock('mongodb');
 
 import MongoRepository from '../../repositories/MongoRepository';
 
@@ -93,7 +93,7 @@ describe('MongoRepository', () => {
   it('Cannot insert any document if connection has not beed established', () => {
     var mongoRep = new MongoRepository('aValidSource');
 
-    expect(() => mongoRep.insert({})).toThrowError(MongoRepository.CONNECTION_NOT_ESTABLISHED());
+    expect(() => mongoRep.insert('rootDocument', {})).toThrowError(MongoRepository.CONNECTION_NOT_ESTABLISHED());
   });
 
   it('Cannot update any document if connection has not beed established', () => {
@@ -208,5 +208,101 @@ describe('MongoRepository', () => {
     mongoRep.connect();
 
     expect(mongoRep.get('aDocument', {})).toBe(expectedResult);
+  });
+
+  it('Cannot insert a childDocument with an undefined rootDocument', () => {
+    var mongodb = require('mongodb');
+    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+
+    var undefinedRootDocument;
+    var mongoRep = new MongoRepository('aValidSource');
+    mongoRep.connect();
+
+    expect(() => mongoRep.insert(undefinedRootDocument, {})).toThrowError(MongoRepository.INVALID_DOCUMENT());
+  });
+
+  it('Cannot insert a childDocument with a null rootDocument', () => {
+    var mongodb = require('mongodb');
+    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+
+    var nullRootDocument = null;
+    var mongoRep = new MongoRepository('aValidSource');
+    mongoRep.connect();
+
+    expect(() => mongoRep.insert(nullRootDocument, {})).toThrowError(MongoRepository.INVALID_DOCUMENT());
+  });
+
+  it('Cannot insert an undefined childDocument', () => {
+    var mongodb = require('mongodb');
+    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+
+    var undefinedChildtDocument;
+    var mongoRep = new MongoRepository('aValidSource');
+    mongoRep.connect();
+
+    expect(() => mongoRep.insert('rootDocument', undefinedChildtDocument)).toThrowError(MongoRepository.INVALID_CHILD_DOCUMENT());
+  });
+
+  it('Cannot insert a null childDocument', () => {
+    var mongodb = require('mongodb');
+    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+    
+    var nullChildDocument = null;
+    var mongoRep = new MongoRepository('aValidSource');
+    mongoRep.connect();
+
+    expect(() => mongoRep.insert('rootDocument', nullChildDocument)).toThrowError(MongoRepository.INVALID_CHILD_DOCUMENT());
+  });
+
+  it('Collection method from db must be called when insert', () => {
+    var rootDocument = 'aDocument';
+    var mongodb = require('mongodb');
+    var mockedCollectionMethod = jest.fn((document) => {return {insert: function(childDocument){}}});
+
+    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {collection: mockedCollectionMethod}));
+
+    var mongoRep = new MongoRepository('aValidSource');
+    mongoRep.connect();
+
+    mongoRep.insert(rootDocument, {});
+
+    expect(mockedCollectionMethod).toBeCalledWith(rootDocument);
+  });
+
+  it('Insert method from db must be called when insert', () => {
+    var mongodb = require('mongodb');
+    var mockedInsertMethod = jest.fn((criteria) => {});
+    var childDocument = {};
+
+    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, { collection: function(){return {insert: mockedInsertMethod}}}));
+
+    var mongoRep = new MongoRepository('aValidSource');
+    mongoRep.connect();
+
+    mongoRep.insert('rootDocument', childDocument);
+
+    expect(mockedInsertMethod).toBeCalledWith(childDocument);
+  });
+
+  it('Can insert a child document', () => {
+    var rootDocument = 'rootDocument';
+    var nameDefined = 'aName'; 
+    var documentInserted = {name: nameDefined, surname: 'aSurname', addree: 'aAddress'};
+    var mongodb = require('mongodb');
+    var db = {
+        collection: function(document) {
+            return {
+              find: jest.fn((criteria) => documentInserted),
+              insert: jest.fn(() => {})
+            };
+        }
+    };
+    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, db));
+
+    var mongoRep = new MongoRepository('aValidSource');
+    mongoRep.connect();
+    mongoRep.insert(rootDocument, documentInserted);
+
+    expect(mongoRep.get(rootDocument, {name: nameDefined})).toBe(documentInserted);
   });
 });
