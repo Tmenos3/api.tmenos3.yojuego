@@ -1,11 +1,13 @@
 {
   "name": "api.ffpsoft.yojuego",
   "subdomain": "api.ffpsoft.yojuego",
+  "description": "YoJuego!",
+  "version": "0.0.0-13",
+  "license": "UNLICENSED",
   "scripts": {
     "start": "server.js",
     "test": "jest"
   },
-  "version": "0.0.0-13",
   "engines": {
     "node": "0.8.x"
   },
@@ -14,18 +16,24 @@
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
-    "react": "^15.3.0",
     "babel-jest": "*",
     "babel-preset-es2015": "*",
     "babel-preset-react": "*",
-    "jest": "*"
+    "jest": "*",
+    "mongodb": "^2.2.5",
+    "react": "^15.3.0"
   },
   "jest": {
     "automock": false,
-      "unmockedModulePathPatterns": [
-    "<rootDir>/node_modules/react/",
-    "<rootDir>/node_modules/react-dom/",
-    "<rootDir>/node_modules/react-addons-test-utils/"
-  ]
+    "unmockedModulePathPatterns": [
+      "<rootDir>/node_modules/react/",
+      "<rootDir>/node_modules/react-dom/",
+      "<rootDir>/node_modules/react-addons-test-utils/"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FFPSoft/api.ffpsoft.yojuego.git",
+    "private": true
   }
 }

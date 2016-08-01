@@ -1,7 +1,7 @@
-jest.unmock('../src/Invitation');
+jest.unmock('../../src/Invitation');
 
-import Invitation from '../src/Invitation';
-import Player from '../src/Player';
+import Invitation from '../../src/Invitation';
+import Player from '../../src/Player';
 
 describe('Invitation', () => {
   it('Cannot create with a Sender undefined', () => {
@@ -19,7 +19,7 @@ describe('Invitation', () => {
   it('Can create a valid Invitation', () => {
     var aSender = new Player('aUsername');
     var invitation = new Invitation(aSender);
-
+    
     expect(invitation.sender).toBe(aSender);
   });
 });

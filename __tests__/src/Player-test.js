@@ -1,6 +1,6 @@
-jest.unmock('../src/Player');
+jest.unmock('../../src/Player');
 
-import Player from '../src/Player';
+import Player from '../../src/Player';
 
 describe('Player', () => {
   it('Cannot create with a username undefined', () => {
