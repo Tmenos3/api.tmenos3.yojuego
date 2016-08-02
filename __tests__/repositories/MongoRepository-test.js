@@ -3,6 +3,16 @@ jest.mock('mongodb');
 import MongoRepository from '../../repositories/MongoRepository';
 
 describe('MongoRepository', () => {
+  var mongodb;
+
+  beforeEach(function() {
+    mongodb = require('mongodb');
+  });
+
+  afterEach(function() {
+    mongodb = null;
+  });
+
   it('Cannot create with a source undefined', () => {
     var undefinedSource;
   
@@ -23,8 +33,6 @@ describe('MongoRepository', () => {
   });
 
   it('If the source is valid connect returns true', () => {
-    var mongodb = require('mongodb');
-
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
 
     var mongoRep = new MongoRepository("aValidUrl");
@@ -33,8 +41,6 @@ describe('MongoRepository', () => {
   });
 
   it('If the source is invalid connect returns false', () => {
-    var mongodb = require('mongodb');
-
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {}));
 
     var mongoRep = new MongoRepository("anInvalidUrl");
@@ -44,10 +50,6 @@ describe('MongoRepository', () => {
 
   it('The connection must be done with the source it has been created', () => {
     var aValidSource = 'aValidSource';
-    var mongodb = require('mongodb');
-
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
-
     var mongoRep = new MongoRepository(aValidSource);
     mongoRep.connect();
 
@@ -55,7 +57,6 @@ describe('MongoRepository', () => {
   });
 
   it('isConnected returns true if connection has been established', () => {
-    var mongodb = require('mongodb');
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
 
     var mongoRep = new MongoRepository('aValidSource');
@@ -71,7 +72,6 @@ describe('MongoRepository', () => {
   });
 
   it('Can close a connection still when it has not been established', () => {
-    var mongodb = require('mongodb');
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
 
     var mongoRep = new MongoRepository('aValidSource');
@@ -84,7 +84,6 @@ describe('MongoRepository', () => {
 
   it('Can close a connection when it has been established', () => {
     var mongoRep = new MongoRepository('aValidSource');
-
     mongoRep.closeConnection();
 
     expect(mongoRep.isConnected()).toBe(false);
@@ -116,7 +115,6 @@ describe('MongoRepository', () => {
 
   it('Cannot get document if a undefined document is passed', () => {
     var undefinedDocument;
-    var mongodb = require('mongodb');
 
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
 
@@ -128,7 +126,6 @@ describe('MongoRepository', () => {
 
   it('Cannot get document if a null document is passed', () => {
     var nullDocument = null;
-    var mongodb = require('mongodb');
 
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
 
@@ -140,7 +137,6 @@ describe('MongoRepository', () => {
 
   it('Cannot get document if a undefined criteria is passed', () => {
     var undefinedCriteria;
-    var mongodb = require('mongodb');
 
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
 
@@ -152,7 +148,6 @@ describe('MongoRepository', () => {
 
   it('Cannot get document if a null criteria is passed', () => {
     var nullCriteria = null;
-    var mongodb = require('mongodb');
 
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
 
@@ -164,7 +159,6 @@ describe('MongoRepository', () => {
 
   it('Collection method from db must be called in get', () => {
     var documentToFind = 'aDocument';
-    var mongodb = require('mongodb');
     var mockedCollectionMethod = jest.fn((document) => {return {find: function(){}}});
 
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {collection: mockedCollectionMethod}));
@@ -179,7 +173,6 @@ describe('MongoRepository', () => {
 
   it('Find method from db must be called in get', () => {
     var documentToFind = 'aDocument';
-    var mongodb = require('mongodb');
     var mockedFindMethod = jest.fn((criteria) => {});
 
     var criteriaToApply = {};
@@ -196,7 +189,6 @@ describe('MongoRepository', () => {
 
   it('Can get a document collection', () => {
     var expectedResult = [{name: 'element1'}, {name: 'element2'}];
-    var mongodb = require('mongodb');
     var db = {
         collection: function(document) {
             return {find: jest.fn((criteria) => expectedResult)};
@@ -211,7 +203,6 @@ describe('MongoRepository', () => {
   });
 
   it('Cannot insert a childDocument with an undefined rootDocument', () => {
-    var mongodb = require('mongodb');
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
 
     var undefinedRootDocument;
@@ -222,7 +213,6 @@ describe('MongoRepository', () => {
   });
 
   it('Cannot insert a childDocument with a null rootDocument', () => {
-    var mongodb = require('mongodb');
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
 
     var nullRootDocument = null;
@@ -233,7 +223,6 @@ describe('MongoRepository', () => {
   });
 
   it('Cannot insert an undefined childDocument', () => {
-    var mongodb = require('mongodb');
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
 
     var undefinedChildtDocument;
@@ -244,7 +233,6 @@ describe('MongoRepository', () => {
   });
 
   it('Cannot insert a null childDocument', () => {
-    var mongodb = require('mongodb');
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
     
     var nullChildDocument = null;
@@ -256,7 +244,6 @@ describe('MongoRepository', () => {
 
   it('Collection method from db must be called when insert', () => {
     var rootDocument = 'aDocument';
-    var mongodb = require('mongodb');
     var mockedCollectionMethod = jest.fn((document) => {return {insert: function(childDocument){}}});
 
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {collection: mockedCollectionMethod}));
@@ -270,7 +257,6 @@ describe('MongoRepository', () => {
   });
 
   it('Insert method from db must be called when insert', () => {
-    var mongodb = require('mongodb');
     var mockedInsertMethod = jest.fn((criteria) => {});
     var childDocument = {};
 
@@ -288,7 +274,6 @@ describe('MongoRepository', () => {
     var rootDocument = 'rootDocument';
     var nameDefined = 'aName'; 
     var documentInserted = {name: nameDefined, surname: 'aSurname', addree: 'aAddress'};
-    var mongodb = require('mongodb');
     var db = {
         collection: function(document) {
             return {
@@ -298,7 +283,7 @@ describe('MongoRepository', () => {
         }
     };
     mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, db));
-
+    
     var mongoRep = new MongoRepository('aValidSource');
     mongoRep.connect();
     mongoRep.insert(rootDocument, documentInserted);
