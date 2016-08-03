@@ -304,7 +304,7 @@ describe('MongoRepository', () => {
             };
         }
     };
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, db));
+    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, db));
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.connect()
@@ -312,7 +312,7 @@ describe('MongoRepository', () => {
                          .then((msj) => mongoRep.get(rootDocument, {name: nameDefined})
                                         .then((objReturned) => expect(objReturned).toBe(documentInserted), (err) => expect(false).toBeTruthy())
                                         .catch((err) => expect(false).toBeTruthy()), 
-                                (err) => expect(false).toBeTruthy())
+                               (err) => expect(false).toBeTruthy())
                          .catch((err) => expect(false).toBeTruthy()), 
                 (err) => expect(false).toBeTruthy())
           .catch((err) => expect(false).toBeTruthy());
