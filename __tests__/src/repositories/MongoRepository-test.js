@@ -1,6 +1,6 @@
 jest.mock('mongodb');
 
-import MongoRepository from '../../repositories/MongoRepository';
+import MongoRepository from '../../../src/repositories/MongoRepository';
 
 describe('MongoRepository', () => {
   var mongodb;

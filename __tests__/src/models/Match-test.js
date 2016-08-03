@@ -1,6 +1,6 @@
-jest.unmock('../../src/Match');
+jest.unmock('../../../src/models/Match');
 
-import Match from '../../src/Match';
+import Match from '../../../src/models/Match';
 
 describe('Match', () => {
   it('Cannot create with a Date undefined', () => {

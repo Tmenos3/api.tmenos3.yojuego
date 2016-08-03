@@ -1,7 +1,7 @@
-jest.unmock('../../src/Invitation');
+jest.unmock('../../../src/models/Invitation');
 
-import Invitation from '../../src/Invitation';
-import Player from '../../src/Player';
+import Invitation from '../../../src/models/Invitation';
+import Player from '../../../src/models/Player';
 
 describe('Invitation', () => {
   it('Cannot create with a Sender undefined', () => {
