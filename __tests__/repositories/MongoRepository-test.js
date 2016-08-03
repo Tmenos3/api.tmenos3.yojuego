@@ -72,87 +72,83 @@ describe('MongoRepository', () => {
     .catch((err) => { expect(true).toBe(false)});
   });
 
-  // it('Cannot insert any document if connection has not beed established', () => {
-  //   var mongoRep = new MongoRepository('aValidSource');
+  it('Insert executes reject callback if connection is not established', () => {
+    var mongoRep = new MongoRepository('aValidSource');
 
-  //   expect(() => mongoRep.insert('rootDocument', {})).toThrowError(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-  // });
+    mongoRep.insert('rootDocument', {})
+    .then((msj) => { expect(true).toBe(false) }, (err) => { expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED())})
+    .catch((err) => { expect(true).toBe(false) });
+  });
 
-  // it('Cannot update any document if connection has not beed established', () => {
-  //   var mongoRep = new MongoRepository('aValidSource');
+  it('Update executes reject callback if connection is not established', () => {
+    var mongoRep = new MongoRepository('aValidSource');
 
-  //   expect(() => mongoRep.update({})).toThrowError(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-  // });
+    mongoRep.update( {})
+    .then((msj) => { expect(true).toBe(false) }, (err) => { expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED())})
+    .catch((err) => { expect(true).toBe(false) });
+  });
 
-  // it('Cannot delete any document if connection has not beed established', () => {
-  //   var mongoRep = new MongoRepository('aValidSource');
+  it('Delete executes reject callback if connection is not established', () => {
+    var mongoRep = new MongoRepository('aValidSource');
 
-  //   expect(() => mongoRep.delete({})).toThrowError(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-  // });
+    mongoRep.delete( {})
+    .then((msj) => { expect(true).toBe(false) }, (err) => { expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED())})
+    .catch((err) => { expect(true).toBe(false) });
+  });
 
-  // it('Cannot get any document if connection has not beed established', () => {
-  //   var mongoRep = new MongoRepository('aValidSource');
+  it('Cannot get any document if connection has not beed established', () => {
+    var mongoRep = new MongoRepository('aValidSource');
 
-  //   expect(() => mongoRep.get('aDocument', {})).toThrowError(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-  // });
+    mongoRep.get('aDocument', {})
+    .then((msj) => { expect(true).toBe(false) }, (err) => { expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED())})
+    .catch((err) => { expect(true).toBe(false) });
+  });
 
-  // it('Cannot get document if a undefined document is passed', () => {
-  //   var undefinedDocument;
+  it('Cannot get document if a undefined document is passed', () => {
+    var undefinedDocument;
+    var mongoRep = new MongoRepository('aValidSource');
 
-  //   mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+    expect(() => mongoRep.get(undefinedDocument, {})).toThrowError(MongoRepository.INVALID_DOCUMENT());
+  });
 
-  //   var mongoRep = new MongoRepository('aValidSource');
-  //   mongoRep.connect();
+  it('Cannot get document if a null document is passed', () => {
+    var nullDocument = null;
+    var mongoRep = new MongoRepository('aValidSource');
 
-  //   expect(() => mongoRep.get(undefinedDocument, {})).toThrowError(MongoRepository.INVALID_DOCUMENT());
-  // });
+    expect(() => mongoRep.get(nullDocument, {})).toThrowError(MongoRepository.INVALID_DOCUMENT());
+  });
 
-  // it('Cannot get document if a null document is passed', () => {
-  //   var nullDocument = null;
+  it('Cannot get document if a undefined criteria is passed', () => {
+    var undefinedCriteria;
+    var mongoRep = new MongoRepository('aValidSource');
 
-  //   mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+    expect(() => mongoRep.get('aDocument', undefinedCriteria)).toThrowError(MongoRepository.INVALID_CRITERIA());
+  });
 
-  //   var mongoRep = new MongoRepository('aValidSource');
-  //   mongoRep.connect();
+  it('Cannot get document if a null criteria is passed', () => {
+    var nullCriteria = null;
+    var mongoRep = new MongoRepository('aValidSource');
 
-  //   expect(() => mongoRep.get(nullDocument, {})).toThrowError(MongoRepository.INVALID_DOCUMENT());
-  // });
+    expect(() => mongoRep.get('aDocument', nullCriteria)).toThrowError(MongoRepository.INVALID_CRITERIA());
+  });
 
-  // it('Cannot get document if a undefined criteria is passed', () => {
-  //   var undefinedCriteria;
+  it('Collection method from db must be called in get', () => {
+    var documentToFind = 'aDocument';
+    var mockedCollectionMethod = jest.fn((document) => {return {find: function(){}}});
 
-  //   mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {collection: mockedCollectionMethod}));
 
-  //   var mongoRep = new MongoRepository('aValidSource');
-  //   mongoRep.connect();
+    var mongoRep = new MongoRepository('aValidSource');
+    mongoRep.connect()
+    .then(() =>  mongoRep.get(documentToFind, {})
+                .then(() => expect(mockedCollectionMethod).toBeCalledWith(documentToFind), (err) => { expect(true).toBe(false) })
+                .catch((err) => { expect(true).toBe(false) }), 
+          (err) => { expect(true).toBe(false) })
+    .catch((err) => { expect(true).toBe(false) });
+  });
 
-  //   expect(() => mongoRep.get('aDocument', undefinedCriteria)).toThrowError(MongoRepository.INVALID_CRITERIA());
-  // });
-
-  // it('Cannot get document if a null criteria is passed', () => {
-  //   var nullCriteria = null;
-
-  //   mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
-
-  //   var mongoRep = new MongoRepository('aValidSource');
-  //   mongoRep.connect();
-
-  //   expect(() => mongoRep.get('aDocument', nullCriteria)).toThrowError(MongoRepository.INVALID_CRITERIA());
-  // });
-
-  // it('Collection method from db must be called in get', () => {
-  //   var documentToFind = 'aDocument';
-  //   var mockedCollectionMethod = jest.fn((document) => {return {find: function(){}}});
-
-  //   mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {collection: mockedCollectionMethod}));
-
-  //   var mongoRep = new MongoRepository('aValidSource');
-  //   mongoRep.connect();
-
-  //   mongoRep.get(documentToFind, {});
-
-  //   expect(mockedCollectionMethod).toBeCalledWith(documentToFind);
-  // });
+  //cuando hago el get tengo que ejecutar el resolve
+  //si hay un error debo ejecutar el reject
 
   // it('Find method from db must be called in get', () => {
   //   var documentToFind = 'aDocument';

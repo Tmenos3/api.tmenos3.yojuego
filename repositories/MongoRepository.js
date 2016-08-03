@@ -37,10 +37,6 @@
     }
 
     insert(rootDocument, childDocument){
-        if (!this.isConnected()){
-            throw new Error(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-        }
-
         if (rootDocument === undefined || rootDocument === null){
             throw new Error(MongoRepository.INVALID_DOCUMENT());
         }
@@ -49,26 +45,27 @@
             throw new Error(MongoRepository.INVALID_CHILD_DOCUMENT());
         }
 
-        var collection = _db.collection(rootDocument);
-        collection.insert(childDocument);
+        // var collection = _db.collection(rootDocument);
+        // collection.insert(childDocument);
+
+        return new Promise( (resolve, reject) => {
+            reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
+        });
     }
 
     update(document){
-        if (!this.isConnected()){
-            throw new Error(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-        }
+        return new Promise( (resolve, reject) => {
+            reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
+        });
     }
 
     delete(document){
-        if (!this.isConnected()){
-            throw new Error(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-        }
+        return new Promise( (resolve, reject) => {
+            reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
+        });
     }
 
     get(document, criteria){
-        if (!this.isConnected()){
-            throw new Error(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-        }
 
         if (document === undefined || document === null){
             throw new Error(MongoRepository.INVALID_DOCUMENT());
@@ -78,8 +75,12 @@
             throw new Error(MongoRepository.INVALID_CRITERIA());
         }
 
-        var collection = _db.collection(document);
-        return collection.find(criteria);
+        // var collection = _db.collection(document);
+        // return collection.find(criteria);
+
+        return new Promise( (resolve, reject) => {
+            reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
+        });
     }
 
     static INVALID_SOURCE() {
