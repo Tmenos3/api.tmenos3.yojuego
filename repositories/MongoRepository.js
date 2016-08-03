@@ -13,24 +13,27 @@
     }
 
     connect(){
-        var mongodb = require('mongodb');
-        var ret = false;
-        mongodb.MongoClient.connect(this.source, function (err, db) {
-            ret = err;
-            _db = db;
+        return new Promise( (resolve, reject) => {
+            var mongodb = require('mongodb');
+            mongodb.MongoClient.connect(this.source, function (err, db) {
+                console.log('err: ' + err);
+                console.log('db: ' + db);
+                if (!err){
+                    _db = db;
+                    resolve(MongoRepository.CONNECTION_ESTABLISHED());
+                }else{
+                    resolve(MongoRepository.CONNECTION_NOT_ESTABLISHED());
+                }
+            });
         });
-
-        return ret;
-    }
-
-    isConnected(){
-        return !(_db === undefined || _db === null);
     }
 
     closeConnection(){
-        if (this.isConnected()){
+        return new Promise( (resolve, reject) => {
+            _db.close();
             _db = null;
-        }
+            resolve();
+        });
     }
 
     insert(rootDocument, childDocument){
@@ -85,6 +88,10 @@
 
     static CONNECTION_NOT_ESTABLISHED() {
         return "La conexión no fue establecida.";
+    }
+
+    static CONNECTION_ESTABLISHED() {
+        return "La conexión fue establecida exitosamente.";
     }
 
     static INVALID_DOCUMENT() {
