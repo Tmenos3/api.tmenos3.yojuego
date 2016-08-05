@@ -4,9 +4,16 @@ import MongoRepository from '../../../src/repositories/MongoRepository';
 
 describe('MongoRepository', () => {
   var mongodb;
+  var mockedDb = {
+    collection: (document) => {},
+    close: () => {}
+  };
+  var mockedConnect = jest.fn((error, db) => { return jest.fn((aUrl, aFunction) => aFunction(error, db)); });
+  var baseDeleteOneMethod = jest.fn((err, result) => { return jest.fn((childDocument, callback) => callback(err, result)); });
 
   beforeEach(function() {
     mongodb = require('mongodb');
+    mongodb.MongoClient.connect = mockedConnect(false, {});
   });
 
   afterEach(function() {
@@ -33,8 +40,6 @@ describe('MongoRepository', () => {
   });
 
   pit('Connect must execute the resolve callback if connection succesful', () => {
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {}));
-
     var mongoRep = new MongoRepository("aValidUrl");
     
     return mongoRep._connect()
@@ -43,7 +48,7 @@ describe('MongoRepository', () => {
   });
 
   pit('Connect must execute the reject callback if connection fail', () => {
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+    mongodb.MongoClient.connect = mockedConnect(true, {});
 
     var mongoRep = new MongoRepository("anInvalidUrl");
 
@@ -56,17 +61,15 @@ describe('MongoRepository', () => {
     var aValidSource = 'aValidSource';
     var mongoRep = new MongoRepository(aValidSource);
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {}));
-
     return mongoRep._connect()
-    .then((db) => expect(mongodb.MongoClient.connect.mock.calls[0][0]).toEqual(aValidSource), (err) => expect(true).toBe(false))
-    .catch((err) => expect(false).toBeTruthy());
+          .then((db) => expect(mongodb.MongoClient.connect.mock.calls[0][0]).toEqual(aValidSource), (err) => expect(true).toBe(false))
+          .catch((err) => expect(false).toBeTruthy());
   });
 
   pit('Insert executes reject callback if connection is not established', () => {
     var mongoRep = new MongoRepository('aValidSource');
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+    mongodb.MongoClient.connect = mockedConnect(true, mockedDb);
 
     return mongoRep.insert('rootDocument', {})
           .then(() => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED()))
@@ -84,7 +87,7 @@ describe('MongoRepository', () => {
   pit('Delete executes reject callback if connection is not established', () => {
     var mongoRep = new MongoRepository('aValidSource');
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+    mongodb.MongoClient.connect = mockedConnect(true, mockedDb);
 
     return mongoRep.delete('aDocument', {})
           .then((msj) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED()))
@@ -93,7 +96,7 @@ describe('MongoRepository', () => {
 
   pit('Cannot get any document if connection has not beed established', () => {
     var mongoRep = new MongoRepository('aValidSource');
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(true, {}));
+    mongodb.MongoClient.connect = mockedConnect(true, mockedDb);
 
     return mongoRep.get('aDocument', {})
           .then((msj) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED()))
@@ -104,8 +107,6 @@ describe('MongoRepository', () => {
     var undefinedDocument;
     var mongoRep = new MongoRepository('aValidSource');
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {}));
-
     return mongoRep.get(undefinedDocument, {})
           .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_DOCUMENT()))
           .catch((err) => expect(false).toBeTruthy());
@@ -115,8 +116,6 @@ describe('MongoRepository', () => {
     var nullDocument = null;
     var mongoRep = new MongoRepository('aValidSource');
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {}));
-
     return mongoRep.get(nullDocument, {})
            .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_DOCUMENT()))
            .catch((err) => expect(false).toBeTruthy());
@@ -125,8 +124,6 @@ describe('MongoRepository', () => {
   pit('Cannot get document if a undefined criteria is passed', () => {
     var undefinedCriteria;
     var mongoRep = new MongoRepository('aValidSource');
-
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {}));
 
     return mongoRep.get('aDocument', undefinedCriteria)
            .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_CRITERIA()))
@@ -145,8 +142,9 @@ describe('MongoRepository', () => {
   pit('Collection method from db must be called in get', () => {
     var documentToFind = 'aDocument';
     var mockedCollectionMethod = jest.fn((document) => {return {find: (criteria) => { return {}; }}});
+    var db = {collection: mockedCollectionMethod, close: () => {}};
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {collection: mockedCollectionMethod, close: () => {}}));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.get(documentToFind, {})
@@ -157,8 +155,9 @@ describe('MongoRepository', () => {
   pit('Get must execute reject if an exception occurs', () => {
     var documentToFind = 'aDocument';
     var mockedGetThrowsException = jest.fn((document) => {return { find: (criteria) => { throw new Error(MongoRepository.UNEXPECTED_ERROR()); }, close: () => {} }});
+    var db = {collection: mockedGetThrowsException};
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {collection: mockedGetThrowsException}));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.get(documentToFind, {})
@@ -175,7 +174,7 @@ describe('MongoRepository', () => {
 
     var criteriaToApply = {};
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, db));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.get(documentToFind, criteriaToApply)
@@ -189,7 +188,7 @@ describe('MongoRepository', () => {
         collection: (document) => { return {find: jest.fn((criteria) => expectedResult) }; },
         close: () => {}
     };
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, db));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
 
@@ -236,9 +235,10 @@ describe('MongoRepository', () => {
 
   pit('Collection method from db must be called when insert', () => {
     var rootDocument = 'aDocument';
-    var mockedCollectionMethod = jest.fn((document) => {});
+    var mockedCollectionMethod = jest.fn((document) => {return {insert: jest.fn((childDoc, callback) => { callback(false, {}); })}});
+    var db = {collection: mockedCollectionMethod, close: () => {}};
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {collection: mockedCollectionMethod, close: () => {}}));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.insert(rootDocument, {})
@@ -247,33 +247,29 @@ describe('MongoRepository', () => {
   });
 
   pit('Insert method from db must be called when insert', () => {
-    var mockedInsertMethod = jest.fn((childDocument) => {});
+    var mockedInsertMethod = jest.fn((childDoc, callback) => { callback(false, {}); });
+    var db = { collection: () => {return {insert: mockedInsertMethod}}, close: () => {}};
     var childDocument = {};
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, { collection: function(){return {insert: mockedInsertMethod}}}));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
-    return mongoRep.connect()
-          .then((msj) => mongoRep.insert('rootDocument', childDocument)
-                         .then((msj) => expect(mockedInsertMethod).toBeCalledWith(childDocument), (err) => expect(false).toBeTruthy())
-                         .catch((err) => expect(false).toBeTruthy()), 
-                (err) => expect(false).toBeTruthy())
-          .catch((err) => expect(false).toBeTruthy());
+    return mongoRep.insert('rootDocument', childDocument)
+            .then((msj) => expect(mockedInsertMethod.mock.calls[0][0]).toBe(childDocument), (err) => expect(false).toBeTruthy())
+            .catch((err) => expect(false).toBeTruthy());
   });
 
   pit('Insert must execute resolve after inserting', () => {
-    var mockedInsertMethod = jest.fn((childDocument) => {});
+    var mockedInsertMethod = jest.fn((childDocument, callback) => {callback(false, {})});
     var childDocument = {};
-
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, { collection: function(){return {insert: mockedInsertMethod}}}));
+    var db = { collection: () => {return {insert: mockedInsertMethod}}, close: () => {}};
+    
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
-    return mongoRep.connect()
-          .then((msj) => mongoRep.insert('rootDocument', childDocument)
-                         .then((msj) => expect(msj).toBe(MongoRepository.DOCUMENT_INSERTED()), (err) => expect(false).toBeTruthy())
-                         .catch((err) => expect(false).toBeTruthy()), 
-                (err) => expect(false).toBeTruthy())
-          .catch((err) => expect(false).toBeTruthy());
+    return mongoRep.insert('rootDocument', childDocument)
+            .then((msj) => expect(msj).toBe(MongoRepository.DOCUMENT_INSERTED()), (err) => expect(false).toBeTruthy())
+            .catch((err) => expect(false).toBeTruthy());
   });
 
   pit('Can insert a child document', () => {
@@ -289,7 +285,7 @@ describe('MongoRepository', () => {
         },
         close: () => {}
     };
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, db));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.get(rootDocument, {name: nameDefined})
@@ -300,8 +296,9 @@ describe('MongoRepository', () => {
   pit('Insert must execute reject if an exception occurs', () => {
     var documentToFind = 'aDocument';
     var mockedDeleteOneThrowsException = jest.fn((document) => {return { insert: function(){ throw new Error(MongoRepository.UNEXPECTED_ERROR()); } }});
+    var db = {collection: mockedDeleteOneThrowsException, close: () => {}};
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {collection: mockedDeleteOneThrowsException, close: () => {}}));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.insert(documentToFind, {})
@@ -313,7 +310,7 @@ describe('MongoRepository', () => {
     var undefinedDocument;
     var mongoRep = new MongoRepository('aValidSource');
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {}));
+    mongodb.MongoClient.connect = mockedConnect(false, mockedDb);
 
     return mongoRep.delete(undefinedDocument, {})
            .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_DOCUMENT()))
@@ -324,7 +321,7 @@ describe('MongoRepository', () => {
     var nullDocument = null;
     var mongoRep = new MongoRepository('aValidSource');
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {}));
+    mongodb.MongoClient.connect = mockedConnect(false, mockedDb);
 
     return mongoRep.delete(nullDocument, {})
            .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_DOCUMENT()))
@@ -335,7 +332,7 @@ describe('MongoRepository', () => {
     var undefinedCriteria;
     var mongoRep = new MongoRepository('aValidSource');
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {}));
+    mongodb.MongoClient.connect = mockedConnect(false, mockedDb);
 
     return mongoRep.delete('aDocument', undefinedCriteria)
            .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_CRITERIA()))
@@ -353,21 +350,24 @@ describe('MongoRepository', () => {
 
   pit('Collection method from db must be called in delete', () => {
     var documentToFind = 'aDocument';
-    var mockedCollectionMethod = jest.fn((document) => {return { deleteOne: (childDocument, callback) => {} }});
+    var db = mockedDb;
+    db.collection = jest.fn((document) => { return { deleteOne: baseDeleteOneMethod(false, {}) }});
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {collection: mockedCollectionMethod, close: () => {}}));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.delete(documentToFind, {})
-          .then(() => expect(mockedCollectionMethod).toBeCalledWith(documentToFind), (err) => expect(false).toBeTruthy())
+          .then(() => expect(db.collection.mock.calls[0][0]).toBe(documentToFind), (err) => expect(false).toBeTruthy())
           .catch((err) => expect(false).toBeTruthy());
   });
 
   pit('delete must execute reject if an exception occurs', () => {
     var documentToFind = 'aDocument';
-    var mockedDeleteOneThrowsException = jest.fn((document) => {return { deleteOne: function(document, callback){ throw new Error(MongoRepository.UNEXPECTED_ERROR()); } }});
+    var mockedDeleteOneThrowsException = jest.fn((document, callback) => { throw new Error(MongoRepository.UNEXPECTED_ERROR()); });
+    var db = mockedDb;
+    db.collection = (document) => { return { deleteOne: mockedDeleteOneThrowsException }};
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, {collection: mockedDeleteOneThrowsException, close: () => {}}));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.delete(documentToFind, {})
@@ -376,29 +376,31 @@ describe('MongoRepository', () => {
   });
 
   pit('deleteOne method from db must be called in delete', () => {
-    var documentToDelete = 'aDocument';
     var mockedDeleteOneMethod = jest.fn((document, callback) => callback(false, {}));
+    var db = mockedDb;
+    db.collection = (document) => { return { deleteOne: mockedDeleteOneMethod }}
 
     var criteriaToApply = {};
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, { collection: function(document){return {deleteOne: mockedDeleteOneMethod}}, close: () => {}}));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
-    return mongoRep.delete(documentToDelete, criteriaToApply)
+    return mongoRep.delete('aDocumentToDelete', criteriaToApply)
           .then(() => expect(mockedDeleteOneMethod.mock.calls[0][0]).toBe(criteriaToApply), (err) => expect(false).toBeTruthy())
           .catch((err) => expect(false).toBeTruthy());
   });
 
   pit('delete must execute reject if db.deleteOne returns error', () => {
-    var documentToDelete = 'aDocument';
     var mockedDeleteOneMethod = jest.fn((document, callback) => callback(true, {}));
+    var db = mockedDb;
+    db.collection = (document) => {return {deleteOne: mockedDeleteOneMethod}}
 
     var criteriaToApply = {};
 
-    mongodb.MongoClient.connect = jest.fn((aUrl, aFunction) => aFunction(false, { collection: function(){return {deleteOne: mockedDeleteOneMethod}}, close: () => {}}));
+    mongodb.MongoClient.connect = mockedConnect(false, db);
 
     var mongoRep = new MongoRepository('aValidSource');
-    return mongoRep.delete(documentToDelete, criteriaToApply)
+    return mongoRep.delete('aDocumentToDelete', criteriaToApply)
           .then(() => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.ERROR_WHILE_DELETING()))
           .catch((err) => expect(false).toBeTruthy());
   });
