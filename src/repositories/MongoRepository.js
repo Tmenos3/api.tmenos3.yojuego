@@ -52,9 +52,26 @@
         });
     }
 
-    update(document){
+    update(rootDocument, id, toUpdate){
+//collection.update({_id:"123"}, {$set: {author:"Jessica"}});
         return new Promise( (resolve, reject) => {
-            reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
+            if (isNullOrUndefined(rootDocument)){
+                reject(MongoRepository.INVALID_DOCUMENT());
+            }else{
+                if (isNullOrUndefined(id)){
+                    reject(MongoRepository.INVALID_ID());
+                }else{
+                    if (isNullOrUndefined(toUpdate)){
+                        reject(MongoRepository.INVALID_DATA_TO_UPDATE());
+                    }else{
+                        this._connect()
+                        .then((db) => {
+                            db.collection(rootDocument).update(id, toUpdate, (err, result) => {});
+                        }, (err) => reject(err))
+                        .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
+                    }
+                }
+            }
         });
     }
 
@@ -125,6 +142,14 @@
 
     static INVALID_CHILD_DOCUMENT() {
         return "El elemento a insertar no es válido.";
+    }
+
+    static INVALID_ID() {
+        return "Debe proporcionar un id válido.";
+    }
+
+    static INVALID_DATA_TO_UPDATE(){
+        return "Debe proporcionar data para actualizar valida.";
     }
 
     static DOCUMENT_INSERTED() {

@@ -79,7 +79,7 @@ describe('MongoRepository', () => {
   pit('Update executes reject callback if connection is not established', () => {
     var mongoRep = new MongoRepository('aValidSource');
 
-    return mongoRep.update( {})
+    return mongoRep.update('rootDocument', {_id: 'anId'}, {})
           .then((msj) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED()))
           .catch((err) => expect(false).toBeTruthy());
   });
@@ -178,8 +178,8 @@ describe('MongoRepository', () => {
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.get(documentToFind, criteriaToApply)
-          .then((objectReturned) => {console.log('1'); expect(mockedFindMethod).toBeCalledWith(criteriaToApply); }, (err) => {console.log('2 - err: ' + err); expect(false).toBeTruthy(); })
-          .catch((err) => {console.log('3 - err: ' + err); expect(false).toBeTruthy(); });
+          .then((objectReturned) => expect(mockedFindMethod).toBeCalledWith(criteriaToApply), (err) => expect(false).toBeTruthy())
+          .catch((err) => expect(false).toBeTruthy());
   });
 
   pit('Can get a document collection', () => {
@@ -403,6 +403,82 @@ describe('MongoRepository', () => {
     return mongoRep.delete('aDocumentToDelete', criteriaToApply)
           .then(() => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.ERROR_WHILE_DELETING()))
           .catch((err) => expect(false).toBeTruthy());
+  });
+
+  pit('Cannot update any document if connection has not beed established', () => {
+    var mongoRep = new MongoRepository('aValidSource');
+    mongodb.MongoClient.connect = mockedConnect(true, mockedDb);
+
+    return mongoRep.update('aDocument', {_id: 'aId'}, {})
+          .then((msj) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED()))
+          .catch((err) => expect(false).toBeTruthy());
+  });
+
+  pit('Cannot update document if a undefined document is passed', () => {
+    var undefinedDocument;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.update(undefinedDocument, {_id: 'aId'}, {})
+          .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_DOCUMENT()))
+          .catch((err) => expect(false).toBeTruthy());
+  });
+
+  pit('Cannot update document if a null document is passed', () => {
+    var nullDocument = null;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.update(nullDocument, {_id: 'aId'}, {})
+           .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_DOCUMENT()))
+           .catch((err) => expect(false).toBeTruthy());
+  });
+
+  pit('Cannot update document if a undefined id is passed', () => {
+    var undefinedId;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.update('aDocument', undefinedId, {})
+           .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_ID()))
+           .catch((err) => expect(false).toBeTruthy());  
+  });
+
+  pit('Cannot update document if a null id is passed', () => {
+    var nullId = null;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.update('aDocument', nullId, {})
+           .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_ID()))
+           .catch((err) => expect(false).toBeTruthy()); 
+  });
+
+  pit('Cannot update document if a undefined data to update is passed', () => {
+    var undefinedDataToUpdate;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.update('aDocument', {_id: 'anId'}, undefinedDataToUpdate)
+           .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_DATA_TO_UPDATE()))
+           .catch((err) => expect(false).toBeTruthy());  
+  });
+
+  pit('Cannot update document if a null data to update is passed', () => {
+    var nullDataToUpdate = null;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.update('aDocument', {_id: 'anId'}, nullDataToUpdate)
+           .then((objReturned) => expect(false).toBeTruthy(), (err) => expect(err).toBe(MongoRepository.INVALID_DATA_TO_UPDATE()))
+           .catch((err) => expect(false).toBeTruthy()); 
+  });
+
+  pit('Collection method from db must be called in update', () => {
+    var rootDocument = 'aDocument';
+    var mockedCollectionMethod = jest.fn((document) => { console.log('mockedCollectionMethod'); return {update: (id, toUpdate, callback) => { console.log('update'); }}});
+    var db = {collection: mockedCollectionMethod, close: () => {}};
+
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+    return mongoRep.update(rootDocument, {_id: 'anId'}, {})
+           .then(() => { console.log('1'); expect(mockedCollectionMethod.mock.calls[0][0]).toBe(rootDocument); }, (err) => {console.log('2 - err: ' + err); expect(false).toBeTruthy(); })
+           .catch((err) => {console.log('3 - err: ' + err); expect(false).toBeTruthy(); });
   });
 
   //testear en todos los casos que se llame al dl.close
