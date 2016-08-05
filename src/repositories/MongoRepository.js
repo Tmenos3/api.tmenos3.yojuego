@@ -1,9 +1,11 @@
 
  var _db;
 
+ var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
+
  class MongoRepository {
     constructor(source){
-        if(source === undefined || source === null){
+        if (isNullOrUndefined(source)){
             throw new Error(MongoRepository.INVALID_SOURCE());
         }
 
@@ -12,13 +14,12 @@
         //var url = 'mongodb://localhost:27017/yojuego';
     }
 
-    connect(){
+    _connect(){
         return new Promise( (resolve, reject) => {
             var mongodb = require('mongodb');
             mongodb.MongoClient.connect(this.source, function (err, db) {
                 if (!err){
-                    _db = db;
-                    resolve(MongoRepository.CONNECTION_ESTABLISHED());
+                    resolve(db);
                 }else{
                     reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
                 }
@@ -26,33 +27,26 @@
         });
     }
 
-    closeConnection(){
-        return new Promise( (resolve, reject) => {
-            if (_db === null || _db === undefined){
-                reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-            }else{
-                _db.close();
-                _db = null;
-                resolve();
-            }
-        });
-    }
-
     insert(rootDocument, childDocument){
-        return new Promise( (resolve, reject) => {
-            if (rootDocument === undefined || rootDocument === null){
+        return new Promise((resolve, reject) => {
+            if (isNullOrUndefined(rootDocument)){
                 reject(MongoRepository.INVALID_DOCUMENT());
             }else{
-                if (childDocument === undefined || childDocument === null){
+                if (isNullOrUndefined(childDocument)){
                     reject(MongoRepository.INVALID_CHILD_DOCUMENT());
                 }else{
-                    if (_db === null || _db === undefined){
-                        reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-                    }else{
-                        var collection = _db.collection(rootDocument);
-                        collection.insert(childDocument);
-                        resolve(MongoRepository.DOCUMENT_INSERTED());
-                    }
+                    this._connect()
+                    .then((db) => {
+                                    db.collection(rootDocument).insert(childDocument, (err, result) =>{
+                                        db.close();
+                                        if (err){
+                                            reject(MongoRepository.ERROR_WHILE_INSERTING());
+                                        }else{    
+                                            resolve(MongoRepository.DOCUMENT_INSERTED());
+                                        }
+                                    });
+                                  }, (err) => reject(err))
+                    .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
                 }
             }
         });
@@ -64,26 +58,46 @@
         });
     }
 
-    delete(document){
+    delete(rootDocument, criteria){
         return new Promise( (resolve, reject) => {
-            reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
+            if (isNullOrUndefined(rootDocument)){
+                reject(MongoRepository.INVALID_DOCUMENT());
+            }else{
+                if (isNullOrUndefined(criteria)){
+                    reject(MongoRepository.INVALID_CRITERIA());
+                }else{
+                    this._connect()
+                    .then((db) => {
+                        db.collection(rootDocument).deleteOne(criteria, (err, results) => { 
+                            db.close();
+                            if (err){
+                                reject(MongoRepository.ERROR_WHILE_DELETING());
+                            }else{
+                                resolve();
+                            } 
+                        });
+                    }, (err) => reject(err))
+                    .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
+                }
+            }
         });
     }
 
     get(document, criteria){
         return new Promise( (resolve, reject) => {
-            if (document === undefined || document === null){
+            if (isNullOrUndefined(document)){
                 reject(MongoRepository.INVALID_DOCUMENT());
             }else{
-                if (criteria === undefined  || criteria === null){
+                if (isNullOrUndefined(criteria)){
                     reject(MongoRepository.INVALID_CRITERIA());
                 }else{
-                    if (_db === null || _db === undefined){
-                        reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-                    }else{
-                        var collection = _db.collection(document);
-                        resolve(collection.find(criteria));
-                    }
+                    this._connect()
+                    .then((db) => {
+                        var ret = db.collection(document).find(criteria);
+                        db.close();
+                        resolve(ret);
+                    }, (err) => reject(err))
+                    .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
                 }
             } 
         });
@@ -115,6 +129,18 @@
 
     static DOCUMENT_INSERTED() {
         return "Documento insertado correctamente";
+    }
+
+    static UNEXPECTED_ERROR(){
+        return 'Error inesperado';
+    }
+
+    static ERROR_WHILE_DELETING(){
+        return 'No se ha podido eliminar el documento';
+    }
+
+    static ERROR_WHILE_INSERTING(){
+        return 'No se ha podido eliminar el documento';
     }
 }
 
