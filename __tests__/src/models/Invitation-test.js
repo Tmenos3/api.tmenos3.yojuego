@@ -17,7 +17,7 @@ describe('Invitation', () => {
   });
 
   it('Can create a valid Invitation', () => {
-    var aSender = new Player('aUsername');
+    var aSender = new Player('aUsername', 'aPassword', 'aEmail');
     var invitation = new Invitation(aSender);
     
     expect(invitation.sender).toBe(aSender);
