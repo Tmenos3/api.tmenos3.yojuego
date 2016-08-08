@@ -1,6 +1,6 @@
 {
-  "name": "api.ffpsoft.yojuego",
-  "subdomain": "api.ffpsoft.yojuego",
+  "name": "api.tmenos3.yojuego",
+  "subdomain": "api.tmenos3.yojuego",
   "description": "YoJuego!",
   "version": "0.0.0-13",
   "license": "UNLICENSED",
@@ -12,7 +12,10 @@
     "node": "0.8.x"
   },
   "dependencies": {
-    "restify": "4.1.x"
+    "jsonwebtoken": "^7.1.7",
+    "mongoose": "^4.5.8",
+    "restify": "4.1.x",
+    "restify-jwt": "^0.4.0"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
@@ -33,7 +36,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/FFPSoft/api.ffpsoft.yojuego.git",
+    "url": "https://github.com/tmenos3/api.tmenos3.yojuego.git",
     "private": true
   }
 }

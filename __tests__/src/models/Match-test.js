@@ -33,7 +33,7 @@ it('Cannot create with a Location undefined', () => {
 
  it('Cannot create with a Location null', () => {
     var nullLocation = null;
-    expect(() => new Match('20000101', '00:00:00',nullLocation)).toThrowError(Match.INVALID_LOCATION())
+    expect(() => new Match('20000101', '00:00:00', nullLocation)).toThrowError(Match.INVALID_LOCATION())
   });
 
   it('Can create a valid Match', () => {

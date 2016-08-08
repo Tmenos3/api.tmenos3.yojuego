@@ -1,123 +1,140 @@
-
- var _db;
-
- var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
+ var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+ var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
 
  class MongoRepository {
     constructor(source){
-        if (isNullOrUndefined(source)){
-            throw new Error(MongoRepository.INVALID_SOURCE());
-        }
-
-        this.source = source;
-        _db = null;
+        var conditions = [new NotNullOrUndefinedCondition(source, MongoRepository.INVALID_SOURCE())];
+        var validator = new CommonValidatorHelper(conditions, () => this.source = source, (err) => { throw new Error(err) });
+        validator.execute();
         //var url = 'mongodb://localhost:27017/yojuego';
     }
 
     _connect(){
         return new Promise( (resolve, reject) => {
             var mongodb = require('mongodb');
-            mongodb.MongoClient.connect(this.source, function (err, db) {
-                if (!err){
-                    resolve(db);
-                }else{
-                    reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
-                }
-            });
+            mongodb.MongoClient.connect(this.source, (err, db) => { this._doAfterConnect(err, db, resolve, reject); } );
         });
     }
 
     insert(rootDocument, childDocument){
         return new Promise((resolve, reject) => {
-            if (isNullOrUndefined(rootDocument)){
-                reject(MongoRepository.INVALID_DOCUMENT());
-            }else{
-                if (isNullOrUndefined(childDocument)){
-                    reject(MongoRepository.INVALID_CHILD_DOCUMENT());
-                }else{
-                    this._connect()
-                    .then((db) => {
-                                    db.collection(rootDocument).insert(childDocument, (err, result) =>{
-                                        db.close();
-                                        if (err){
-                                            reject(MongoRepository.ERROR_WHILE_INSERTING());
-                                        }else{    
-                                            resolve(MongoRepository.DOCUMENT_INSERTED());
-                                        }
-                                    });
-                                  }, (err) => reject(err))
-                    .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
-                }
-            }
+            var conditions = [
+                new NotNullOrUndefinedCondition(rootDocument, MongoRepository.INVALID_DOCUMENT()),
+                new NotNullOrUndefinedCondition(childDocument, MongoRepository.INVALID_CHILD_DOCUMENT())
+            ];
+            
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateInsert(rootDocument, childDocument, resolve, reject); }, (err) => reject(err));
+            validator.execute();
         });
     }
 
     update(rootDocument, id, toUpdate){
-//collection.update({_id:"123"}, {$set: {author:"Jessica"}});
         return new Promise( (resolve, reject) => {
-            if (isNullOrUndefined(rootDocument)){
-                reject(MongoRepository.INVALID_DOCUMENT());
-            }else{
-                if (isNullOrUndefined(id)){
-                    reject(MongoRepository.INVALID_ID());
-                }else{
-                    if (isNullOrUndefined(toUpdate)){
-                        reject(MongoRepository.INVALID_DATA_TO_UPDATE());
-                    }else{
-                        this._connect()
-                        .then((db) => {
-                            db.collection(rootDocument).update(id, toUpdate, (err, result) => {});
-                        }, (err) => reject(err))
-                        .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
-                    }
-                }
-            }
+            var conditions = [
+                new NotNullOrUndefinedCondition(rootDocument, MongoRepository.INVALID_DOCUMENT()),
+                new NotNullOrUndefinedCondition(id, MongoRepository.INVALID_ID()),
+                new NotNullOrUndefinedCondition(toUpdate, MongoRepository.INVALID_DATA_TO_UPDATE())
+            ];
+            
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateUpdate(rootDocument, id, toUpdate, resolve, reject); }, (err) => reject(err));
+            validator.execute();
         });
     }
 
     delete(rootDocument, criteria){
         return new Promise( (resolve, reject) => {
-            if (isNullOrUndefined(rootDocument)){
-                reject(MongoRepository.INVALID_DOCUMENT());
-            }else{
-                if (isNullOrUndefined(criteria)){
-                    reject(MongoRepository.INVALID_CRITERIA());
-                }else{
-                    this._connect()
-                    .then((db) => {
-                        db.collection(rootDocument).deleteOne(criteria, (err, results) => { 
-                            db.close();
-                            if (err){
-                                reject(MongoRepository.ERROR_WHILE_DELETING());
-                            }else{
-                                resolve();
-                            } 
-                        });
-                    }, (err) => reject(err))
-                    .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
-                }
-            }
+            var conditions = [
+                new NotNullOrUndefinedCondition(rootDocument, MongoRepository.INVALID_DOCUMENT()),
+                new NotNullOrUndefinedCondition(criteria, MongoRepository.INVALID_CRITERIA())
+            ];
+            
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidaDelete(rootDocument, criteria, resolve, reject); }, (err) => reject(err));
+            validator.execute();
         });
     }
 
-    get(document, criteria){
+    get(rootDocument, criteria){
         return new Promise( (resolve, reject) => {
-            if (isNullOrUndefined(document)){
-                reject(MongoRepository.INVALID_DOCUMENT());
-            }else{
-                if (isNullOrUndefined(criteria)){
-                    reject(MongoRepository.INVALID_CRITERIA());
-                }else{
-                    this._connect()
-                    .then((db) => {
-                        var ret = db.collection(document).find(criteria);
-                        db.close();
-                        resolve(ret);
-                    }, (err) => reject(err))
-                    .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
-                }
-            } 
+            var conditions = [
+                new NotNullOrUndefinedCondition(rootDocument, MongoRepository.INVALID_DOCUMENT()),
+                new NotNullOrUndefinedCondition(criteria, MongoRepository.INVALID_CRITERIA())
+            ];
+            
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateGet(rootDocument, criteria, resolve, reject); }, (err) => reject(err));
+            validator.execute();
         });
+    }
+
+    _doAfterConnect(err, db, resolve, reject) {
+        if (!err){
+            resolve(db);
+        }else{
+            reject(MongoRepository.CONNECTION_NOT_ESTABLISHED());
+        }
+    }
+
+    _doAfterValidateInsert(rootDocument, childDocument, resolve, reject) { 
+        this._connect()
+            .then((db) => { 
+                    var collection = db.collection(rootDocument);
+                    collection.insert(childDocument, (err, result) => { this._doAfterInsert(db, err, resolve, reject); });
+                }, (err) => reject(err))
+            .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
+    }
+
+    _doAfterValidateUpdate(rootDocument, id, toUpdate, resolve, reject){
+        this._connect()
+        .then((db) => {
+                var collection = db.collection(rootDocument); 
+                collection.update(id, {$set: toUpdate}, (err, result) => { this._doAfterUpdate(db, err, resolve, reject); });
+            }, (err) => reject(err))
+        .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
+    }
+
+    _doAfterValidaDelete(rootDocument, criteria, resolve, reject){
+        this._connect()
+        .then((db) => {
+                var collection = db.collection(rootDocument);  
+                collection.deleteOne(criteria, (err, results) => { this._doAfterDelete(db, err, resolve, reject); });
+            }, (err) => reject(err))
+        .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
+    }
+
+    _doAfterValidateGet(rootDocument, criteria, resolve, reject){
+        this._connect()
+        .then((db) => {
+            var ret = db.collection(rootDocument).find(criteria);
+            db.close();
+            resolve(ret);
+        }, (err) => reject(err))
+        .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
+    }
+
+    _doAfterInsert(db, err, resolve, reject){
+        db.close();
+        if (err){
+            reject(MongoRepository.ERROR_WHILE_INSERTING());
+        }else{    
+            resolve(MongoRepository.DOCUMENT_INSERTED());
+        }
+    }
+
+    _doAfterUpdate(db, err, resolve, reject){
+        db.close();
+        if (err){
+            reject(MongoRepository.ERROR_WHILE_UPDATING());
+        }else{    
+            resolve(MongoRepository.DOCUMENT_UPDATED());
+        }
+    }
+
+    _doAfterDelete(db, err, resolve, reject){ 
+        db.close();
+        if (err){
+            reject(MongoRepository.ERROR_WHILE_DELETING());
+        }else{
+            resolve(MongoRepository.DOCUMENT_DELETED());
+        } 
     }
 
     static INVALID_SOURCE() {
@@ -156,6 +173,14 @@
         return "Documento insertado correctamente";
     }
 
+    static DOCUMENT_UPDATED() {
+        return "Documento actualizado correctamente";
+    }
+
+    static DOCUMENT_DELETED() {
+        return "Documento eliminad correctamente";
+    }
+
     static UNEXPECTED_ERROR(){
         return 'Error inesperado';
     }
@@ -166,6 +191,10 @@
 
     static ERROR_WHILE_INSERTING(){
         return 'No se ha podido eliminar el documento';
+    }
+
+    static ERROR_WHILE_UPDATING(){
+        return 'No se ha podido actualizar el documento';
     }
 }
 
