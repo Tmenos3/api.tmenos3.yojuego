@@ -47,13 +47,6 @@ describe('Player', () => {
     expect(() => new Player(aUsernameWithBlankSpace, 'aPassword', 'aEMail').toThrowError(Palyer.INVALID_USERNAMEWITHBLANKSPACE()));
   });
 
-  it('Cannot be less 5 character', () => {
-      //lo hacemos pinchar para que no nos olvidemos que esta,
-      //que pinche nos va a ogligar a no perderlo de vista
-    expect(false).toBe(true);
-    expect(() => new Player(aUsernameWithBlankSpace, aPassword, aEMail).toThrowError(Palyer.INVALID_STRING_HAD_BLANK_SPACE()))
-  });
-
   it('UserName must be more than 5 characters', () => {
     var aUserName = "aU";
     var aPassword = "aPassword";
