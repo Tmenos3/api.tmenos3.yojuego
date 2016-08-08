@@ -1,0 +1,53 @@
+class ApiService{
+    constructor(){
+
+    }
+
+    login(username, password){
+
+    }
+
+    signIn(username, password){
+
+    }
+
+    profile = {
+        get: (userId) => {},
+        update: () => {}
+    }
+
+    invitations = {
+        getAll: (userId) => {},
+        getPending: (userId) => {},
+        getSended: (userId) => {},
+        create: () => {},
+        accept: (invitationId) => {},
+        reject: (invitationId) => {},
+        remove: (invitationId) => {}
+    }
+
+    friends = {
+        getAll: (userId) => {},
+        accept: (userId, acceptedUserId) => {},
+        invite: (userId, invitedUserId) => {},
+        remove: (userId, removedUserId) => {}
+    }
+
+    groups = {
+        getAll: (userId) => {},
+        inviteTo: (userId, groupId, userToInviteId) => {},
+        joinTo: (userId, groupId) => {},
+        remove: (userId, groupId) => {},
+        create: () => {}
+    } 
+
+    matches = {
+        getAll: (userId) => {},
+        getNextMatches: (userId) => {},
+        getPastMatches: (userId) => {},
+        remove: (matchId) => {},
+        create: () => {}
+    }  
+}
+
+module.exports = ApiService;
