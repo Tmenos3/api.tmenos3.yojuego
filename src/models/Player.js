@@ -48,13 +48,7 @@ export default class Player {
     }
 
     hasBlankSpace(textToValidate) {
-        for (var i = 0; i < textToValidate.length; i++) {
-            var character = textToValidate[i];
-            if (character == ' ') {
-                return true;
-            }
-        }
-        return false;
+        return textToValidate.includes(' ');
     }
 
     hasMoreThanFiveCharacters(textToValidate) {
