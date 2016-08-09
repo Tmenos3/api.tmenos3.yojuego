@@ -7,13 +7,13 @@ describe('Invitation', () => {
   it('Cannot create with a Sender undefined', () => {
     var undefinedSender;
   
-    expect(() => new Invitation(undefinedSender)).toThrowError(Invitation.INVALID_SENDER())
+    expect(() => new Invitation(undefinedSender)).toThrowError(Invitation.INVALID_SENDER());
   });
 
  it('Cannot create with a Sender null', () => {
     var nullSender = null;
    
-    expect(() => new Invitation(nullSender)).toThrowError(Invitation.INVALID_SENDER())
+    expect(() => new Invitation(nullSender)).toThrowError(Invitation.INVALID_SENDER());
   });
 
   it('Can create a valid Invitation', () => {
