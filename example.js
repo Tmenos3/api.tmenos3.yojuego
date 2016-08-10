@@ -4,6 +4,11 @@ var jwt = require('jsonwebtoken');
 var jwtRestify = require('restify-jwt');
 var config = require('./config');
 var User = require('./src/models/User');
+var MongoRepository = require('./erc/repositories/MongoRepository');
+var ApiService = require('./src/services/ApiService');
+
+var mongoRep = new MongoRepository(config.database);
+var apiService = new ApiService(mongoRep, jwt);
 
 mongoose.connect(config.database);
 
@@ -66,25 +71,36 @@ function showAllUsers(req, res, next) {
 */
 
 function loginCallback(req, res, next) {
-
-  User.find({username: req.body.username}, function(err, users) {
-    var user = users[0];
-    if (err) {
-        console.log('something goes wrong');
-        res.send({success: false, err: 'something goes wrong'});
-    }else if (!user){
-        console.log('user does not exist');
-        res.send({success: false, err: 'user does not exist'});
-    }else if(user.password != req.body.password){
-        console.log('invalid password');
-        res.send({success: false, err: 'invalid password'});
-    }else {
-        var token = jwt.sign({username: user.username, password: user.password}, config.secret, {
-          expiresIn: 60 // expires in 24 hours
-        }); 
-        res.send({success: false, creedentials: {username: user.username, password: user.password, token: token}});
-    }
-  });
+    apiService.login(request)
+    .then((ret) => {
+      console.log('login completed - ret: ' + ret); 
+      res.send(ret);
+    }, (ret) => {
+      console.log('login completed with errors - ret: ' + ret);  
+      res.send(ret); 
+    })
+    .catch((err) => { 
+      console.log('login throw unexpected error - err: ' + err);  
+      res.send(err); 
+    });
+  // User.find({username: req.body.username}, function(err, users) {
+  //   var user = users[0];
+  //   if (err) {
+  //       console.log('something goes wrong');
+  //       res.send({success: false, err: 'something goes wrong'});
+  //   }else if (!user){
+  //       console.log('user does not exist');
+  //       res.send({success: false, err: 'user does not exist'});
+  //   }else if(user.password != req.body.password){
+  //       console.log('invalid password');
+  //       res.send({success: false, err: 'invalid password'});
+  //   }else {
+  //       var token = jwt.sign({username: user.username, password: user.password}, config.secret, {
+  //         expiresIn: 60 // expires in 24 hours
+  //       }); 
+  //       res.send({success: false, creedentials: {username: user.username, password: user.password, token: token}});
+  //   }
+  // });
 }
 
 var server = restify.createServer();
