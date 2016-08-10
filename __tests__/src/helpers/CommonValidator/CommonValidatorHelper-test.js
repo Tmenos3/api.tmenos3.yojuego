@@ -1,6 +1,8 @@
 jest.unmock('../../../../src/helpers/CommonValidator/CommonValidatorHelper');
 
+var Condition = require('../../../../src/helpers/CommonValidator/Condition');
 var NotNullOrUndefinedCondition = require('../../../../src/helpers/CommonValidator/NotNullOrUndefinedCondition');
+var CustomCondition = require('../../../../src/helpers/CommonValidator/CustomCondition');
 var CommonValidatorHelper = require('../../../../src/helpers/CommonValidator/CommonValidatorHelper');
 
 describe('CommonValidatorHelper', () => {

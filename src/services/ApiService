@@ -1,53 +1,140 @@
+ var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+ var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
+ var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
+//  var MongoRepository = require('../repositories/MongoRepository');
+//  var jwt = require('jsonwebtoken');
+ var config = require('../../config');
+
+var profile = {
+    get: (userId) => {},
+    update: () => {}
+}
+
+var invitations = {
+    getAll: (userId) => {},
+    getPending: (userId) => {},
+    getSended: (userId) => {},
+    create: () => {},
+    accept: (invitationId) => {},
+    reject: (invitationId) => {},
+    remove: (invitationId) => {}
+}
+
+var friends = {
+    getAll: (userId) => {},
+    accept: (userId, acceptedUserId) => {},
+    invite: (userId, invitedUserId) => {},
+    remove: (userId, removedUserId) => {}
+}
+
+var groups = {
+    getAll: (userId) => {},
+    inviteTo: (userId, groupId, userToInviteId) => {},
+    joinTo: (userId, groupId) => {},
+    remove: (userId, groupId) => {},
+    create: () => {}
+} 
+
+var matches = {
+    getAll: (userId) => {},
+    getNextMatches: (userId) => {},
+    getPastMatches: (userId) => {},
+    remove: (matchId) => {},
+    create: () => {}
+}  
+
 class ApiService{
-    constructor(){
+    constructor(repo, jwt){
+        var conditions = [
+            new NotNullOrUndefinedCondition(repo, ApiService.INVALID_REPOSITORY()),
+            new NotNullOrUndefinedCondition(jwt, ApiService.INVALID_JWT()),
+        ];
+        
+        var validator = new CommonValidatorHelper(conditions, () => {
+            this._repo = repo; 
+            this._profile = profile;
+            this._invitations = invitations;
+            this._friends = friends;
+            this._groups = groups;
+            this._matches = matches;
+            this._repo = repo; 
+            this._jwt = jwt}, (err) => { throw new Error(err); });
 
+        validator.execute();
     }
 
-    login(username, password){
-
+    login(req){
+        return new Promise((resolve, reject) => {
+            var conditions = [
+                new CustomCondition(() => { return this._isValidRequest(req); }, ApiService.INVALID_REQUEST()),
+                new CustomCondition(() => { return this._isValidRequestBody(req); }, ApiService.INVALID_REQUEST_BODY()),
+                new CustomCondition(() => { return this._isValidUsername(req); }, ApiService.INVALID_CREDENTIALS()),
+                new CustomCondition(() => { return this._isValidPassword(req); }, ApiService.INVALID_CREDENTIALS())
+            ];
+            
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateLogin(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
+            validator.execute();
+        });
     }
+
 
     signIn(username, password){
 
     }
 
-    profile = {
-        get: (userId) => {},
-        update: () => {}
+    _doAfterValidateLogin(username, password, resolve, reject){
+        this._repo.get('users', {username: username})
+            .then((userReturned) => { 
+                if (userReturned.password === password){
+                    var token = this._jwt.sign({username: userReturned.username, password: userReturned.password}, config.secret, { expiresIn: config.expiresIn });
+                    resolve({ status: true, token: token });
+                }else{
+                    reject({ status: false, message: ApiService.INVALID_CREDENTIALS() });
+                }
+             }, 
+                  (err) => { reject({ status: false, message: err }); })
+            .catch((err) => { reject({ status: false , message: err}); });
     }
 
-    invitations = {
-        getAll: (userId) => {},
-        getPending: (userId) => {},
-        getSended: (userId) => {},
-        create: () => {},
-        accept: (invitationId) => {},
-        reject: (invitationId) => {},
-        remove: (invitationId) => {}
+    _isValidRequest(req){
+        return !(req === undefined || req === null);
     }
 
-    friends = {
-        getAll: (userId) => {},
-        accept: (userId, acceptedUserId) => {},
-        invite: (userId, invitedUserId) => {},
-        remove: (userId, removedUserId) => {}
+    _isValidRequestBody(req){
+        return !(req.body === undefined || req.body === null);
     }
 
-    groups = {
-        getAll: (userId) => {},
-        inviteTo: (userId, groupId, userToInviteId) => {},
-        joinTo: (userId, groupId) => {},
-        remove: (userId, groupId) => {},
-        create: () => {}
-    } 
+    _isValidUsername(req){
+        return !(req.body.username === undefined || req.body.username === null);
+    }
 
-    matches = {
-        getAll: (userId) => {},
-        getNextMatches: (userId) => {},
-        getPastMatches: (userId) => {},
-        remove: (matchId) => {},
-        create: () => {}
-    }  
+    _isValidPassword(req){
+        return !(req.body.password === undefined || req.body.password === null);
+    }
+
+    static INVALID_REQUEST(){
+        return 'Request inválido';
+    }
+
+    static INVALID_REQUEST_BODY(){
+        return 'Body request inválido';
+    }
+
+    static INVALID_REPOSITORY(){
+        return 'El password es inválido';
+    }
+
+    static INVALID_JWT(){
+        return 'El jwt es inválido';
+    }
+
+    static INVALID_CALLBACK(){
+        return 'Callback inválido.';
+    }
+
+    static INVALID_CREDENTIALS(){
+        return 'Las credenciales no son válidas.';
+    }
 }
 
 module.exports = ApiService;

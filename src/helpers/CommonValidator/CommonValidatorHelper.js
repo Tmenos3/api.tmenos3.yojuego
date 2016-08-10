@@ -1,5 +1,7 @@
 var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
+var Condition = require('./Condition');
 var NotNullOrUndefinedCondition = require('./NotNullOrUndefinedCondition');
+var CustomCondition = require('./CustomCondition');
 
 class CommonValidatorHelper{
     constructor(conditionsList, resolveCallback, rejectCallback){
@@ -13,7 +15,7 @@ class CommonValidatorHelper{
             throw new Error(CommonValidatorHelper.INVALID_CONDITION_LIST());
         }else{
             conditionsList.forEach(function(element) {
-                if(!(element instanceof NotNullOrUndefinedCondition)){
+                if(!(element instanceof NotNullOrUndefinedCondition) && !(element instanceof CustomCondition)){
                     throw new Error(CommonValidatorHelper.INVALID_CONDITION_LIST());
                 }
             }, this);
