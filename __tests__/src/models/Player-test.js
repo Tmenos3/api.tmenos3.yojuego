@@ -40,33 +40,33 @@ describe('Player', () => {
   });
 
   it('Cannot create whit UserName whit blank space', () => {
-    var aUsernameWithBlankSpace = "a UsernameWithBlankSpace";
+    var aUsernameWithBlankSpace = 'a UsernameWithBlankSpace';
 
     expect(() => new Player(aUsernameWithBlankSpace, 'aPassword', 'aEMail')).toThrowError(Player.INVALID_USERNAME_HAS_BLANK_SPACE());
   });
 
   it('Cannot create whit Password whit blank space', () => {
-    var aPasswordWithBlankSpace = "a PasswordWithBlankSpace";
+    var aPasswordWithBlankSpace = 'a PasswordWithBlankSpace';
 
     expect(() => new Player('aUsername', aPasswordWithBlankSpace, 'aEMail')).toThrowError(Player.INVALID_PASSWORD_HAS_BLANK_SPACE());
   });
 
   it('UserName must be more than 5 characters', () => {
-    var aShortUsername = "abcd";
+    var aShortUsername = 'abcd';
 
     expect(() => new Player(aShortUsername, 'aPassword', 'aEMail')).toThrowError(Player.INVALID_USERNAME_LENGHT());
   });
 
   it('Password must be more than 5 characters', () => {
-    var aShortPassword = "abcd";
+    var aShortPassword = 'abcd';
 
-    expect(() => new Player("aUserName", aShortPassword, "aEMAil")).toThrowError(Player.INVALID_PASSWORD_LENGHT());
+    expect(() => new Player('aUserName', aShortPassword, 'aEMAil')).toThrowError(Player.INVALID_PASSWORD_LENGHT());
   });
 
   it('Can create a valid Player', () => {
-    var aUsername = "aUsername";
-    var aPassword = "aPassword";
-    var aEMail = "aEMail";
+    var aUsername = 'aUsername';
+    var aPassword = 'aPassword';
+    var aEMail = 'aEMail';
     var aplayer = new Player(aUsername, aPassword, aEMail);
 
     expect(aplayer.username).toBe(aUsername);
@@ -75,9 +75,9 @@ describe('Player', () => {
   });
 
   it('Two players are equal if they have same username', () => {
-    var aUsername = "aUsername";
-    var aPassword = "aPassword";
-    var aEMail = "aEMail";
+    var aUsername = 'aUsername';
+    var aPassword = 'aPassword';
+    var aEMail = 'aEMail';
     var playerOne = new Player(aUsername, aPassword, aEMail);
     var playerTwo = new Player(aUsername, aPassword, aEMail);
 
@@ -85,18 +85,18 @@ describe('Player', () => {
   });
 
   it('UserName and password cannot be the same', () => {
-    var aUsername = "sameString";
-    var aPassword = "sameString";
-    var aEMail = "aEMail";
+    var aUsername = 'sameString';
+    var aPassword = 'sameString';
+    var aEMail = 'aEMail';
 
     expect(() => new Player(aUserName, aPassword, aEMail).toThrowError(Player.USERNAME_AND_PASSWORD_CANNOT_BE_EQUALS()));
   });
 
   it('Two players are not equal if they have diferent username', () => {
-    var aUsername = "aUsername";
-    var aOtherUserName = "aOtherUserName";
-    var aPassword = "aPassword";
-    var aEMail = "aEMail";
+    var aUsername = 'aUsername';
+    var aOtherUserName = 'aOtherUserName';
+    var aPassword = 'aPassword';
+    var aEMail = 'aEMail';
 
     var playerOne = new Player(aUsername, aPassword, aEMail);
     var playerTwo = new Player(aOtherUserName, aPassword, aEMail);

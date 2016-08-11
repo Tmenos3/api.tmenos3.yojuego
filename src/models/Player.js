@@ -66,34 +66,34 @@ export default class Player {
     }
 
     static INVALID_USERNAME() {
-        return "El nombre de usuario debe tener un valor.";
+        return 'El nombre de usuario debe tener un valor.';
     }
 
     static INVALID_PASSWORD() {
-        return "La contraseña debe tener un valor.";
+        return 'La contraseña debe tener un valor.';
     }
 
     static INVALID_EAMIL() {
-        return "El email debe tener valor.";
+        return 'El email debe tener valor.';
     }
 
     static INVALID_USERNAME_HAS_BLANK_SPACE() {
-        return "El usuario tiene espacios en blanco.";
+        return 'El usuario tiene espacios en blanco.';
     }
 
     static INVALID_PASSWORD_HAS_BLANK_SPACE() {
-        return "La contraseña tiene espacios en blanco.";
+        return 'La contraseña tiene espacios en blanco.';
     }
 
     static INVALID_USERNAME_LENGHT() {
-        return "El nombre de usuario debe contener mas de 5 caracteres.";
+        return 'El nombre de usuario debe contener mas de 5 caracteres.';
     }
 
     static INVALID_PASSWORD_LENGHT() {
-        return "La contraseña debe contener mas de 5 caracteres.";
+        return 'La contraseña debe contener mas de 5 caracteres.';
     }
 
     static USERNAME_AND_PASSWORD_CANNOT_BE_EQUALS() {
-        return "El usuario y la contraseña no pueden ser iguales."
+        return 'El usuario y la contraseña no pueden ser iguales.'
     }
 }

@@ -8,6 +8,6 @@ export default class Invitation {
     }
 
     static INVALID_SENDER() {
-        return "El remitente debe contener un valor.";
+        return 'El remitente debe contener un valor.';
     }
 }
