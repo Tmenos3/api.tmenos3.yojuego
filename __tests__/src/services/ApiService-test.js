@@ -16,7 +16,7 @@ describe('ApiService', () => {
 
     MongoRepository = require('../../../src/repositories/MongoRepository');
     mongoRep = new MongoRepository('validSource');
-    mongoRep.get = jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve({}); })});
+    mongoRep.getOne = jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve({}); })});
   });
 
   afterEach(function() {
@@ -182,7 +182,7 @@ describe('ApiService', () => {
 
     var request = { body: { username: 'username', password: 'password' }};
 
-    mongoRep.get =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(userWithOtherPassword); })});
+    mongoRep.getOne =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(userWithOtherPassword); })});
     var apiService = new ApiService(mongoRep, jwt);
 
     return apiService.login(request)
@@ -198,7 +198,7 @@ describe('ApiService', () => {
     var request = { body: user};
     var token = 'aToken';
 
-    mongoRep.get =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(user); })});
+    mongoRep.getOne =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(user); })});
     jwt.sign = jest.fn((object, secret, options) => { return token });
     var apiService = new ApiService(mongoRep, jwt);
 

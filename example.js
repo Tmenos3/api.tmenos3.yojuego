@@ -4,7 +4,7 @@ var jwt = require('jsonwebtoken');
 var jwtRestify = require('restify-jwt');
 var config = require('./config');
 var User = require('./src/models/User');
-var MongoRepository = require('./erc/repositories/MongoRepository');
+var MongoRepository = require('./src/repositories/MongoRepository');
 var ApiService = require('./src/services/ApiService');
 
 var mongoRep = new MongoRepository(config.database);
@@ -45,22 +45,22 @@ function signinCallback(req, res, next) {
 }
 
 function showAllUsers(req, res, next) {
-  console.log('showAllUsers');
-  console.log('req.headers: ' + req.headers);
-  console.log('req.headers.authorization: ' + req.headers.authorization);
-
   var token = req.headers.authorization;
 
-  jwt.verify(token, config.secret, (err, decoded) => {
-    if(err){
-      res.send(401);
-    }else{
-      console.log('decodeds: ' + decoded);
-      User.find({id: decoded._id}, function(err, users) {
-        res.json(users);
-      });
-    }
-  });
+  // jwt.verify(token, config.secret, (err, decoded) => {
+  //   if(err){
+  //     res.send(401);
+  //   }else{
+  //     console.log('decodeds: ' + decoded);
+  //     User.find({id: decoded._id}, function(err, users) {
+  //       res.json(users);
+  //     });
+  //   }
+  // });
+res.send(req);
+      // User.find({id: decoded._id}, function(err, users) {
+      //   res.json(users);
+      // });
 }
 
 /*
@@ -71,7 +71,7 @@ function showAllUsers(req, res, next) {
 */
 
 function loginCallback(req, res, next) {
-    apiService.login(request)
+    apiService.login(req)
     .then((ret) => {
       console.log('login completed - ret: ' + ret); 
       res.send(ret);
@@ -83,62 +83,44 @@ function loginCallback(req, res, next) {
       console.log('login throw unexpected error - err: ' + err);  
       res.send(err); 
     });
-  // User.find({username: req.body.username}, function(err, users) {
-  //   var user = users[0];
-  //   if (err) {
-  //       console.log('something goes wrong');
-  //       res.send({success: false, err: 'something goes wrong'});
-  //   }else if (!user){
-  //       console.log('user does not exist');
-  //       res.send({success: false, err: 'user does not exist'});
-  //   }else if(user.password != req.body.password){
-  //       console.log('invalid password');
-  //       res.send({success: false, err: 'invalid password'});
-  //   }else {
-  //       var token = jwt.sign({username: user.username, password: user.password}, config.secret, {
-  //         expiresIn: 60 // expires in 24 hours
-  //       }); 
-  //       res.send({success: false, creedentials: {username: user.username, password: user.password, token: token}});
-  //   }
-  // });
 }
 
 var server = restify.createServer();
 server.use(restify.bodyParser());
-// server.use(jwtRestify({
-//   secret: config.secret,
-//   credentialsRequired: false
-// }).unless({path: ['/', '/login', '/signon']}));
+server.use(jwtRestify({
+  secret: config.secret,
+  credentialsRequired: false
+}).unless({path: ['/', '/login', '/signin']}));
 
 //POST
-server.post('/login', loginCallback);
+server.post('/login', apiService.login);
 server.post('/signin', signinCallback);
-server.post('/user/invitations/accept', (req, res, next) => {}); //Aceptar uan invitacion recibida
-server.post('/user/invitations/reject', (req, res, next) => {}); //Rechazar una invitacion recibida
-server.post('/user/friends/accept', (req, res, next) => {}); //Aceptar solicitud de amistad
-server.post('/user/friends/invite', (req, res, next) => {}); //Enviar solicitud de amistad
-server.post('/user/groups/inviteTo', (req, res, next) => {}); //Invitar a amigos a formar parte del grupo
-server.post('/user/groups/joinTo', (req, res, next) => {}); //Unirse a un grupo al que fui invitado
-server.post('/user/profile/update', (req, res, next) => {}); //Unirse a un grupo al que fui invitado
+server.post('/user/invitations/accept', (req, res, next) => { res.send({status: 'notImplemented'})}); //Aceptar uan invitacion recibida
+server.post('/user/invitations/reject', (req, res, next) => { res.send({status: 'notImplemented'})}); //Rechazar una invitacion recibida
+server.post('/user/friends/accept', (req, res, next) => { res.send({status: 'notImplemented'})}); //Aceptar solicitud de amistad
+server.post('/user/friends/invite', (req, res, next) => { res.send({status: 'notImplemented'})}); //Enviar solicitud de amistad
+server.post('/user/groups/inviteTo', (req, res, next) => { res.send({status: 'notImplemented'})}); //Invitar a amigos a formar parte del grupo
+server.post('/user/groups/joinTo', (req, res, next) => { res.send({status: 'notImplemented'})}); //Unirse a un grupo al que fui invitado
+server.post('/user/profile/update', (req, res, next) => { res.send({status: 'notImplemented'})}); //Unirse a un grupo al que fui invitado
 
 //DELETE
-server.post('/user/friends/remove', (req, res, next) => {}); //Eliminar un amigo
-server.post('/user/matches/remove', (req, res, next) => {}); //Eliminar un partido creado por mi
-server.post('/user/invitations/remove', (req, res, next) => {}); //Eliminar una invitacion creada por mi
-server.post('/user/groups/remove', (req, res, next) => {}); //Eliminar un grupo creado por mi
+server.post('/user/friends/remove', (req, res, next) => { res.send({status: 'notImplemented'})}); //Eliminar un amigo
+server.post('/user/matches/remove', (req, res, next) => { res.send({status: 'notImplemented'})}); //Eliminar un partido creado por mi
+server.post('/user/invitations/remove', (req, res, next) => { res.send({status: 'notImplemented'})}); //Eliminar una invitacion creada por mi
+server.post('/user/groups/remove', (req, res, next) => { res.send({status: 'notImplemented'})}); //Eliminar un grupo creado por mi
 
 //PUT
-server.post('/user/matches/create', (req, res, next) => {}); //Crear un partido
-server.post('/user/invitations/create', (req, res, next) => {}); //Crear una invitacion
-server.post('/user/groups/create', (req, res, next) => {}); //Crear un grupo
+server.post('/user/matches/create', (req, res, next) => { res.send({status: 'notImplemented'})}); //Crear un partido
+server.post('/user/invitations/create', (req, res, next) => { res.send({status: 'notImplemented'})}); //Crear una invitacion
+server.post('/user/groups/create', (req, res, next) => { res.send({status: 'notImplemented'})}); //Crear un grupo
 
 //GET
 server.get('/users', showAllUsers);//solo para test
-server.get('/user/profile', (req, res, next) => {});
-server.get('/user/matches', (req, res, next) => {});
-server.get('/user/invitations', (req, res, next) => {});
-server.get('/user/friends', (req, res, next) => {});
-server.get('/user/groups', (req, res, next) => {});
+server.get('/user/profile', (req, res, next) => { res.send({status: 'notImplemented'})});
+server.get('/user/matches', (req, res, next) => { res.send({status: 'notImplemented'})});
+server.get('/user/invitations', (req, res, next) => { res.send({status: 'notImplemented'})});
+server.get('/user/friends', (req, res, next) => { res.send({status: 'notImplemented'})});
+server.get('/user/groups', (req, res, next) => { res.send({status: 'notImplemented'})});
 
 
 server.listen(8081, function() {

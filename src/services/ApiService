@@ -1,8 +1,6 @@
  var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
  var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
  var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
-//  var MongoRepository = require('../repositories/MongoRepository');
-//  var jwt = require('jsonwebtoken');
  var config = require('../../config');
 
 var profile = {
@@ -83,7 +81,7 @@ class ApiService{
     }
 
     _doAfterValidateLogin(username, password, resolve, reject){
-        this._repo.get('users', {username: username})
+        this._repo.getOne('users', {username: username})
             .then((userReturned) => { 
                 if (userReturned.password === password){
                     var token = this._jwt.sign({username: userReturned.username, password: userReturned.password}, config.secret, { expiresIn: config.expiresIn });

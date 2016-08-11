@@ -53,14 +53,14 @@
         });
     }
 
-    get(rootDocument, criteria){
+    getOne(rootDocument, criteria){
         return new Promise( (resolve, reject) => {
             var conditions = [
                 new NotNullOrUndefinedCondition(rootDocument, MongoRepository.INVALID_DOCUMENT()),
                 new NotNullOrUndefinedCondition(criteria, MongoRepository.INVALID_CRITERIA())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateGet(rootDocument, criteria, resolve, reject); }, (err) => reject(err));
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateGetOne(rootDocument, criteria, resolve, reject); }, (err) => reject(err));
             validator.execute();
         });
     }
@@ -100,10 +100,10 @@
         .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
     }
 
-    _doAfterValidateGet(rootDocument, criteria, resolve, reject){
+    _doAfterValidateGetOne(rootDocument, criteria, resolve, reject){
         this._connect()
         .then((db) => {
-            var ret = db.collection(rootDocument).find(criteria);
+            var ret = db.collection(rootDocument).findOne(criteria);
             db.close();
             resolve(ret);
         }, (err) => reject(err))
