@@ -1,51 +1,50 @@
 var restify = require('restify');
-var mongoose = require('mongoose');
+//var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken');
 var jwtRestify = require('restify-jwt');
 var config = require('./config');
-var User = require('./src/models/User');
+//var User = require('./src/models/User');
 var MongoRepository = require('./src/repositories/MongoRepository');
 var ApiService = require('./src/services/ApiService');
 
-var mongoRep = new MongoRepository(config.database);
-var apiService = new ApiService(mongoRep, jwt);
+// var mongoRep = new MongoRepository(config.database);
+// var apiService = new ApiService(mongoRep, jwt);
 
-mongoose.connect(config.database);
+//mongoose.connect(config.database);
 
-function signinCallback(req, res, next) {
-  console.log('signon');
-  console.log('req.body.username: ' + req.body.username);
-  console.log('req.body.password: ' + req.body.password);
+// function signinCallback(req, res, next) {
+//   if (req.body === undefined || req.body === null){
+//     res.json({ err: 'Invalid body' });
+//   }else if (req.body.username === undefined || req.body.username === null) {
+//     res.json({ err: 'Body.username is undefined or null.' });
+//   }else if (req.body.password === undefined || req.body.password === null) {
+//     res.json({ err: 'Body.password is undefined or null.' });
+//   }else{
+//       User.find({username: req.body.username}, function(err, users) {
+//         if (users.length > 0){
+//           res.json({ err: 'Username ' + req.body.username + ' is already in use.' });
+//         }else{
+//             var newUser = new User({ 
+//               username: req.body.username, 
+//               password: req.body.password
+//             });
 
-  if (req.body === undefined || req.body === null){
-    res.json({ err: 'Invalid body' });
-  }else if (req.body.username === undefined || req.body.username === null) {
-    res.json({ err: 'Body.username is undefined or null.' });
-  }else if (req.body.password === undefined || req.body.password === null) {
-    res.json({ err: 'Body.password is undefined or null.' });
-  }else{
-      User.find({username: req.body.username}, function(err, users) {
-        if (users.length > 0){
-          res.json({ err: 'Username ' + req.body.username + ' is already in use.' });
-        }else{
-            var newUser = new User({ 
-              username: req.body.username, 
-              password: req.body.password
-            });
+//             newUser.save(function(err) {
+//               if (err) throw err;
 
-            newUser.save(function(err) {
-              if (err) throw err;
-
-              console.log('User ' + newUser.username + ' has been created.');
-              res.json({ success: true, msj: 'User ' + newUser.username + ' has been created.' });
-            });
-        }
-      });
-  }
-}
+//               console.log('User ' + newUser.username + ' has been created.');
+//               res.json({ success: true, msj: 'User ' + newUser.username + ' has been created.' });
+//             });
+//         }
+//       });
+//   }
+// }
 
 function showAllUsers(req, res, next) {
-  var token = req.headers.authorization;
+  var token = req.headers.baerer;
+
+  //console.log('showAllUsers req: ' + req);
+  console.log('showAllUsers req.headers: ' + req.headers);
 
   // jwt.verify(token, config.secret, (err, decoded) => {
   //   if(err){
@@ -57,7 +56,7 @@ function showAllUsers(req, res, next) {
   //     });
   //   }
   // });
-res.send(req);
+  res.send(req);
       // User.find({id: decoded._id}, function(err, users) {
       //   res.json(users);
       // });
@@ -85,6 +84,21 @@ function loginCallback(req, res, next) {
     });
 }
 
+function signinCallback(req, res, next) {
+    apiService.signin(req)
+    .then((ret) => {
+      console.log('signin completed - ret: ' + ret); 
+      res.send(ret);
+    }, (ret) => {
+      console.log('signin completed with errors - ret: ' + ret);  
+      res.send(ret); 
+    })
+    .catch((err) => { 
+      console.log('signin throw unexpected error - err: ' + err);  
+      res.send(err); 
+    });
+}
+
 var server = restify.createServer();
 server.use(restify.bodyParser());
 server.use(jwtRestify({
@@ -93,8 +107,8 @@ server.use(jwtRestify({
 }).unless({path: ['/', '/login', '/signin']}));
 
 //POST
-server.post('/login', apiService.login);
-server.post('/signin', signinCallback);
+//server.post('/login', loginCallback);
+//server.post('/signin', signinCallback);
 server.post('/user/invitations/accept', (req, res, next) => { res.send({status: 'notImplemented'})}); //Aceptar uan invitacion recibida
 server.post('/user/invitations/reject', (req, res, next) => { res.send({status: 'notImplemented'})}); //Rechazar una invitacion recibida
 server.post('/user/friends/accept', (req, res, next) => { res.send({status: 'notImplemented'})}); //Aceptar solicitud de amistad
@@ -123,7 +137,7 @@ server.get('/user/friends', (req, res, next) => { res.send({status: 'notImplemen
 server.get('/user/groups', (req, res, next) => { res.send({status: 'notImplemented'})});
 
 
-server.listen(8081, function() {
+server.listen(8080, function() {
   console.log('%s listening at %s', server.name, server.url);
 });
 
