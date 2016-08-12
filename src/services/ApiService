@@ -76,8 +76,18 @@ class ApiService{
     }
 
 
-    signIn(username, password){
-
+    signin(req){
+        return new Promise((resolve, reject) => {
+            var conditions = [
+                 new CustomCondition(() => { return this._isValidRequest(req); }, ApiService.INVALID_REQUEST()),
+                 new CustomCondition(() => { return this._isValidRequestBody(req); }, ApiService.INVALID_REQUEST_BODY()),
+                 new CustomCondition(() => { return this._isValidUsername(req); }, ApiService.INVALID_CREDENTIALS()),
+                 new CustomCondition(() => { return this._isValidPassword(req); }, ApiService.INVALID_CREDENTIALS())
+            ];
+            
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateSignin(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
+            validator.execute();
+        });
     }
 
     _doAfterValidateLogin(username, password, resolve, reject){
@@ -90,6 +100,20 @@ class ApiService{
                     reject({ status: false, message: ApiService.INVALID_CREDENTIALS() });
                 }
              }, 
+                  (err) => { reject({ status: false, message: err }); })
+            .catch((err) => { reject({ status: false , message: err}); });
+    }
+
+    _doAfterValidateSignin(username, password, resolve, reject){
+        this._repo.getOne('users', {username: username})
+            .then((userReturned) => { 
+                        if(userReturned.username !== undefined){
+                            reject({ status: false, message: ApiService.USERNAME_IS_ALREADY_IN_USE() });
+                        }else{
+                            this._repo.insert('users', {username: username, password: password});
+                            resolve(ApiService.USER_CREATED());
+                        }
+                    }, 
                   (err) => { reject({ status: false, message: err }); })
             .catch((err) => { reject({ status: false , message: err}); });
     }
@@ -132,6 +156,14 @@ class ApiService{
 
     static INVALID_CREDENTIALS(){
         return 'Las credenciales no son válidas.';
+    }
+
+    static USERNAME_IS_ALREADY_IN_USE(){
+        return 'El nombre d eusuario ya está siendo utilizado.';
+    }
+
+    static USER_CREATED(){
+        return 'El usuario ha sido creado.';
     }
 }
 
