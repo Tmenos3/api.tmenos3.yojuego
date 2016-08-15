@@ -65,6 +65,17 @@
         });
     }
 
+    getAll(rootDocument){
+        return new Promise( (resolve, reject) => {
+            var conditions = [
+                new NotNullOrUndefinedCondition(rootDocument, MongoRepository.INVALID_DOCUMENT())
+            ];
+            
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateGetAll(rootDocument, resolve, reject); }, (err) => reject(err));
+            validator.execute();
+        });
+    }
+
     _doAfterConnect(err, db, resolve, reject) {
         if (!err){
             resolve(db);
@@ -106,6 +117,17 @@
             var ret = db.collection(rootDocument).findOne(criteria);
             db.close();
             resolve(ret);
+        }, (err) => reject(err))
+        .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
+    }
+
+    _doAfterValidateGetAll(rootDocument, resolve, reject){
+        this._connect()
+        .then((db) => {
+            db.collection(rootDocument).find({}).toArray((err, documents) => {
+                db.close();
+                resolve(documents);
+            });
         }, (err) => reject(err))
         .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
     }

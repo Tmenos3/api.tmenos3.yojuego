@@ -151,8 +151,8 @@ describe('MongoRepository', () => {
 
     var mongoRep = new MongoRepository('aValidSource');
     return mongoRep.getOne(documentToFind, {})
-           .then((objectReturned) => {console.log('1'); expect(mockedCollectionMethod).toBeCalledWith(documentToFind); }, (err) => {console.log('2 - err: ' + err); expect(true).toBe(false); })
-           .catch((err) => {console.log('3 - err: ' + err); expect(true).toBe(false);});
+           .then((objectReturned) => expect(mockedCollectionMethod).toBeCalledWith(documentToFind), (err) =>  expect(true).toBe(false))
+           .catch((err) => expect(true).toBe(false));
   });
 
   pit('GetOne must execute reject if an exception occurs', () => {
@@ -168,7 +168,7 @@ describe('MongoRepository', () => {
           .catch((err) => { expect(true).toBe(false) });
   });
 
-  pit('Find method from db must be called in getOne', () => {
+  pit('FindOne method from db must be called in getOne', () => {
     var documentToFind = 'aDocument';
     var db = { collection: (document) => { return { findOne: mockedFindMethod }},
                close: () => {} 
@@ -213,6 +213,105 @@ describe('MongoRepository', () => {
            .then((result) => {
                 expect(db.close).toBeCalled();
            }, (err) => expect(true).toBe(false))
+           .catch((err) => expect(true).toBe(false));
+  });
+
+  pit('GetAll executes reject callback if connection is not established', () => {
+    var mongoRep = new MongoRepository('aValidSource');
+
+    mongodb.MongoClient.connect = mockedConnect(true, mockedDb);
+
+    return mongoRep.getAll('rootDocument')
+          .then(() => expect(true).toBe(false), (err) => expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED()))
+          .catch((err) => expect(true).toBe(false));
+  });
+
+  pit('Cannot getAll document if a undefined document is passed', () => {
+    var undefinedDocument;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.getAll(undefinedDocument)
+          .then((objReturned) => expect(true).toBe(false), (err) => expect(err).toBe(MongoRepository.INVALID_DOCUMENT()))
+          .catch((err) => expect(true).toBe(false));
+  });
+
+  pit('Cannot getAll document if a null document is passed', () => {
+    var nullDocument = null;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.getAll(nullDocument)
+           .then((objReturned) => expect(true).toBe(false), (err) => expect(err).toBe(MongoRepository.INVALID_DOCUMENT()))
+           .catch((err) => expect(true).toBe(false));
+  });
+
+  pit('Collection method from db must be called in getAll', () => {
+    var documentToFind = 'aDocument';
+    var mockedCollectionMethod = jest.fn((document) => {return {find: (criteria) => { return {toArray: (callback) => { callback(false, [{}]); }}; }}});
+    var db = {collection: mockedCollectionMethod, close: () => {}};
+
+
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+    return mongoRep.getAll(documentToFind)
+           .then((objectReturned) => expect(true).toBe(false), (err) =>  expect(true).toBe(false))
+           .catch((err) => expect(mockedCollectionMethod).toBeCalledWith(documentToFind));
+  });
+
+  pit('GetAll must execute reject if an exception occurs', () => {
+    var documentToFind = 'aDocument';
+    var mockedGetThrowsException = jest.fn((document) => {return { find: (criteria) => { throw new Error(MongoRepository.UNEXPECTED_ERROR()); }, close: () => {} }});
+    var db = {collection: mockedGetThrowsException};
+
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+    return mongoRep.getAll(documentToFind)
+          .then((objectReturned) => expect(true).toBe(false), (err) => expect(err).toBe(MongoRepository.UNEXPECTED_ERROR()))
+          .catch((err) => { expect(true).toBe(false) });
+  });
+
+  pit('Find method from db must be called in getAll', () => {
+    var documentToFind = 'aDocument';
+    var db = { collection: (document) => { return { find: mockedFindMethod }},
+               close: () => {} 
+        };
+    var mockedFindMethod = jest.fn((criteria) => {return { toArray: (callback) => { callback(false, [{}]); }}});
+
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+    return mongoRep.getAll(documentToFind)
+          .then((objectReturned) => expect(mockedFindMethod).toBeCalledWith({}), (err) => expect(true).toBe(false))
+          .catch((err) => expect(true).toBe(false));
+  });
+
+  pit('Can getAll a document collection', () => {
+    var expectedResult = [{name: 'element1'}, {name: 'element2'}];
+    var db = {
+        collection: (document) => { return {find: jest.fn((criteria) => { return { toArray: (callback) => { callback(false, expectedResult) }}})}; },
+        close: () => {}
+    };
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.getAll('aDocument')
+           .then((objectReturned) => expect(objectReturned).toBe(expectedResult), (err) => expect(true).toBe(false))
+           .catch(() => expect(true).toBe(false));
+  });
+
+  pit('After getAll connection must be closed', () => {
+    var db = {
+        collection: (document) => { return { find: (document) => { return {toArray: (callback) => { callback(false, [{}]); }}}};},
+        close: jest.fn(() => {})
+    };
+
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+    return mongoRep.getAll('aDocumentToFind')
+           .then((result) => expect(db.close).toBeCalled(), (err) => expect(true).toBe(false))
            .catch((err) => expect(true).toBe(false));
   });
 

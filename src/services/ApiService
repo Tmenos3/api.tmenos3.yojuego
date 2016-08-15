@@ -76,7 +76,7 @@ class ApiService{
     }
 
 
-    signin(req){
+    signUp(req){
         return new Promise((resolve, reject) => {
             var conditions = [
                  new CustomCondition(() => { return this._isValidRequest(req); }, ApiService.INVALID_REQUEST()),
@@ -85,7 +85,7 @@ class ApiService{
                  new CustomCondition(() => { return this._isValidPassword(req); }, ApiService.INVALID_CREDENTIALS())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateSignin(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateSignUp(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
             validator.execute();
         });
     }
@@ -104,10 +104,11 @@ class ApiService{
             .catch((err) => { reject({ status: false , message: err}); });
     }
 
-    _doAfterValidateSignin(username, password, resolve, reject){
+    _doAfterValidateSignUp(username, password, resolve, reject){
         this._repo.getOne('users', {username: username})
             .then((userReturned) => { 
-                        if(userReturned.username !== undefined){
+                        //if(userReturned.username !== undefined){
+                        if(userReturned !== null && userReturned !== undefined){
                             reject({ status: false, message: ApiService.USERNAME_IS_ALREADY_IN_USE() });
                         }else{
                             this._repo.insert('users', {username: username, password: password});

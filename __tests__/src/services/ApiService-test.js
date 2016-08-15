@@ -30,7 +30,7 @@ describe('ApiService', () => {
     expect(() => new ApiService({}, nullJwt)).toThrowError(ApiService.INVALID_JWT());
   });
 
-  pit('Can login after signin with a new user', () => {
+  pit('Can login after signUp with a new user', () => {
     /* Que estoy haciendo aca?
        1- Verifico que no pueda hacer LogIn con un usuario que no existe
        2- Verifico que pueda hacer el SignIn correctamente
@@ -53,7 +53,7 @@ describe('ApiService', () => {
             expect(ret.status).toBe(false);
             expect(ret.message).toBe(ApiService.INVALID_CREDENTIALS());
 
-            apiService.signin(request)
+            apiService.signUp(request)
                     .then((ret) => {
                           expect(ret).toBe(ApiService.USER_CREATED());
 
