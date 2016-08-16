@@ -90,6 +90,19 @@ class ApiService{
         });
     }
 
+    getUserProfile(req){
+        return new Promise((resolve, reject) => {
+            var conditions = [
+                 new CustomCondition(() => { return this._isValidRequest(req); }, ApiService.INVALID_REQUEST()),
+                 new CustomCondition(() => { return this._isValidRequestParams(req); }, ApiService.INVALID_REQUEST_PARAMS()),
+                 new CustomCondition(() => { return this._isValidIdUser(req); }, ApiService.INVALID_ID_USER())
+            ];
+            
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateGetUserProfile(req.params.idUser, resolve, reject) }, (err) => { reject(err); });
+            validator.execute();
+        });
+    }
+
     _doAfterValidateLogin(username, password, resolve, reject){
         this._repo.getOne('users', {username: username})
             .then((userReturned) => { 
@@ -98,6 +111,19 @@ class ApiService{
                     resolve({ status: true, token: token });
                 }else{
                     reject({ status: false, message: ApiService.INVALID_CREDENTIALS() });
+                }
+             }, 
+                  (err) => { reject({ status: false, message: err }); })
+            .catch((err) => { reject({ status: false , message: err}); });
+    }
+
+    _doAfterValidateGetUserProfile(idUser, resolve, reject){
+        this._repo.getOne('users', {_id: idUser})
+            .then((userReturned) => { 
+                if (userReturned === undefined || userReturned === null){
+                    reject({ status: false, message: ApiService.USER_DOES_NOT_EXIST() });
+                }else{
+                    resolve(userReturned.profile);
                 }
              }, 
                   (err) => { reject({ status: false, message: err }); })
@@ -135,8 +161,20 @@ class ApiService{
         return !(req.body.password === undefined || req.body.password === null);
     }
 
+    _isValidRequestParams(req){
+        return !(req.params === undefined || req.params === null);
+    }
+
+    _isValidIdUser(req){
+        return !(req.params.idUser === undefined || req.params.idUser === null);
+    }
+
     static INVALID_REQUEST(){
         return 'Request inválido';
+    }
+
+    static INVALID_REQUEST_PARAMS(){
+        return 'Los parámetros del request no son válidos.';
     }
 
     static INVALID_REQUEST_BODY(){
@@ -160,11 +198,19 @@ class ApiService{
     }
 
     static USERNAME_IS_ALREADY_IN_USE(){
-        return 'El nombre d eusuario ya está siendo utilizado.';
+        return 'El nombre de usuario ya está siendo utilizado.';
+    }
+
+    static INVALID_ID_USER(){
+        return 'El id de usuario es inválido.';
     }
 
     static USER_CREATED(){
         return 'El usuario ha sido creado.';
+    }
+
+    static USER_DOES_NOT_EXIST(){
+        return 'Usuario inexistente.';
     }
 }
 

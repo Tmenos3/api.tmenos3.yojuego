@@ -72,6 +72,22 @@ function signUpCallback(req, res, next) {
     });
 }
 
+function getUserProfileCallback(req, res, next) {
+    // apiService.signUp(req)
+    // .then((ret) => {
+    //   console.log('signUp completed - ret: ' + ret); 
+    //   res.send(ret);
+    // }, (ret) => {
+    //   console.log('signUp completed with errors - ret: ' + ret);  
+    //   res.send(ret); 
+    // })
+    // .catch((err) => { 
+    //   console.log('signUp throw unexpected error - err: ' + err);  
+    //   res.send(err); 
+    // });
+    res.json({status: 'notImplemented'});
+}
+
 var server = restify.createServer();
 server.use(restify.bodyParser());
 
@@ -99,7 +115,7 @@ server.post('/user/groups/create', (req, res, next) => { res.send({status: 'notI
 
 //GET
 server.get('/users', showAllUsersCallback);//solo para test
-server.get('/user/:id/profile', (req, res, next) => { res.send({status: 'notImplemented'})});
+server.get('/user/:id/profile/:otroId', getUserProfileCallback);
 server.get('/user/:id/matches', (req, res, next) => { res.send({status: 'notImplemented'})});
 server.get('/user/:id/invitations', (req, res, next) => { res.send({status: 'notImplemented'})});
 server.get('/user/:id/friends', (req, res, next) => { res.send({status: 'notImplemented'})});
