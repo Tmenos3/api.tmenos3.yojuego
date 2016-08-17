@@ -129,10 +129,9 @@ describe('ApiService.getUserProfile', () => {
 
     return apiService.getUserProfile(request)
         .then((ret) => {
-              expect(mongoRep.insert.mock.calls[0][0]).toBe('users');
-              expect(mongoRep.insert.mock.calls[0][1].idUser).toBe(user._id);
-              expect(ret._id).toBe(user._id);
-              expect(ret.userProfile.nickname).toBe(user.userProfile.nickname);
+              expect(mongoRep.getOne.mock.calls[0][0]).toBe('users');
+              expect(mongoRep.getOne.mock.calls[0][1]._id).toBe(user._id);
+              expect(ret.nickname).toBe(user.profile.nickname);
           }, (ret) => expect(false).toBe(true))
         .catch((err) => expect(false).toBe(true));
   });
