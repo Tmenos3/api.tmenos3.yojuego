@@ -50,28 +50,28 @@ describe('Match', () => {
 
   it('Cannot add a players undefined', () => {
     var anUndefinedPlayer;
-    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'email'));
+    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'qqq@qqq.com'));
 
     expect(() => match.addPlayer(anUndefinedPlayer)).toThrowError(Match.INVALID_PLAYER());
   });
 
   it('Cannot add a players null', () => {
     var aNullPlayer = null;
-    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'email'));
+    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'email@email.com'));
 
     expect(() => match.addPlayer(aNullPlayer)).toThrowError(Match.INVALID_PLAYER());
   });
 
   it('Cannot remove a players undefined', () => {
     var anUndefinedPlayer;
-    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'email'));
+    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'email@email.com'));
 
     expect(() => match.removePlayer(anUndefinedPlayer)).toThrowError(Match.INVALID_PLAYER());
   });
 
   it('Cannot remove a players null', () => {
     var aNullPlayer = null;
-    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'email'));
+    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'email@email.com'));
 
     expect(() => match.removePlayer(aNullPlayer)).toThrowError(Match.INVALID_PLAYER());
   });
@@ -80,7 +80,7 @@ describe('Match', () => {
     var aDate = '19000101';
     var aTime = '00:00:00';
     var aLocation = 'aLocation';
-    var aUser = new User('aUsername', 'aPassword', 'aEMail');
+    var aUser = new User('aUsername', 'aPassword', 'email@email.com');
 
     var match = new Match(aDate, aTime, aLocation, aUser);
 
@@ -94,8 +94,8 @@ describe('Match', () => {
     var aDate = '19000101';
     var aTime = '00:00:00';
     var aLocation = 'aLocation';
-    var aUser = new User('aUsername', 'aPassword', 'aEMail');
-    var aPlayer = new Player('aUsername', 'aPassword', 'aEMail');
+    var aUser = new User('aUsername', 'aPassword', 'email@email.com');
+    var aPlayer = new Player('aUsername', 'aPassword', 'email@email.com');
     var match = new Match(aDate, aTime, aLocation, aUser);
 
     match.addPlayer(aPlayer);
@@ -104,14 +104,16 @@ describe('Match', () => {
     expect(match.location).toBe(aLocation);
     expect(match.creator.equal(aUser)).toBe(true);
     expect(match.players[0].equal(aPlayer)).toBe(true);
+    console.log(match.players.length);
+    expect(match.players.length).toBe(1);
   });
 
   it('Can remove a valid player', () => {
     var aDate = '19000101';
     var aTime = '00:00:00';
     var aLocation = 'aLocation';
-    var aUser = new User('aUsername', 'aPassword', 'aEMail');
-    var aPlayer = new Player('aUsername', 'aPassword', 'aEMail');
+    var aUser = new User('aUsername', 'aPassword', 'aEMail@email.com');
+    var aPlayer = new Player('aUsername', 'aPassword', 'aEMail@email.com');
     var match = new Match(aDate, aTime, aLocation, aUser);
 
     match.addPlayer(aPlayer);
@@ -120,6 +122,6 @@ describe('Match', () => {
     expect(match.time).toBe(aTime);
     expect(match.location).toBe(aLocation);
     expect(match.creator.equal(aUser)).toBe(true);
-    expect(match.players.lenght).toBe(0);
+    expect(match.players.length).toBe(0);
   });
-});
+})

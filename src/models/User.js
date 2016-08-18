@@ -27,6 +27,7 @@ class User {
         this.validateIfPasswordHasBlankSpaces(password);
         this.validateIfUserNameBeMoreThanFiveCharaters(username);
         this.validateIfPasswordBeMoreThanFiveCharaters(password);
+        this.validateIfAValidEmail(email);
         this.username = username;
         this.password = password;
         this.eMail = email;
@@ -62,6 +63,14 @@ class User {
 
     hasMoreThanFiveCharacters(textToValidate) {
         return textToValidate.length > 5;
+    }
+
+    validateIfAValidEmail(eMailToValidate) {
+        var reg = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+
+        if (!reg.test(eMailToValidate)) {
+            throw new Error(User.INVALID_EMAIL());
+        }
     }
 
     equal(otherUser) {

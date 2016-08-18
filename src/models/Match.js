@@ -33,8 +33,6 @@ class Match {
             this.players.push(player);
         }, (err) => { throw new Error(err); });
         validator.execute();
-
-         this.players.push(player);
     }
 
     removePlayer(player) {

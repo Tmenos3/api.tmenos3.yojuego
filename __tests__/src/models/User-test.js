@@ -3,19 +3,19 @@ jest.unmock('../../../src/models/User');
 import User from '../../../src/models/User';
 
 describe('User', () => {
-  it('Cannot create with a username undefined', () => {
+  it('Cannot create with an undefined username', () => {
     var undefinedUsername;
 
     expect(() => new User(undefinedUsername, 'password', 'email@email.com')).toThrowError(User.INVALID_USERNAME());
   });
 
-  it('Cannot create with a username null', () => {
+  it('Cannot create with a null username', () => {
     var nullUsername = null;
 
     expect(() => new User(nullUsername, 'password', 'email@email.com')).toThrowError(User.INVALID_USERNAME());
   });
 
-  it('Cannot create with a password undefined', () => {
+  it('Cannot create with a undefined password', () => {
     var undefinedPassword;
 
     expect(() => new User('username', undefinedPassword, 'email@email.com')).toThrowError(User.INVALID_PASSWORD());
@@ -51,16 +51,22 @@ describe('User', () => {
     expect(() => new User('aUserName', aShortPassword, 'email@email.com')).toThrowError(User.INVALID_PASSWORD_LENGHT());
   });
 
-  it('Cannot create with an email null', () => {
+  it('Cannot create with an null email', () => {
     var aNullemail = null;
 
     expect(() => new User('aUserName', 'aShortPassword', aNullemail)).toThrowError(User.INVALID_EMAIL());
   });
 
-  it('Cannot create with an email undefined', () => {
+  it('Cannot create with an undefined email', () => {
     var anUndefinedEmail;
 
     expect(() => new User('aUserName', 'aShortPassword', anUndefinedEmail)).toThrowError(User.INVALID_EMAIL());
+  });
+
+  it('Cannot create with an invalid email', () => {
+    var anInvalidadEmail = '342nsiuncdu@w!!';
+
+    expect(() => new User('aUserName', 'aShortPassword', anInvalidadEmail)).toThrowError(User.INVALID_EMAIL());
   });
 
   it('Password cannot be equal to username', () => {
@@ -73,10 +79,10 @@ describe('User', () => {
   it('Can create a valid User', () => {
     var ausername = 'ausername';
     var apassword = 'apassword';
-    var email = 'aemail';
+    var email = 'qqq@edc.com';
 
     var user = new User(ausername, apassword, email);
-    
+
     expect(user.username).toBe(ausername);
     expect(user.password).toBe(apassword);
     expect(user.eMail).toBe(email);
