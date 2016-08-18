@@ -1,5 +1,7 @@
 jest.mock('../../../src/repositories/MongoRepository');
 jest.unmock('../../../src/services/ApiService');
+jest.mock('jsonwebtoken');
+jest.mock('../../../config');
 
 import ApiService from '../../../src/services/ApiService';
 
@@ -7,125 +9,109 @@ var MongoRepository;
 
 describe('ApiService.getUserProfile', () => {
   var mongoRep;
+  var jwt;
+  var config;
+  var getMockedVerify = jest.fn((err, decoded) => { return jest.fn((token, secret, callback) => { callback(err, decoded); }); });
+  var mockedGetOne = jest.fn((toReturn) => jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(toReturn); })}));
 
   beforeEach(function() {
      MongoRepository = require('../../../src/repositories/MongoRepository');
      mongoRep = new MongoRepository('validSource');
+     mongoRep.getOne = jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve({}); })});
+     jwt = require('jsonwebtoken');
+     jwt.verify = getMockedVerify(false, {id: 'anyId'});
+     config = require('../../../config');
   });
 
   afterEach(function() {
     mongoRep = null;
+    jwt = null;
   });
 
-  pit('Cannot getUserProfile if request is undefined', () => {
-    var undefinedRequest;
-    var apiService = new ApiService(mongoRep, {});
+  pit('when getUserProfile must call _verifyAuthentication', () => {
+    var user = {_id: 'existantIdUser'};
+    var req = { headers: { authorization: 'token' }};
+    mongoRep.getOne = mockedGetOne(user);
 
-    return apiService.getUserProfile(undefinedRequest)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()))
+    var apiService = new ApiService(mongoRep, {});
+    apiService._verifyAuthentication = jest.fn((req) => { return new Promise((resolve, reject) => { resolve({id: 'decodedInfo'}); })});
+
+    return apiService.getUserProfile(req)
+    .then((ret) => expect(apiService._verifyAuthentication).toBeCalled(), (ret) => expect(false).toBe(true))
     .catch((err) => expect(false).toBe(true));
   });
 
-  pit('Cannot getUserProfile users if request is null', () => {
-    var nullRequest = null;
-    var apiService = new ApiService(mongoRep, {});
+  pit('Cannot getUserProfile if id is undefined', () => {
+    var req = { headers: { authorization: 'token' }};
+    jwt.verify = getMockedVerify(false, {id: undefined});
+    var apiService = new ApiService(mongoRep, jwt);
 
-    return apiService.getUserProfile(nullRequest)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()))
-    .catch((err) => expect(false).toBe(true));
-  });
-
-  pit('Cannot getUserProfile if params request is undefined', () => {
-    var undefinedParamsRequest = {
-        params: undefined
-    };
-    var apiService = new ApiService(mongoRep, {});
-
-    return apiService.getUserProfile(undefinedParamsRequest)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_PARAMS()))
-    .catch((err) => expect(false).toBe(true));
-  });
-
-  pit('Cannot getUserProfile if params request is null', () => {
-    var nullParamsRequest = {
-        params: null
-    };
-    var apiService = new ApiService(mongoRep, {});
-
-    return apiService.getUserProfile(nullParamsRequest)
-      .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_PARAMS()))
-      .catch((err) => expect(false).toBe(true));
-  });
-
-  pit('Cannot getUserProfile if idUser is undefined', () => {
-    var undefinedIdUser = {
-        params: {
-            idUser: undefined
-          }
-    };
-    var apiService = new ApiService(mongoRep, {});
-
-    return apiService.getUserProfile(undefinedIdUser)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_ID_USER()))
+    return apiService.getUserProfile(req)
+    .then((ret) => expect(false).toBe(true), (ret) => {
+      expect(ret.message).toBe(ApiService.UNAUTHORIZED());
+      expect(ret.code).toBe(401);
+      expect(ret.status).toBe(false);
+    })
     .catch((err) => expect(false).toBe(true));
   });
 
   pit('Cannot getUserProfile if idUser is null', () => {
-    var nullIdUser = {
-        params: {
-            idUser: null
-          }
-    };
-    var apiService = new ApiService(mongoRep, {});
+    var nullIdUser = { headers: { authorization: 'token' }};
+
+    jwt.verify = getMockedVerify(false, {idUser: null});
+    var apiService = new ApiService(mongoRep, jwt);
 
     return apiService.getUserProfile(nullIdUser)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_ID_USER()))
+    .then((ret) => expect(false).toBe(true), (ret) => {
+      expect(ret.message).toBe(ApiService.UNAUTHORIZED());
+      expect(ret.code).toBe(401);
+      expect(ret.status).toBe(false);
+    })
     .catch((err) => expect(false).toBe(true));
   });
 
   pit('When call getUserProfile must find idUser in repo', () => {
-    var idUser = {idUser: 'oijsjdofuah9'};
-    var request = { params: idUser };
+    var idUser = {id: 'oijsjdofuah9'};
+    var request = { headers: { authorization: 'token' }};
 
-    mongoRep.getOne =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve({profile: {}}); })});
-
-    var apiService = new ApiService(mongoRep, {});
+    mongoRep.getOne = mockedGetOne({profile: {}});
+    
+    jwt.verify = getMockedVerify(false, idUser);
+    var apiService = new ApiService(mongoRep, jwt);
 
     return apiService.getUserProfile(request)
         .then((ret) => { 
               expect(mongoRep.getOne.mock.calls[0][0]).toBe('users');
-              expect(mongoRep.getOne.mock.calls[0][1]._id).toBe(idUser.idUser);
+              expect(mongoRep.getOne.mock.calls[0][1]._id).toBe(idUser.id);
           }, (ret) => expect(false).toBe(true))
         .catch((err) => expect(false).toBe(true));
   });
 
   pit('If users does not exist getUserProfile must executes reject', () => {
-    var request = { params: {idUser: 'nonExistantIdUser'} };
+    var request = { headers: { authorization: 'token' }};
+    mongoRep.getOne = mockedGetOne(null);
 
-    mongoRep.getOne =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(null); })});
-
-    var apiService = new ApiService(mongoRep, {});
+    jwt.verify = getMockedVerify(false, {id: 'inexistantUserId'});
+    var apiService = new ApiService(mongoRep, jwt);
 
     return apiService.getUserProfile(request)
     .then((ret) => expect(false).toBe(true), (ret) => {
-      console.log('1- ret: ' + ret); 
       expect(ret.status).toBe(false);
-      expect(ret.message).toBe(ApiService.USER_DOES_NOT_EXIST()); })
-    .catch((err) => { console.log('2- err: ' + err); expect(false).toBe(true); });
+      expect(ret.message).toBe(ApiService.UNAUTHORIZED()); })
+    .catch((err) => expect(false).toBe(true));
   });
 
   pit('If user exists getUserProfile must execute resolve with user profile', () => {
     var user = {
       _id: 'existantIdUser',
-      profile: {
-        nickname: 'validNickname'
-      }
+      profile: { nickname: 'validNickname' }
     };
-    var request = { params: {idUser: user._id} };
+    var request = { headers: { authorization: 'token' }};
 
-    mongoRep.getOne =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(user); })});
+    mongoRep.getOne = mockedGetOne(user);
 
-    var apiService = new ApiService(mongoRep, {});
+    jwt.verify = getMockedVerify(false, {id: user._id});
+    var apiService = new ApiService(mongoRep, jwt);
 
     return apiService.getUserProfile(request)
         .then((ret) => {
@@ -135,5 +121,4 @@ describe('ApiService.getUserProfile', () => {
           }, (ret) => expect(false).toBe(true))
         .catch((err) => expect(false).toBe(true));
   });
-
 });
