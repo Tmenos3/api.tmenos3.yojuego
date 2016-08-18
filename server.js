@@ -1,13 +1,13 @@
 var restify = require('restify');
 var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken');
-var jwtRestify = require('restify-jwt');
-var config = require('./config');
-var MongoRepository = require('./src/repositories/MongoRepository');
-var ApiService = require('./src/services/ApiService');
-var mongoRep = new MongoRepository(config.database);
-var apiService = new ApiService(mongoRep, jwt);
 var moment = require('moment');
+var config = require('./config');
+var ApiService = require('./src/services/ApiService');
+var UserMap = require('./src/models/mappings/UserMap');
+var apiService = new ApiService(UserMap, jwt);
+
+mongoose.connect(config.database);
 
 function showAllUsersCallback(req, res, next) {
   var token = req.headers.authorization;

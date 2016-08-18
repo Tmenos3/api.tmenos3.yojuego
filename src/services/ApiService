@@ -5,59 +5,15 @@
  var moment = require('moment');
  var mongo = require('mongodb')
 
-var profile = {
-    get: (userId) => {},
-    update: () => {}
-}
-
-var invitations = {
-    getAll: (userId) => {},
-    getPending: (userId) => {},
-    getSended: (userId) => {},
-    create: () => {},
-    accept: (invitationId) => {},
-    reject: (invitationId) => {},
-    remove: (invitationId) => {}
-}
-
-var friends = {
-    getAll: (userId) => {},
-    accept: (userId, acceptedUserId) => {},
-    invite: (userId, invitedUserId) => {},
-    remove: (userId, removedUserId) => {}
-}
-
-var groups = {
-    getAll: (userId) => {},
-    inviteTo: (userId, groupId, userToInviteId) => {},
-    joinTo: (userId, groupId) => {},
-    remove: (userId, groupId) => {},
-    create: () => {}
-} 
-
-var matches = {
-    getAll: (userId) => {},
-    getNextMatches: (userId) => {},
-    getPastMatches: (userId) => {},
-    remove: (matchId) => {},
-    create: () => {}
-}  
-
 class ApiService{
-    constructor(repo, jwt){
+    constructor(UserMap, jwt){
         var conditions = [
-            new NotNullOrUndefinedCondition(repo, ApiService.INVALID_REPOSITORY()),
+            new NotNullOrUndefinedCondition(UserMap, ApiService.INVALID_USERMAP()),
             new NotNullOrUndefinedCondition(jwt, ApiService.INVALID_JWT()),
         ];
         
         var validator = new CommonValidatorHelper(conditions, () => {
-            this._repo = repo; 
-            this._profile = profile;
-            this._invitations = invitations;
-            this._friends = friends;
-            this._groups = groups;
-            this._matches = matches;
-            this._repo = repo; 
+            this._UserMap = UserMap; 
             this._jwt = jwt;
         }, (err) => { throw new Error(err); });
 
@@ -126,17 +82,22 @@ class ApiService{
     }
 
     _doAfterValidateLogin(username, password, resolve, reject){
-        this._repo.getOne('users', {username: username})
-            .then((userReturned) => { 
-                if (userReturned.password === password){
-                    var token = this._jwt.sign({id: userReturned._id, username: userReturned.username, password: userReturned.password}, config.secret, { expiresIn: config.expiresIn });
-                    resolve({ status: true, token: token });
+        this._UserMap.findOne({username: username}, (err, userReturned) => {
+            if (err){
+                reject({ status: false , message: ApiService.UNEXPECTED_ERROR()});
+            }else{
+                if (userReturned === undefined || userReturned === null){
+                    reject({ status: false , message: ApiService.INVALID_CREDENTIALS()});
                 }else{
-                    reject({ status: false, message: ApiService.INVALID_CREDENTIALS() });
+                    if (userReturned.password !== password){
+                        reject({ status: false, message: ApiService.INVALID_CREDENTIALS() });
+                    }else{
+                        var token = this._jwt.sign({id: userReturned._id, username: userReturned.username, password: userReturned.password}, config.secret, { expiresIn: config.expiresIn });
+                        resolve({ status: true, token: token });
+                    }
                 }
-             }, 
-             (err) => { reject({ status: false, message: err }); })
-            .catch((err) => { reject({ status: false , message: err}); });
+            }
+        })
     }
 
     _doAfterValidateGetUserProfile(idUser, resolve, reject){
@@ -153,17 +114,24 @@ class ApiService{
     }
 
     _doAfterValidateSignUp(username, password, resolve, reject){
-        this._repo.getOne('users', {username: username})
-            .then((userReturned) => { 
-                        if(userReturned !== null && userReturned !== undefined){
-                            reject({ status: false, message: ApiService.USERNAME_IS_ALREADY_IN_USE() });
+        this._UserMap.findOne({username: username}, (err, userReturned) => {
+            if (err){
+                reject({ status: false , message: ApiService.UNEXPECTED_ERROR()});
+            }else{
+                if(userReturned !== null && userReturned !== undefined){
+                    reject({ status: false, message: ApiService.USERNAME_IS_ALREADY_IN_USE() });
+                }else{
+                    var user = new this._UserMap({username: username, password: password});
+                    user.save((err) => {
+                        if (err){
+                            reject({ status: false , message: ApiService.UNEXPECTED_ERROR()});
                         }else{
-                            this._repo.insert('users', {username: username, password: password});
                             resolve(ApiService.USER_CREATED());
                         }
-                    }, 
-                  (err) => { reject({ status: false, message: err }); })
-            .catch((err) => { reject({ status: false , message: err}); });
+                    })
+                }
+            }
+        });
     }
 
     _doAfterValidateGetUpcomingMatches(idUser, datefrom, resolve, reject){
@@ -258,8 +226,8 @@ class ApiService{
         return 'Body request inválido';
     }
 
-    static INVALID_REPOSITORY(){
-        return 'El password es inválido';
+    static INVALID_USERMAP(){
+        return 'El USERMAP es inválido.';
     }
 
     static INVALID_JWT(){
@@ -288,6 +256,10 @@ class ApiService{
 
     static USER_DOES_NOT_EXIST(){
         return 'Usuario inexistente.';
+    }
+
+    static UNEXPECTED_ERROR(){
+        return 'Error inexperado.';
     }
 
     static INVALID_DATEFROM(){

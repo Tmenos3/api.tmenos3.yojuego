@@ -1,25 +1,22 @@
-jest.mock('../../../src/repositories/MongoRepository');
+jest.mock('../../../src/models/mappings/UserMap');
 jest.unmock('../../../src/services/ApiService');
 
 import ApiService from '../../../src/services/ApiService';
 
-var MongoRepository;
-
 describe('ApiService.signUp', () => {
-  var mongoRep;
+  var UserMap;
 
   beforeEach(function() {
-     MongoRepository = require('../../../src/repositories/MongoRepository');
-     mongoRep = new MongoRepository('validSource');
+     UserMap = require('../../../src/models/mappings/UserMap');
   });
 
   afterEach(function() {
-    mongoRep = null;
+    UserMap = null;
   });
 
   pit('Cannot signUp users if request is undefined', () => {
     var undefinedRequest;
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(undefinedRequest)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()))
@@ -28,7 +25,7 @@ describe('ApiService.signUp', () => {
 
   pit('Cannot signUp users if request is null', () => {
     var nullRequest = null;
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(nullRequest)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()))
@@ -39,7 +36,7 @@ describe('ApiService.signUp', () => {
     var undefinedBodyRequest = {
         body: undefined
     };
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(undefinedBodyRequest)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_BODY()))
@@ -50,7 +47,7 @@ describe('ApiService.signUp', () => {
     var nullBodyRequest = {
         body: null
     };
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(nullBodyRequest)
       .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_BODY()))
@@ -63,7 +60,7 @@ describe('ApiService.signUp', () => {
             username: undefined
           }
     };
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(undefinedUsername)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -76,7 +73,7 @@ describe('ApiService.signUp', () => {
             username: null
           }
     };
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(nullUsername)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -90,7 +87,7 @@ describe('ApiService.signUp', () => {
             password: undefined
           }
     };
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(undefinedPassword)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -104,60 +101,110 @@ describe('ApiService.signUp', () => {
             password: null
           }
     };
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(nullPassword)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
     .catch((err) => expect(false).toBe(true));
   });
 
-  pit('When call signUp must find username in repo', () => {
+  pit('When call signUp must use findOne from UserMap by username', () => {
     var user = {username: 'username', password: 'password'};
     var request = { body: user };
 
-    mongoRep.getOne =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(null); })});
+    UserMap = jest.fn(() => {return {save: jest.fn((callback) => {callback(false)})}});
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)}); 
 
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(request)
         .then((ret) => { 
-              expect(mongoRep.getOne.mock.calls[0][0]).toBe('users');
-              expect(mongoRep.getOne.mock.calls[0][1].username).toBe(user.username);
+              expect(UserMap.findOne.mock.calls[0][0].username).toBe(user.username);
+              expect(UserMap.findOne.mock.calls[0][1]).not.toBeUndefined();
           }, (ret) => expect(false).toBe(true))
         .catch((err) => expect(false).toBe(true));
+  });
+
+  pit('if findOne from UserMap return error must execute reject', () => {
+    var user = {username: 'username', password: 'password'};
+    var request = { body: user };
+
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(true, null)}); 
+
+    var apiService = new ApiService(UserMap, {});
+    return apiService.signUp(request)
+    .then((ret) => expect(false).toBe(true), 
+          (ret) => {
+            expect(ret.status).toBe(false);
+            expect(ret.message).toBe(ApiService.UNEXPECTED_ERROR());
+          })
+    .catch((err) => expect(false).toBe(true));
   });
 
   pit('If username exists signUp must executes reject', () => {
     var user = {username: 'username', password: 'password'};
     var request = { body: user };
 
-    mongoRep.getOne =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(user); })});
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, user)});
 
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(request)
     .then((ret) => { expect(false).toBe(true); }, (ret) => { 
       expect(ret.status).toBe(false);
-      expect(ret.message).toBe(ApiService.USERNAME_IS_ALREADY_IN_USE()); })
-    .catch((err) => { expect(false).toBe(true); });
+      expect(ret.message).toBe(ApiService.USERNAME_IS_ALREADY_IN_USE());})
+    .catch((err) => expect(false).toBe(true));
   });
 
-  pit('If username does not exist signUp must insert the user', () => {
+  pit('If username does not exist signUp must intantiate UserMap', () => {
     var user = {username: 'username', password: 'password'};
     var request = { body: user };
 
-    mongoRep.getOne =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(null); })});
-    mongoRep.insert =  jest.fn((rootDocument, childDocument) => {return new Promise((resolve, reject) => { resolve('inserted'); })});
+    UserMap = jest.fn(() => {return {save: jest.fn((callback) => {callback(false)})}});
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
 
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService(UserMap, {});
 
     return apiService.signUp(request)
         .then((ret) => {
-              expect(mongoRep.insert.mock.calls[0][0]).toBe('users');
-              expect(mongoRep.insert.mock.calls[0][1].username).toBe(user.username);
-              expect(mongoRep.insert.mock.calls[0][1].password).toBe(user.password);
-              expect(ret).toBe(ApiService.USER_CREATED());
+              expect(UserMap.mock.instances.length).toBe(1);
+              expect(UserMap.mock.calls[0][0].username).toBe(user.username);
+              expect(UserMap.mock.calls[0][0].password).toBe(user.password);
           }, (ret) => expect(false).toBe(true))
+        .catch((err) => expect(false).toBe(true));
+  });
+
+  pit('If username does not exist signUp must save user', () => {
+    var user = {username: 'username', password: 'password'};
+    var request = { body: user };
+
+    var mockedSave = jest.fn((callback) => {callback(false)});
+    UserMap = jest.fn(() => {return {save: mockedSave}});
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
+
+    var apiService = new ApiService(UserMap, {});
+
+    return apiService.signUp(request)
+        .then((ret) => expect(mockedSave.mock.calls[0][0]).not.toBeUndefined(), (ret) => expect(false).toBe(true))
+        .catch((err) => expect(false).toBe(true));
+  });
+
+  pit('If save return error must execute reject', () => {
+    var user = {username: 'username', password: 'password'};
+    var request = { body: user };
+
+    var mockedSave = jest.fn((callback) => {callback(true)});
+    UserMap = jest.fn(() => {return {save: mockedSave}});
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
+
+    var apiService = new ApiService(UserMap, {});
+
+    return apiService.signUp(request)
+        .then((ret) => expect(false).toBe(true), 
+          (ret) => {
+            expect(ret.status).toBe(false);
+            expect(ret.message).toBe(ApiService.UNEXPECTED_ERROR());
+          })
         .catch((err) => expect(false).toBe(true));
   });
 

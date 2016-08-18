@@ -6,16 +6,16 @@ import ApiService from '../../../src/services/ApiService';
 
 describe('ApiService', () => {
 
-  it('Cannot create ApiService with an undefined repo', () => {
-    var undefinedRepo;
+  it('Cannot create ApiService with an undefined UserMap', () => {
+    var undefinedUserMap;
   
-    expect(() => new ApiService(undefinedRepo)).toThrowError(ApiService.INVALID_REPOSITORY());
+    expect(() => new ApiService(undefinedUserMap, {})).toThrowError(ApiService.INVALID_USERMAP());
   });
 
-  it('Cannot create ApiService with an null repo', () => {
-    var nullRepo;
+  it('Cannot create ApiService with an null UserMap', () => {
+    var nullUserMap;
   
-    expect(() => new ApiService(nullRepo)).toThrowError(ApiService.INVALID_REPOSITORY());
+    expect(() => new ApiService(nullUserMap, {})).toThrowError(ApiService.INVALID_USERMAP());
   });
 
   it('Cannot create ApiService with an undefined jwt', () => {
