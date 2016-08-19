@@ -21,7 +21,7 @@ describe('ApiService.login', () => {
 
   pit('Cannot login users if request is undefined', () => {
     var undefinedRequest;
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService.login(undefinedRequest)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()))
@@ -30,7 +30,7 @@ describe('ApiService.login', () => {
 
   pit('Cannot login users if request is null', () => {
     var nullRequest;
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService.login(nullRequest)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()))
@@ -41,7 +41,7 @@ describe('ApiService.login', () => {
     var undefinedBodyRequest = {
         body: undefined
     };
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService.login(undefinedBodyRequest)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_BODY()))
@@ -52,7 +52,7 @@ describe('ApiService.login', () => {
     var nullBodyRequest = {
         body: null
     };
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService.login(nullBodyRequest)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_BODY()))
@@ -65,7 +65,7 @@ describe('ApiService.login', () => {
             username: undefined
           }
     };
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService.login(undefinedUsername)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -78,7 +78,7 @@ describe('ApiService.login', () => {
             username: null
           }
     };
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService.login(nullUsername)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -92,7 +92,7 @@ describe('ApiService.login', () => {
             password: undefined
           }
     };
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService.login(undefinedPassword)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -106,7 +106,7 @@ describe('ApiService.login', () => {
             password: null
           }
     };
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService.login(nullPassword)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -119,7 +119,7 @@ describe('ApiService.login', () => {
 
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, user)}); 
 
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService(UserMap, {}, {}, jwt);
     return apiService.login(request)
     .then((ret) => { 
         expect(UserMap.findOne.mock.calls[0][0].username).toBe(user.username);
@@ -134,7 +134,7 @@ describe('ApiService.login', () => {
 
     UserMap.findOne = jest.fn((criteria, callback) => {callback(true, null)}); 
 
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService(UserMap, {}, {}, jwt);
     return apiService.login(request)
     .then((ret) => expect(false).toBe(true), 
           (ret) => {
@@ -148,7 +148,7 @@ describe('ApiService.login', () => {
     var request = { body: { username: 'username', password: 'password' }};
 
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)}); 
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService(UserMap, {}, {}, jwt);
 
     return apiService.login(request)
     .then((ret) => expect(false).toBe(true), (ret) => { 
@@ -162,7 +162,7 @@ describe('ApiService.login', () => {
     var request = { body: { username: 'username', password: 'password' }};
 
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, userWithOtherPassword)}); 
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService(UserMap, {}, {}, jwt);
 
     return apiService.login(request)
     .then((ret) => expect(true).toBe(false), (ret) => { 
@@ -179,7 +179,7 @@ describe('ApiService.login', () => {
 
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, user)});
     jwt.sign = jest.fn((object, secret, options) => { return token });
-    var apiService = new ApiService(UserMap, jwt);
+    var apiService = new ApiService(UserMap, {}, {}, jwt);
 
     return apiService.login(request)
     .then((ret) => {

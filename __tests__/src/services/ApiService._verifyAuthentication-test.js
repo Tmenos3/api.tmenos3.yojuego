@@ -1,36 +1,27 @@
-jest.mock('../../../src/repositories/MongoRepository');
 jest.unmock('../../../src/services/ApiService');
 jest.mock('jsonwebtoken');
 jest.mock('../../../config');
 
 import ApiService from '../../../src/services/ApiService';
 
-var MongoRepository;
-
 describe('ApiService._verifyAuthentication', () => {
-  var mongoRep;
   var jwt;
   var config;
   var getMockedVerify = jest.fn((err, decoded) => { return jest.fn((token, secret, callback) => { callback(err, decoded); }); });
-  var mockedGetOne = jest.fn((toReturn) => jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve(toReturn); })}));
 
   beforeEach(function() {
-     MongoRepository = require('../../../src/repositories/MongoRepository');
-     mongoRep = new MongoRepository('validSource');
-     mongoRep.getOne = jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve({}); })});
      jwt = require('jsonwebtoken');
      jwt.verify = getMockedVerify(false, {id: 'anyId'});
      config = require('../../../config');
   });
 
   afterEach(function() {
-    mongoRep = null;
     jwt = null;
   });
 
   pit('_verifyAuthentication executes reject if request is undefined', () => {
     var undefinedRequest;
-    var apiService = new ApiService(mongoRep, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService._verifyAuthentication(undefinedRequest)
     .then((ret) => expect(false).toBe(true), (ret) => {
@@ -43,7 +34,7 @@ describe('ApiService._verifyAuthentication', () => {
 
   pit('_verifyAuthentication executes reject if request is null', () => {
     var nullRequest = null;
-    var apiService = new ApiService(mongoRep, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService._verifyAuthentication(nullRequest)
     .then((ret) => expect(false).toBe(true), (ret) => {
@@ -56,7 +47,7 @@ describe('ApiService._verifyAuthentication', () => {
 
   pit('_verifyAuthentication executes reject if headerRequest is undefined', () => {
     var undefinedHeaderRequest = {headers: undefined};
-    var apiService = new ApiService(mongoRep, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService._verifyAuthentication(undefinedHeaderRequest)
     .then((ret) => expect(false).toBe(true), (ret) => {
@@ -69,7 +60,7 @@ describe('ApiService._verifyAuthentication', () => {
 
   pit('_verifyAuthentication executes reject if headerRequest is null', () => {
     var nullHeaderRequest = {headers: null};
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService._verifyAuthentication(nullHeaderRequest)
     .then((ret) => expect(false).toBe(true), (ret) => {
@@ -82,7 +73,7 @@ describe('ApiService._verifyAuthentication', () => {
 
   pit('_verifyAuthentication executes reject if headerRequest authorization is undefined', () => {
     var undefinedHeaderRequestAuthorization = {headers: { authorization: undefined }};
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService._verifyAuthentication(undefinedHeaderRequestAuthorization)
     .then((ret) => expect(false).toBe(true), (ret) => {
@@ -95,7 +86,7 @@ describe('ApiService._verifyAuthentication', () => {
 
   pit('_verifyAuthentication executes reject if headerRequest authorization is null', () => {
     var nullHeaderRequestAuthorization = {headers: { authorization: null }};
-    var apiService = new ApiService(mongoRep, {});
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService._verifyAuthentication(nullHeaderRequestAuthorization)
     .then((ret) => expect(false).toBe(true), (ret) => {
@@ -110,7 +101,7 @@ describe('ApiService._verifyAuthentication', () => {
     var anyToken = 'anyToken';
     var request = { headers: { authorization: anyToken }};
     jwt.verify = getMockedVerify(false, {id: 'id'});
-    var apiService = new ApiService(mongoRep, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService._verifyAuthentication(request)
     .then((ret) => {
@@ -123,7 +114,7 @@ describe('ApiService._verifyAuthentication', () => {
   pit('_verifyAuthentication executes reject if authorization token is not valid', () => {
     var req = { headers: { authorization: 'notValidToken' }};
     jwt.verify = getMockedVerify(true, 'undecodedToken');
-    var apiService = new ApiService(mongoRep, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService._verifyAuthentication(req)
     .then((ret) => expect(false).toBe(true), (ret) => {
@@ -138,7 +129,7 @@ describe('ApiService._verifyAuthentication', () => {
     var decoded = {decoded: 'decodedInfo'}
     var req = { headers: { authorization: 'validToken' }};
     jwt.verify = getMockedVerify(false, decoded);
-    var apiService = new ApiService(mongoRep, jwt);
+    var apiService = new ApiService({}, {}, {}, jwt);
 
     return apiService._verifyAuthentication(req)
     .then((ret) => expect(ret.decoded).toEqual(decoded.decoded), (ret) => expect(false).toBe(true))

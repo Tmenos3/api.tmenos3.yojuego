@@ -16,7 +16,7 @@ describe('ApiService.signUp', () => {
 
   pit('Cannot signUp users if request is undefined', () => {
     var undefinedRequest;
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService.signUp(undefinedRequest)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()))
@@ -25,7 +25,7 @@ describe('ApiService.signUp', () => {
 
   pit('Cannot signUp users if request is null', () => {
     var nullRequest = null;
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService.signUp(nullRequest)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()))
@@ -36,7 +36,7 @@ describe('ApiService.signUp', () => {
     var undefinedBodyRequest = {
         body: undefined
     };
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService.signUp(undefinedBodyRequest)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_BODY()))
@@ -47,7 +47,7 @@ describe('ApiService.signUp', () => {
     var nullBodyRequest = {
         body: null
     };
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService.signUp(nullBodyRequest)
       .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_BODY()))
@@ -60,7 +60,7 @@ describe('ApiService.signUp', () => {
             username: undefined
           }
     };
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService.signUp(undefinedUsername)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -68,12 +68,8 @@ describe('ApiService.signUp', () => {
   });
 
   pit('Cannot signUp users if username is null', () => {
-    var nullUsername = {
-        body: {
-            username: null
-          }
-    };
-    var apiService = new ApiService(UserMap, {});
+    var nullUsername = { body: { username: null }};
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService.signUp(nullUsername)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -87,7 +83,7 @@ describe('ApiService.signUp', () => {
             password: undefined
           }
     };
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService.signUp(undefinedPassword)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -101,7 +97,7 @@ describe('ApiService.signUp', () => {
             password: null
           }
     };
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService({}, {}, {}, {});
 
     return apiService.signUp(nullPassword)
     .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
@@ -115,7 +111,7 @@ describe('ApiService.signUp', () => {
     UserMap = jest.fn(() => {return {save: jest.fn((callback) => {callback(false)})}});
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)}); 
 
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService(UserMap, {}, {}, {});
 
     return apiService.signUp(request)
         .then((ret) => { 
@@ -131,7 +127,7 @@ describe('ApiService.signUp', () => {
 
     UserMap.findOne = jest.fn((criteria, callback) => {callback(true, null)}); 
 
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService(UserMap, {}, {}, {});
     return apiService.signUp(request)
     .then((ret) => expect(false).toBe(true), 
           (ret) => {
@@ -147,7 +143,7 @@ describe('ApiService.signUp', () => {
 
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, user)});
 
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService(UserMap, {}, {}, {});
 
     return apiService.signUp(request)
     .then((ret) => { expect(false).toBe(true); }, (ret) => { 
@@ -163,7 +159,7 @@ describe('ApiService.signUp', () => {
     UserMap = jest.fn(() => {return {save: jest.fn((callback) => {callback(false)})}});
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
 
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService(UserMap, {}, {}, {});
 
     return apiService.signUp(request)
         .then((ret) => {
@@ -182,7 +178,7 @@ describe('ApiService.signUp', () => {
     UserMap = jest.fn(() => {return {save: mockedSave}});
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
 
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService(UserMap, {}, {}, {});
 
     return apiService.signUp(request)
         .then((ret) => expect(mockedSave.mock.calls[0][0]).not.toBeUndefined(), (ret) => expect(false).toBe(true))
@@ -197,7 +193,7 @@ describe('ApiService.signUp', () => {
     UserMap = jest.fn(() => {return {save: mockedSave}});
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
 
-    var apiService = new ApiService(UserMap, {});
+    var apiService = new ApiService(UserMap, {}, {}, {});
 
     return apiService.signUp(request)
         .then((ret) => expect(false).toBe(true), 
