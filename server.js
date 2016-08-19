@@ -20,15 +20,15 @@ function showAllUsersCallback(req, res, next) {
 
       mongoRep.getAll('users')
       .then((users) => {
-        console.log('getAll completed: ' + users); 
+        console.log('getAll completed: ' + users);
         res.json(users);
       }, (ret) => {
-        console.log('getAll completed with errors - ret: ' + ret);  
-        res.json(ret); 
+        console.log('getAll completed with errors - ret: ' + ret);
+        res.json(ret);
       })
-      .catch((err) => { 
-        console.log('getAll throw unexpected error - err: ' + err);  
-        res.json(err); 
+      .catch((err) => {
+        console.log('getAll throw unexpected error - err: ' + err);
+        res.json(err);
       });
     }
   });
@@ -45,30 +45,30 @@ function showAllUsersCallback(req, res, next) {
 function loginCallback(req, res, next) {
     apiService.login(req)
     .then((ret) => {
-      console.log('login completed - ret: ' + ret); 
+      console.log('login completed - ret: ' + ret);
       res.send(ret);
     }, (ret) => {
-      console.log('login completed with errors - ret: ' + ret);  
-      res.send(ret); 
+      console.log('login completed with errors - ret: ' + ret);
+      res.send(ret);
     })
-    .catch((err) => { 
-      console.log('login throw unexpected error - err: ' + err);  
-      res.send(err); 
+    .catch((err) => {
+      console.log('login throw unexpected error - err: ' + err);
+      res.send(err);
     });
 }
 
 function signUpCallback(req, res, next) {
     apiService.signUp(req)
     .then((ret) => {
-      console.log('signUp completed - ret: ' + ret); 
+      console.log('signUp completed - ret: ' + ret);
       res.send(ret);
     }, (ret) => {
-      console.log('signUp completed with errors - ret: ' + ret);  
-      res.send(ret); 
+      console.log('signUp completed with errors - ret: ' + ret);
+      res.send(ret);
     })
-    .catch((err) => { 
-      console.log('signUp throw unexpected error - err: ' + err);  
-      res.send(err); 
+    .catch((err) => {
+      console.log('signUp throw unexpected error - err: ' + err);
+      res.send(err);
     });
 }
 
@@ -76,6 +76,7 @@ var server = restify.createServer();
 server.use(restify.bodyParser());
 
 //POST
+server.post('/echo', (req, res, next) => { res.send(req.body); }); //echo
 server.post('/login', loginCallback);
 server.post('/signUp', signUpCallback);
 server.post('/user/invitations/accept', (req, res, next) => { res.send({status: 'notImplemented'})}); //Aceptar uan invitacion recibida
@@ -109,4 +110,3 @@ server.get('/user/:id/groups', (req, res, next) => { res.send({status: 'notImple
 server.listen(config.port, function() {
   console.log('%s listening at %s', server.name, server.url);
 });
-
