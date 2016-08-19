@@ -5,7 +5,9 @@ var moment = require('moment');
 var config = require('./config');
 var ApiService = require('./src/services/ApiService');
 var UserMap = require('./src/models/mappings/UserMap');
-var apiService = new ApiService(UserMap, jwt);
+var PlayerMap = require('./src/models/mappings/PlayerMap');
+var MatchMap = require('./src/models/mappings/MatchMap');
+var apiService = new ApiService(UserMap, PlayerMap, MatchMap, jwt);
 
 mongoose.connect(config.database);
 
