@@ -19,8 +19,8 @@ describe('MatchRoutes', () => {
       body: JSON.stringify(aBody)
     })
     .then((response) => {
-      expect(response.ok)
-      .toBe(true);
+      expect(response.status)
+      .toBe(200);
       //console.log(response);
       return response.json();
     })
