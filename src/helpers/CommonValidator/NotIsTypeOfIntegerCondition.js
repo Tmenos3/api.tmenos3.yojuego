@@ -1,16 +1,17 @@
 var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
 
-class Condition {
-    constructor(err) {
+class NotIsTypeOfIntegerCondition {
+    constructor(value, err) {
         if (isNullOrUndefined(err)) {
-            throw new Error(Condition.INVALID_ERROR());
+            throw new Error(NotIsTypeOfIntegerCondition.INVALID_ERROR());
         } else {
+            this._value = value;
             this._err = err;
         }
     }
 
     isValid() {
-        return true;
+        return (Number.isInteger(this._value));
     }
 
     getError() {
@@ -22,4 +23,4 @@ class Condition {
     }
 }
 
-module.exports = Condition;
+module.exports = NotIsTypeOfIntegerCondition;

@@ -3,46 +3,27 @@ jest.unmock('../../../src/models/PlayerProfile');
 import PlayerProfile from '../../../src/models/PlayerProfile';
 
 describe('PlayerProfile', () => {
-  it('Cannot create with a nickname undefined', () => {
-    var undefinedNickname;
+  it('Cannot create with a playerID undefined', () => {
+    var undefinedPlayerProfile;
 
-    expect(() => new PlayerProfile(undefinedNickname)).toThrowError(PlayerProfile.INVALID_NICKNAME());
+    expect(() => new PlayerProfile(undefinedPlayerProfile)).toThrowError(PlayerProfile.INVALID_PALYERID());
   });
 
-  it('Cannot create with a nickname null', () => {
-    var nullNickname = null;
+  it('Cannot create with a playerID null', () => {
+    var nullPlayerProfile = null;
 
-    expect(() => new PlayerProfile(nullNickname)).toThrowError(PlayerProfile.INVALID_NICKNAME());
+    expect(() => new PlayerProfile(nullPlayerProfile)).toThrowError(PlayerProfile.INVALID_PALYERID());
   });
 
-  it('Can create with a PlayerProfile', () => {
-    var nickname = 'nickname';
-    var playerProfile = new PlayerProfile(nickname);
-
-    expect(playerProfile.nickname).toBe(nickname);
+  it('Cannot create with a playerProfile distinct of int', () => {
+    var aPlayerProfile = '1';
+    expect(() => new PlayerProfile(aPlayerProfile)).toThrowError(PlayerProfile.INVALID_PALYERID());
   });
 
-  it('Can change nickname', () => {
-    var oldNickname = 'oldNickname';
-    var newNickname = 'newNickname';
-    var playerProfile = new PlayerProfile(oldNickname);
+  it('Can create  a PlayerProfile', () => {
+    var playerID = 1;
+    var playerProfile = new PlayerProfile(playerID);
 
-    playerProfile.changeNickname(newNickname);
-
-    expect(playerProfile.nickname).toBe(newNickname);
-  });
-
-  it('Cannot change nickname if it is undefined', () => {
-    var undefinedNickname;
-    var playerProfile = new PlayerProfile('aNickname');
-
-    expect(() => playerProfile.changeNickname(undefinedNickname)).toThrowError(PlayerProfile.INVALID_NICKNAME());
-  });
-
-  it('Cannot change nickname if it is null', () => {
-    var nullNickname = null;
-    var playerProfile = new PlayerProfile('aNickname');
-
-    expect(() => playerProfile.changeNickname(nullNickname)).toThrowError(PlayerProfile.INVALID_NICKNAME());
+    expect(playerProfile.playerID).toBe(playerID);
   });
 });

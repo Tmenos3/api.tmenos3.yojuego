@@ -1,27 +1,23 @@
- var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
- var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
+var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
+var NotIsTypeOfIntegerCondition = require('../helpers/CommonValidator/NotIsTypeOfIntegerCondition');
 
-class PlayerProfile{
-    constructor(nickname){
+class PlayerProfile {
+    constructor(playerID) {
         var conditions = [
-            new NotNullOrUndefinedCondition(nickname, PlayerProfile.INVALID_NICKNAME())
+            new NotNullOrUndefinedCondition(playerID, PlayerProfile.INVALID_PALYERID()),
+            new NotIsTypeOfIntegerCondition(playerID, PlayerProfile.INVALID_PALYERID()),
         ];
-        
-        var validator = new CommonValidatorHelper(conditions, () => { this.nickname = nickname; }, (err) => { throw new Error(err); });
+        var validator = new CommonValidatorHelper(conditions, () => {
+            this.playerID = playerID;
+        }, (err) => {
+            throw new Error(err);
+        });
         validator.execute();
     }
 
-    changeNickname(newNickname){
-        var conditions = [
-            new NotNullOrUndefinedCondition(newNickname, PlayerProfile.INVALID_NICKNAME())
-        ];
-        
-        var validator = new CommonValidatorHelper(conditions, () => { this.nickname = newNickname; }, (err) => { throw new Error(err); });
-        validator.execute();
-    }
-
-    static INVALID_NICKNAME() {
-        return "El nickname debe ser válido";
+    static INVALID_PALYERID() {
+        return "El ID de jugador es indefinido, nulo ó no es del tipo integer.";
     }
 }
 

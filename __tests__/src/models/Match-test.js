@@ -95,7 +95,7 @@ describe('Match', () => {
     var aTime = '00:00:00';
     var aLocation = 'aLocation';
     var aUser = new User('aUsername', 'aPassword', 'email@email.com');
-    var aPlayer = new Player('aUsername', 'aPassword', 'email@email.com');
+    var aPlayer = new Player('nickName', 1);
     var match = new Match(aDate, aTime, aLocation, aUser);
 
     match.addPlayer(aPlayer);
@@ -104,7 +104,6 @@ describe('Match', () => {
     expect(match.location).toBe(aLocation);
     expect(match.creator.equal(aUser)).toBe(true);
     expect(match.players[0].equal(aPlayer)).toBe(true);
-    console.log(match.players.length);
     expect(match.players.length).toBe(1);
   });
 
@@ -113,7 +112,7 @@ describe('Match', () => {
     var aTime = '00:00:00';
     var aLocation = 'aLocation';
     var aUser = new User('aUsername', 'aPassword', 'aEMail@email.com');
-    var aPlayer = new Player('aUsername', 'aPassword', 'aEMail@email.com');
+    var aPlayer = new Player('nickName', 1);
     var match = new Match(aDate, aTime, aLocation, aUser);
 
     match.addPlayer(aPlayer);

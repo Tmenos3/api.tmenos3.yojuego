@@ -2,10 +2,9 @@
 
 var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
 var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
+var NotHasBlankSpacesCondition = require('../helpers/CommonValidator/NotHasBlankSpacesCondition');
+var NotLessCharacterLenghtCondition = require('../helpers/CommonValidator/NotLessCharacterLenghtCondition');
 var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
-// get an instance of mongoose and mongoose.Schema
-// var mongoose = require('mongoose');
-// var Schema = mongoose.Schema;
 
 class User {
     constructor(username, password, email) {
@@ -13,6 +12,10 @@ class User {
             new NotNullOrUndefinedCondition(username, User.INVALID_USERNAME()),
             new NotNullOrUndefinedCondition(password, User.INVALID_PASSWORD()),
             new NotNullOrUndefinedCondition(email, User.INVALID_EMAIL()),
+            new NotHasBlankSpacesCondition(username, User.INVALID_USERNAME_HAS_BLANK_SPACE()),
+            new NotHasBlankSpacesCondition(password, User.INVALID_PASSWORD_HAS_BLANK_SPACE()),
+            new NotLessCharacterLenghtCondition(username, 5, User.INVALID_USERNAME_LENGHT()),
+            new NotLessCharacterLenghtCondition(password, 5, User.INVALID_PASSWORD_LENGHT()),
             new CustomCondition(() => { return username !== password }, User.PASSWORD_CANNOT_BE_EQUAL_TO_USERNAME())
         ];
 
@@ -23,46 +26,10 @@ class User {
         }, (err) => { throw new Error(err); });
         validator.execute();
 
-        this.validateIfUserNameHasBlankSpaces(username);
-        this.validateIfPasswordHasBlankSpaces(password);
-        this.validateIfUserNameBeMoreThanFiveCharaters(username);
-        this.validateIfPasswordBeMoreThanFiveCharaters(password);
         this.validateIfAValidEmail(email);
         this.username = username;
         this.password = password;
         this.eMail = email;
-    }
-
-    validateIfUserNameHasBlankSpaces(username) {
-        if (this.hasBlankSpace(username)) {
-            throw new Error(User.INVALID_USERNAME_HAS_BLANK_SPACE());
-        }
-    }
-
-    validateIfPasswordHasBlankSpaces(password) {
-        if (this.hasBlankSpace(password)) {
-            throw new Error(User.INVALID_PASSWORD_HAS_BLANK_SPACE());
-        }
-    }
-
-    hasBlankSpace(textToValidate) {
-        return textToValidate.includes(' ');
-    }
-
-    validateIfUserNameBeMoreThanFiveCharaters(username) {
-        if (this.hasMoreThanFiveCharacters(username) == false) {
-            throw new Error(User.INVALID_USERNAME_LENGHT());
-        }
-    }
-
-    validateIfPasswordBeMoreThanFiveCharaters(password) {
-        if (this.hasMoreThanFiveCharacters(password) == false) {
-            throw new Error(User.INVALID_PASSWORD_LENGHT());
-        }
-    }
-
-    hasMoreThanFiveCharacters(textToValidate) {
-        return textToValidate.length > 5;
     }
 
     validateIfAValidEmail(eMailToValidate) {
@@ -111,10 +78,3 @@ class User {
 }
 
 module.exports = User;
-
-// set up a mongoose model and pass it using module.exports
-// module.exports = mongoose.model('User', new Schema({ 
-//     username: String, 
-//     password: String, 
-//     admin: Boolean 
-// }));

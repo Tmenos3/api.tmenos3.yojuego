@@ -21,7 +21,6 @@ class Match {
         }, (err) => { throw new Error(err); });
         validator.execute();
 
-        //Esto esta bien???
         this.players = [];
     }
 

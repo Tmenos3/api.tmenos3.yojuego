@@ -17,14 +17,14 @@ class Invitation {
         }, (err) => { throw new Error(err); });
         validator.execute();
 
-         this.guests = [];
+        this.guests = [];
     }
 
     static INVALID_SENDER() {
         return 'El remitente debe contener un valor.';
     }
 
-    static INVALID_MATCH(){
+    static INVALID_MATCH() {
         return 'El partido debe tener un valor';
     }
 }
