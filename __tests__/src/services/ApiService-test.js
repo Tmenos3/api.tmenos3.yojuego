@@ -1,33 +1,57 @@
 jest.unmock('../../../src/services/ApiService');
-jest.mock('../../../src/repositories/MongoRepository');
+jest.mock('../../../src/models/mappings/UserMap');
 jest.mock('jsonwebtoken');
 
 import ApiService from '../../../src/services/ApiService';
 
 describe('ApiService', () => {
 
-  it('Cannot create ApiService with an undefined repo', () => {
-    var undefinedRepo;
+  it('Cannot create ApiService with an undefined UserMap', () => {
+    var undefinedUserMap;
   
-    expect(() => new ApiService(undefinedRepo)).toThrowError(ApiService.INVALID_REPOSITORY());
+    expect(() => new ApiService(undefinedUserMap, {}, {}, {})).toThrowError(ApiService.INVALID_USERMAP());
   });
 
-  it('Cannot create ApiService with an null repo', () => {
-    var nullRepo;
+  it('Cannot create ApiService with an null UserMap', () => {
+    var nullUserMap;
   
-    expect(() => new ApiService(nullRepo)).toThrowError(ApiService.INVALID_REPOSITORY());
+    expect(() => new ApiService(nullUserMap, {}, {}, {})).toThrowError(ApiService.INVALID_USERMAP());
+  });
+
+  it('Cannot create ApiService with an undefined PlayerMap', () => {
+    var undefinedPlayerMap;
+  
+    expect(() => new ApiService({}, undefinedPlayerMap, {}, {})).toThrowError(ApiService.INVALID_PLAYERMAP());
+  });
+
+  it('Cannot create ApiService with an null PlayerMap', () => {
+    var nullPlayerMap;
+  
+    expect(() => new ApiService({}, nullPlayerMap, {}, {})).toThrowError(ApiService.INVALID_PLAYERMAP());
+  });
+
+  it('Cannot create ApiService with an undefined MatchMap', () => {
+    var undefinedMatchMap;
+  
+    expect(() => new ApiService({}, {}, undefinedMatchMap, {})).toThrowError(ApiService.INVALID_MATCHMAP());
+  });
+
+  it('Cannot create ApiService with an null MatchMap', () => {
+    var nullMatchMap;
+  
+    expect(() => new ApiService({}, {}, nullMatchMap, {})).toThrowError(ApiService.INVALID_MATCHMAP());
   });
 
   it('Cannot create ApiService with an undefined jwt', () => {
     var undefinedJwt;
   
-    expect(() => new ApiService({}, undefinedJwt)).toThrowError(ApiService.INVALID_JWT());
+    expect(() => new ApiService({}, {}, {}, undefinedJwt)).toThrowError(ApiService.INVALID_JWT());
   });
 
   it('Cannot create ApiService with an null jwt', () => {
     var nullJwt;
   
-    expect(() => new ApiService({}, nullJwt)).toThrowError(ApiService.INVALID_JWT());
+    expect(() => new ApiService({}, {}, {}, nullJwt)).toThrowError(ApiService.INVALID_JWT());
   });
 
   pit('Can login after signUp with a new user', () => {
@@ -41,11 +65,14 @@ describe('ApiService', () => {
     var token = 'aToken';
     
     var jwt = require('jsonwebtoken');
-    var MongoRepository = require('../../../src/repositories/MongoRepository');
-    var mongoRep = new MongoRepository('validSource');
-    mongoRep.getOne =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve({}); })});
+    var UserMap = require('../../../src/models/mappings/UserMap');
     jwt.sign = jest.fn((object, secret, options) => { return token });
-    var apiService = new ApiService(mongoRep, jwt);
+
+    var mockedSave = jest.fn((callback) => {callback(false)});
+    UserMap = jest.fn(() => {return {save: mockedSave}});
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
+
+    var apiService = new ApiService(UserMap, {}, {}, jwt);
 
     return apiService.login(request)
     .then((ret) => expect(true).toBe(false), 

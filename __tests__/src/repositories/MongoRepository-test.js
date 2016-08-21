@@ -315,6 +315,123 @@ describe('MongoRepository', () => {
            .catch((err) => expect(true).toBe(false));
   });
 
+  pit('Cannot getBy document if a undefined document is passed', () => {
+    var undefinedDocument;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.getBy(undefinedDocument, {})
+          .then((objReturned) => expect(true).toBe(false), (err) => expect(err).toBe(MongoRepository.INVALID_DOCUMENT()))
+          .catch((err) => expect(true).toBe(false));
+  });
+
+  pit('Cannot getBy document if a null document is passed', () => {
+    var nullDocument = null;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.getBy(nullDocument, {})
+           .then((objReturned) => expect(true).toBe(false), (err) => expect(err).toBe(MongoRepository.INVALID_DOCUMENT()))
+           .catch((err) => expect(true).toBe(false));
+  });
+
+  pit('Cannot getBy document if a undefined criteria is passed', () => {
+    var undefinedCriteria;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.getBy('aDocument', undefinedCriteria)
+           .then((objReturned) => expect(true).toBe(false), (err) => expect(err).toBe(MongoRepository.INVALID_CRITERIA()))
+           .catch((err) => expect(true).toBe(false));  
+  });
+
+  pit('Cannot getBy document if a null criteria is passed', () => {
+    var nullCriteria = null;
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.getBy('aDocument', nullCriteria)
+           .then((objReturned) => expect(true).toBe(false), (err) => expect(err).toBe(MongoRepository.INVALID_CRITERIA()))
+           .catch((err) => expect(true).toBe(false)); 
+  });
+
+  pit('getBy executes reject callback if connection is not established', () => {
+    var mongoRep = new MongoRepository('aValidSource');
+
+    mongodb.MongoClient.connect = mockedConnect(true, mockedDb);
+
+    return mongoRep.getBy('rootDocument', {})
+          .then(() => expect(true).toBe(false), (err) => expect(err).toBe(MongoRepository.CONNECTION_NOT_ESTABLISHED()))
+          .catch((err) => expect(true).toBe(false));
+  });
+
+  pit('Collection method from db must be called in getBy', () => {
+    var documentToFind = 'aDocument';
+    var mockedCollectionMethod = jest.fn((document) => {return {find: (criteria) => { return {toArray: (callback) => { callback(false, [{}]); }}; }}});
+    var db = {collection: mockedCollectionMethod, close: () => {}};
+
+
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+    return mongoRep.getBy(documentToFind, {})
+           .then((listReturned) => expect(true).toBe(false), (err) =>  expect(true).toBe(false))
+           .catch((err) => expect(mockedCollectionMethod).toBeCalledWith(documentToFind));
+  });
+  
+  pit('GetBy must execute reject if an exception occurs', () => {
+    var documentToFind = 'aDocument';
+    var mockedGetThrowsException = jest.fn((document) => {return { find: (criteria) => { throw new Error(MongoRepository.UNEXPECTED_ERROR()); }, close: () => {} }});
+    var db = {collection: mockedGetThrowsException};
+
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+    return mongoRep.getBy(documentToFind, {})
+          .then((objectReturned) => expect(true).toBe(false), (err) => expect(err).toBe(MongoRepository.UNEXPECTED_ERROR()))
+          .catch((err) => { expect(true).toBe(false) });
+  });
+
+  pit('Find method from db must be called in getBy', () => {
+    var documentToFind = 'aDocument';
+    var db = { collection: (document) => { return { find: mockedFindMethod }},
+               close: () => {} 
+        };
+    var mockedFindMethod = jest.fn((criteria) => {return { toArray: (callback) => { callback(false, [{}]); }}});
+
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+    return mongoRep.getBy(documentToFind, {})
+          .then((objectReturned) => expect(mockedFindMethod).toBeCalledWith({}), (err) => expect(true).toBe(false))
+          .catch((err) => expect(true).toBe(false));
+  });
+
+  pit('Can getBy a document collection', () => {
+    var expectedResult = [{name: 'element1'}, {name: 'element2'}];
+    var db = {
+        collection: (document) => { return {find: jest.fn((criteria) => { return { toArray: (callback) => { callback(false, expectedResult) }}})}; },
+        close: () => {}
+    };
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+
+    return mongoRep.getBy('aDocument', {})
+           .then((objectReturned) => expect(objectReturned).toBe(expectedResult), (err) => expect(true).toBe(false))
+           .catch(() => expect(true).toBe(false));
+  });
+
+  pit('After getBy connection must be closed', () => {
+    var db = {
+        collection: (document) => { return { find: (document) => { return {toArray: (callback) => { callback(false, [{}]); }}}};},
+        close: jest.fn(() => {})
+    };
+
+    mongodb.MongoClient.connect = mockedConnect(false, db);
+
+    var mongoRep = new MongoRepository('aValidSource');
+    return mongoRep.getBy('aDocumentToFind', {})
+           .then((result) => expect(db.close).toBeCalled(), (err) => expect(true).toBe(false))
+           .catch((err) => expect(true).toBe(false));
+  });
+
   pit('Cannot insert a childDocument with an undefined rootDocument', () => {
     var undefinedRootDocument;
     var mongoRep = new MongoRepository('aValidSource');

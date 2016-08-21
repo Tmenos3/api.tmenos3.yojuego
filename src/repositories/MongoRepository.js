@@ -65,6 +65,18 @@
         });
     }
 
+    getBy(rootDocument, criteria){
+        return new Promise( (resolve, reject) => {
+            var conditions = [
+                new NotNullOrUndefinedCondition(rootDocument, MongoRepository.INVALID_DOCUMENT()),
+                new NotNullOrUndefinedCondition(criteria, MongoRepository.INVALID_CRITERIA())
+            ];
+            
+            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateGetBy(rootDocument, criteria, resolve, reject); }, (err) => reject(err));
+            validator.execute();
+        });
+    }
+
     getAll(rootDocument){
         return new Promise( (resolve, reject) => {
             var conditions = [
@@ -117,6 +129,17 @@
             var ret = db.collection(rootDocument).findOne(criteria);
             db.close();
             resolve(ret);
+        }, (err) => reject(err))
+        .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
+    }
+
+    _doAfterValidateGetBy(rootDocument, criteria, resolve, reject){
+        this._connect()
+        .then((db) => {
+             db.collection(rootDocument).find(criteria).toArray((err, documents) => {
+               db.close();
+               resolve(documents);
+             });
         }, (err) => reject(err))
         .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
     }
