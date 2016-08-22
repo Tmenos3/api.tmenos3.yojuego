@@ -1,17 +1,20 @@
-jest.mock('../../../src/models/mappings/UserMap');
+//jest.mock('../../../src/models/mappings/UserMap');
 jest.unmock('../../../src/services/ApiService');
 
 import ApiService from '../../../src/services/ApiService';
 
 describe('ApiService.signUp', () => {
   var UserMap;
+  var PlayerMap;
 
   beforeEach(function() {
      UserMap = require('../../../src/models/mappings/UserMap');
+     PlayerMap = require('../../../src/models/mappings/PlayerMap');
   });
 
   afterEach(function() {
     UserMap = null;
+    PlayerMap = null;
   });
 
   pit('Cannot signUp users if request is undefined', () => {
@@ -112,6 +115,7 @@ describe('ApiService.signUp', () => {
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)}); 
 
     var apiService = new ApiService(UserMap, {}, {}, {});
+    apiService._createPlayer = jest.fn((user, resolve, reject) => resolve(ApiService.USER_CREATED()));
 
     return apiService.signUp(request)
         .then((ret) => { 
@@ -133,8 +137,7 @@ describe('ApiService.signUp', () => {
           (ret) => {
             expect(ret.status).toBe(false);
             expect(ret.message).toBe(ApiService.UNEXPECTED_ERROR());
-          })
-    .catch((err) => expect(false).toBe(true));
+          });
   });
 
   pit('If username exists signUp must executes reject', () => {
@@ -160,6 +163,7 @@ describe('ApiService.signUp', () => {
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
 
     var apiService = new ApiService(UserMap, {}, {}, {});
+    apiService._createPlayer = jest.fn((user, resolve, reject) => resolve(ApiService.USER_CREATED()));
 
     return apiService.signUp(request)
         .then((ret) => {
@@ -179,6 +183,7 @@ describe('ApiService.signUp', () => {
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
 
     var apiService = new ApiService(UserMap, {}, {}, {});
+    apiService._createPlayer = jest.fn((user, resolve, reject) => resolve(ApiService.USER_CREATED()));
 
     return apiService.signUp(request)
         .then((ret) => expect(mockedSave.mock.calls[0][0]).not.toBeUndefined(), (ret) => expect(false).toBe(true))
@@ -202,6 +207,56 @@ describe('ApiService.signUp', () => {
             expect(ret.message).toBe(ApiService.UNEXPECTED_ERROR());
           })
         .catch((err) => expect(false).toBe(true));
+  });
+
+  pit('Must save player after save user', () => {
+    var idUser = 'idUser';
+    var user = {username: 'username', password: 'password'};
+    var request = { body: user };
+
+    var mockedSave = jest.fn((callback) => {callback(false)});
+    PlayerMap = jest.fn(() => {return {save: mockedSave}});
+    UserMap = jest.fn(() => {return {
+      save: jest.fn((callback) => {callback(false)}),
+      _id: idUser,
+      username: user.username
+    }});
+
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
+
+    var apiService = new ApiService(UserMap, PlayerMap, {}, {});
+
+    return apiService.signUp(request)
+        .then((ret) => {
+              expect(PlayerMap.mock.instances.length).toBe(1);
+              expect(PlayerMap.mock.calls[0][0]._idUser).toBe(idUser);
+              expect(PlayerMap.mock.calls[0][0].profile.nickname).toBe(user.username);
+              expect(mockedSave.mock.calls[0][0]).not.toBeUndefined();
+          }, (ret) => expect(false).toBe(true));
+  });
+
+  pit('Must execute reject if save player returns error', () => {
+    var idUser = 'idUser';
+    var user = {username: 'username', password: 'password'};
+    var request = { body: user };
+
+    PlayerMap = jest.fn(() => {return {save: jest.fn((callback) => {callback(true)})}});
+    UserMap = jest.fn(() => {return {
+      save: jest.fn((callback) => {callback(false)}),
+      _id: idUser,
+      username: user.username
+    }});
+
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
+
+    var apiService = new ApiService(UserMap, PlayerMap, {}, {});
+
+    return apiService.signUp(request)
+        .then((ret) => expect(false).toBe(true), 
+          (ret) => {
+            expect(ret.status).toBe(false);
+            expect(ret.message).toBe(ApiService.UNEXPECTED_ERROR());
+          });
   });
 
 });

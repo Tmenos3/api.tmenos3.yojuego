@@ -125,17 +125,36 @@ class ApiService{
                 if(userReturned !== null && userReturned !== undefined){
                     reject({ status: false, message: ApiService.USERNAME_IS_ALREADY_IN_USE() });
                 }else{
-                    var user = new this._UserMap({username: username, password: password});
-                    user.save((err) => {
-                        if (err){
-                            reject({ status: false , message: ApiService.UNEXPECTED_ERROR()});
-                        }else{
-                            resolve(ApiService.USER_CREATED());
-                        }
-                    })
+                    this._createUser(username, password, resolve, reject);
                 }
             }
         });
+    }
+
+    _createUser(username, password, resolve, reject){
+        var user = new this._UserMap({username: username, password: password});
+        user.save((err) => {
+            if (err){
+                reject({ status: false , message: ApiService.UNEXPECTED_ERROR()});
+            }else{
+                this._createPlayer(user, resolve, reject);
+            }
+        });
+    }
+
+    _createPlayer(user, resolve, reject){
+      var player = new this._PlayerMap({
+          _idUser: user._id, 
+          profile: {nickname: user.username}}
+          );
+
+      player.save((err) => {
+        if(err){
+            reject({ status: false , message: ApiService.UNEXPECTED_ERROR()});
+        }else{
+          resolve(ApiService.USER_CREATED());
+        }
+      });
     }
 
     _doAfterValidateGetUpcomingMatches(idUser, datefrom, resolve, reject){
@@ -147,13 +166,13 @@ class ApiService{
                     reject({ status: false, code: 401, message: ApiService.UNAUTHORIZED() });
                 }else{
                     this._MatchMap.find({ datetime: {$gte: new Date(datefrom).toISOString()}, confirmed: [playerReturned._id]}, 
-                                    (err, mathcesReturned) => {
-                                        if(err){
-                                            reject({ status: false , message: ApiService.UNEXPECTED_ERROR()});
-                                        }else{
-                                            resolve(mathcesReturned);
-                                        }
-                                    });
+                        (err, mathcesReturned) => {
+                            if(err){
+                                reject({ status: false , message: ApiService.UNEXPECTED_ERROR()});
+                            }else{
+                                resolve(mathcesReturned);
+                            }
+                        });
                 }
             }
         });
