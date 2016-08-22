@@ -1,7 +1,11 @@
+var Condition = require('./Condition');
+
 var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
 
-class NotNullOrUndefinedCondition{
+class NotNullOrUndefinedCondition extends Condition {
     constructor(value, err){
+        super(err);
+
         if (isNullOrUndefined(err)) {
             throw new Error(NotNullOrUndefinedCondition.INVALID_ERROR());
         }else{

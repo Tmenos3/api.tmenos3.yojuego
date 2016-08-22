@@ -1,4 +1,5 @@
 var Condition = require('./Condition');
+
 var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
 
 class CustomCondition extends Condition{
@@ -16,7 +17,7 @@ class CustomCondition extends Condition{
 
     isValid(){
         try {
-          return this._customAction();   
+          return this._customAction();
         } catch (error) {
             this._err = error.message;
             return false;
