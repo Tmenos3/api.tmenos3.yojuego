@@ -258,5 +258,4 @@ describe('ApiService.signUp', () => {
             expect(ret.message).toBe(ApiService.UNEXPECTED_ERROR());
           });
   });
-
 });

@@ -17,7 +17,8 @@
     "mongoose-construct": "0.0.1",
     "node-fetch": "^1.6.0",
     "restify": "4.1.x",
-    "restify-jwt": "^0.4.0"
+    "restify-jwt": "^0.4.0",
+    "restify-routes": "^0.1.2"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
