@@ -1,4 +1,5 @@
-//jest.mock('../../../src/models/mappings/UserMap');
+jest.mock('../../../src/models/mappings/UserMap');
+jest.mock('../../../src/models/mappings/PlayerMap');
 jest.unmock('../../../src/services/ApiService');
 
 import ApiService from '../../../src/services/ApiService';

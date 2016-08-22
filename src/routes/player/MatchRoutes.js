@@ -1,12 +1,14 @@
-var jwt = require('jsonwebtoken');
+var moment = require('moment');
 var UserMap = require('../../models/mappings/UserMap');
 var PlayerMap = require('../../models/mappings/PlayerMap');
+var MatchMap = require('../../models/mappings/MatchMap');
 var ApiService = require('../../services/ApiService');
-var apiService = new ApiService(UserMap, PlayerMap, MatchMap, jwt);
+
+var apiService = new ApiService(UserMap, PlayerMap, MatchMap);
 
 var MatchRoutes = {
   setRoutes: function(server){
-    server.get('/user/:username/player/:idPlayer/matches/upcoming', function(req, res, cb) {
+    server.get('/user/:username/matches/upcoming', function(req, res, cb) {
         req.params.datefrom = moment().toISOString();
         var token = req.headers.authorization;
 
@@ -25,17 +27,17 @@ var MatchRoutes = {
         return cb();
       });
 
-    server.get('/user/:username/player/:idPlayer/matches/:idMatch', function(req, res, cb) {
+    server.get('/user/:username/matches/:idMatch', function(req, res, cb) {
         res.json({});
         return cb();
       });
 
-    server.delete('/user/:username/player/:idPlayer/matches/:idMatch/remove', function(req, res, cb) {
+    server.post('/user/:username/matches/:idMatch/remove', function(req, res, cb) {
         res.json({});
         return cb();
       });
 
-    server.post('/user/:username/player/:idPlayer/matches/create', function(req, res, cb) {
+    server.post('/user/:username/matches/create', function(req, res, cb) {
         res.json({});
         return cb();
       });

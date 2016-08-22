@@ -10,7 +10,7 @@ var InvitationRoutes = {
         return cb();
       });
 
-    server.delete('/user/:username/player/:idPlayer/invitations/:idInvitation/remove', function(req, res, cb) {
+    server.post('/user/:username/player/:idPlayer/invitations/:idInvitation/remove', function(req, res, cb) {
         res.json({});
         return cb();
       });

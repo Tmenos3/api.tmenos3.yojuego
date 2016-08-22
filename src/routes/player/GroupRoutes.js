@@ -10,7 +10,7 @@ var GroupRoutes = {
         return cb();
       });
 
-    server.delete('/user/:username/player/:idPlayer/groups/:idGroup/remove', function(req, res, cb) {
+    server.post('/user/:username/player/:idPlayer/groups/:idGroup/remove', function(req, res, cb) {
         res.json({});
         return cb();
       });

@@ -1,16 +1,20 @@
 var restify = require('restify');
-//var restifyRoutes = require('restify-routes');
-var mongoose = require('mongoose');
-var jwt = require('jsonwebtoken');
-var moment = require('moment');
+var jwt = require('restify-jwt');
 var config = require('./config');
+var mongoose = require('mongoose');
+var FriendRoutes = require('./src/routes/player/FriendRoutes');
+var GroupRoutes = require('./src/routes/player/GroupRoutes');
+var InvitationRoutes = require('./src/routes/player/InvitationRoutes');
+var MatchRoutes = require('./src/routes/player/MatchRoutes');
+var PlayerRoutes = require('./src/routes/player/PlayerRoutes');
+var UserRoutes = require('./src/routes/user/UserRoutes');
 // var ApiService = require('./src/services/ApiService');
 // var UserMap = require('./src/models/mappings/UserMap');
 // var PlayerMap = require('./src/models/mappings/PlayerMap');
 // var MatchMap = require('./src/models/mappings/MatchMap');
 // var apiService = new ApiService(UserMap, PlayerMap, MatchMap, jwt);
 
-//mongoose.connect(config.database);
+mongoose.connect(config.database);
 
 // function showAllUsersCallback(req, res, next) {
 //   var token = req.headers.authorization;
@@ -78,11 +82,23 @@ var config = require('./config');
 
 var server = restify.createServer();
 server.use(restify.bodyParser());
-//POST
-server.post('/echo', (req, res, next) => { res.send(req.body); }); //echo
+server.use(jwt({ secret: config.secret}).unless({path: ['/', '/login', '/signUp']}));
 
-//GET
-server.get('/users', showAllUsersCallback);//solo para test
+
+FriendRoutes.setRoutes(server);
+GroupRoutes.setRoutes(server);
+InvitationRoutes.setRoutes(server);
+MatchRoutes.setRoutes(server);
+PlayerRoutes.setRoutes(server);
+UserRoutes.setRoutes(server);
+
+// //POST
+// server.post('/echo', (req, res, next) => { res.send(req.body); }); //echo
+
+// //GET
+// server.get('/users', showAllUsersCallback);//solo para test
+
+
 
 server.listen(config.port, function() {
   console.log('%s listening at %s', server.name, server.url);

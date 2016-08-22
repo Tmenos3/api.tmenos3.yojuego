@@ -10,7 +10,7 @@ var FriendRoutes = {
         return cb();
       });
 
-    server.delete('/user/:username/player/:idPlayer/friends/:idFriend/remove', function(req, res, cb) {
+    server.post('/user/:username/player/:idPlayer/friends/:idFriend/remove', function(req, res, cb) {
         res.json({});
         return cb();
       });

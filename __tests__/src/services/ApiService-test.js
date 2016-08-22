@@ -1,6 +1,5 @@
 jest.unmock('../../../src/services/ApiService');
 jest.mock('../../../src/models/mappings/UserMap');
-jest.mock('jsonwebtoken');
 
 import ApiService from '../../../src/services/ApiService';
 
@@ -42,18 +41,6 @@ describe('ApiService', () => {
     expect(() => new ApiService({}, {}, nullMatchMap, {})).toThrowError(ApiService.INVALID_MATCHMAP());
   });
 
-  it('Cannot create ApiService with an undefined jwt', () => {
-    var undefinedJwt;
-  
-    expect(() => new ApiService({}, {}, {}, undefinedJwt)).toThrowError(ApiService.INVALID_JWT());
-  });
-
-  it('Cannot create ApiService with an null jwt', () => {
-    var nullJwt;
-  
-    expect(() => new ApiService({}, {}, {}, nullJwt)).toThrowError(ApiService.INVALID_JWT());
-  });
-
   pit('Can login after signUp with a new user', () => {
     /* Que estoy haciendo aca?
        1- Verifico que no pueda hacer LogIn con un usuario que no existe
@@ -62,17 +49,20 @@ describe('ApiService', () => {
     */
     var user = {username: 'username', password: 'password'};
     var request = { body: user};
-    var token = 'aToken';
     
-    var jwt = require('jsonwebtoken');
     var UserMap = require('../../../src/models/mappings/UserMap');
-    jwt.sign = jest.fn((object, secret, options) => { return token });
+    var PlayerMap = require('../../../src/models/mappings/PlayerMap');
 
     var mockedSave = jest.fn((callback) => {callback(false)});
-    UserMap = jest.fn(() => {return {save: mockedSave}});
+    PlayerMap = jest.fn(() => {return {save: jest.fn((callback) => {callback(true)})}});
+    UserMap = jest.fn(() => {return {
+      save: jest.fn(() => {return {save: mockedSave}}),
+      _id: idUser,
+      username: user.username
+    }});
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
 
-    var apiService = new ApiService(UserMap, {}, {}, jwt);
+    var apiService = new ApiService(UserMap, PlayerMap, {});
 
     return apiService.login(request)
     .then((ret) => expect(true).toBe(false), 
@@ -86,13 +76,10 @@ describe('ApiService', () => {
 
                           apiService.login(request)
                               .then((ret) => {
-                                expect(ret.status).toBe(true);
-                                expect(ret.token).toBe(token);
-                              }, (ret) => expect(true).toBe(false))
-                              .catch((err) => expect(true).toBe(false));
-                      }, (ret) => expect(false).toBe(true))
-                    .catch((err) => expect(false).toBe(true));
-          })
-    .catch((err) => expect(true).toBe(false));
+                                expect(ret.username).toBe(user.username);
+                                expect(ret.password).toBe(user.password);
+                              }, (ret) => expect(true).toBe(false));
+                      }, (ret) => expect(false).toBe(true));
+          });
   });
 });
