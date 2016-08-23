@@ -1,4 +1,4 @@
- var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+ var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
  var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
  var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
  var config = require('../../config');
@@ -13,7 +13,7 @@ class ApiService{
             new NotNullOrUndefinedCondition(MatchMap, ApiService.INVALID_MATCHMAP())
         ];
         
-        var validator = new CommonValidatorHelper(conditions, () => {
+        var validator = new ValidationHelper(conditions, () => {
             this._UserMap = UserMap;
             this._PlayerMap = PlayerMap;
             this._MatchMap = MatchMap; 
@@ -31,7 +31,7 @@ class ApiService{
                 new CustomCondition(() => { return this._isValidPassword(req); }, ApiService.INVALID_CREDENTIALS())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateLogin(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateLogin(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
             validator.execute();
         });
     }
@@ -45,7 +45,7 @@ class ApiService{
                  new CustomCondition(() => { return this._isValidPassword(req); }, ApiService.INVALID_CREDENTIALS())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateSignUp(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateSignUp(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
             validator.execute();
         });
     }
@@ -57,7 +57,7 @@ class ApiService{
                 new CustomCondition(() => { return this._isValidRequestUser(req); }, ApiService.INVALID_REQUEST_USER()),
                 new CustomCondition(() => { return this._isValidIdUser(req); }, ApiService.UNAUTHORIZED())
             ];
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateGetUserProfile(req.user.id, resolve, reject) }, 
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateGetUserProfile(req.user.id, resolve, reject) }, 
                                                                     (err) => { reject({ status: false, code: 400, message: err}); });
             validator.execute();
         });
@@ -72,7 +72,7 @@ class ApiService{
                 new CustomCondition(() => { return this._isValidRequestParams(req); }, ApiService.INVALID_REQUEST_PARAMS()),
                 new CustomCondition(() => { return this._isValidDatefrom(req); }, ApiService.INVALID_DATEFROM())
             ];
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateGetUpcomingMatches(req.user.id, req.params.datefrom, resolve, reject) }, 
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateGetUpcomingMatches(req.user.id, req.params.datefrom, resolve, reject) }, 
                                                                     (err) => reject({ status: false, code: 400, message: err}));
             validator.execute();
         });

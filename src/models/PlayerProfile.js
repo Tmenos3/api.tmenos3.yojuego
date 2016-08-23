@@ -1,4 +1,4 @@
- var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+ var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
  var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
 
 class PlayerProfile{
@@ -7,7 +7,7 @@ class PlayerProfile{
             new NotNullOrUndefinedCondition(nickname, PlayerProfile.INVALID_NICKNAME())
         ];
         
-        var validator = new CommonValidatorHelper(conditions, () => { this.nickname = nickname; }, (err) => { throw new Error(err); });
+        var validator = new ValidationHelper(conditions, () => { this.nickname = nickname; }, (err) => { throw new Error(err); });
         validator.execute();
     }
 
@@ -16,7 +16,7 @@ class PlayerProfile{
             new NotNullOrUndefinedCondition(newNickname, PlayerProfile.INVALID_NICKNAME())
         ];
         
-        var validator = new CommonValidatorHelper(conditions, () => { this.nickname = newNickname; }, (err) => { throw new Error(err); });
+        var validator = new ValidationHelper(conditions, () => { this.nickname = newNickname; }, (err) => { throw new Error(err); });
         validator.execute();
     }
 

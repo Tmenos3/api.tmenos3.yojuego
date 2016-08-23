@@ -98,13 +98,24 @@ describe('Match', () => {
     var aPlayer = new Player('aUsername', 'aPassword', 'email@email.com');
     var match = new Match(aDate, aTime, aLocation, aUser);
 
+    //Creo que está mal agregar un user como creador, siempre se trabaja con el player
+    //El user solo se usaría con fines de login en principio, luego y eventualmente,
+    //segun el tipo de cuenta se pueden considerar otra cosas.
+    //Entiendo que la relacion sería: 
+    // User 
+    //   >> Player
+    //       >> Match
+    //       >> Invitation
+    //       >> Group
+    //       >> Friends
+    expect('').toBe('Analizar este test');
+
     match.addPlayer(aPlayer);
     expect(match.date).toBe(aDate);
     expect(match.time).toBe(aTime);
     expect(match.location).toBe(aLocation);
     expect(match.creator.equal(aUser)).toBe(true);
     expect(match.players[0].equal(aPlayer)).toBe(true);
-    console.log(match.players.length);
     expect(match.players.length).toBe(1);
   });
 

@@ -1,62 +1,62 @@
-jest.unmock('../../../../src/helpers/CommonValidator/CommonValidatorHelper');
+jest.unmock('../../../../src/helpers/CommonValidator/ValidationHelper');
 
 var Condition = require('../../../../src/helpers/CommonValidator/Condition');
 var NotNullOrUndefinedCondition = require('../../../../src/helpers/CommonValidator/NotNullOrUndefinedCondition');
 var CustomCondition = require('../../../../src/helpers/CommonValidator/CustomCondition');
-var CommonValidatorHelper = require('../../../../src/helpers/CommonValidator/CommonValidatorHelper');
+var ValidationHelper = require('../../../../src/helpers/CommonValidator/ValidationHelper');
 
-describe('CommonValidatorHelper', () => {
+describe('ValidationHelper', () => {
   it('Cannot create with a undefined conditions list', () => {
     var undefinedConditionsList;
   
-    expect(() => new CommonValidatorHelper(undefinedConditionsList, () => {}, (err) => {})).toThrowError(CommonValidatorHelper.INVALID_CONDITION_LIST());
+    expect(() => new ValidationHelper(undefinedConditionsList, () => {}, (err) => {})).toThrowError(ValidationHelper.INVALID_CONDITION_LIST());
   });
 
   it('Cannot create with a null conditions list', () => {
     var nullConditionsList = null;
   
-    expect(() => new CommonValidatorHelper(nullConditionsList, () => {}, (err) => {})).toThrowError(CommonValidatorHelper.INVALID_CONDITION_LIST());
+    expect(() => new ValidationHelper(nullConditionsList, () => {}, (err) => {})).toThrowError(ValidationHelper.INVALID_CONDITION_LIST());
   });
 
   it('Cannot create with a undefined resolve callback', () => {
     var undefinedCallback;
   
-    expect(() => new CommonValidatorHelper([new NotNullOrUndefinedCondition('aParameter', 'error')], undefinedCallback, (err) => {})).toThrowError(CommonValidatorHelper.INVALID_RESOLVE_CALLBACK());
+    expect(() => new ValidationHelper([new NotNullOrUndefinedCondition('aParameter', 'error')], undefinedCallback, (err) => {})).toThrowError(ValidationHelper.INVALID_RESOLVE_CALLBACK());
   });
 
   it('Cannot create with a null resolve callback', () => {
     var nullCallback = null;
   
-    expect(() => new CommonValidatorHelper([new NotNullOrUndefinedCondition('aParameter', 'error')], nullCallback, (err) => {})).toThrowError(CommonValidatorHelper.INVALID_RESOLVE_CALLBACK());
+    expect(() => new ValidationHelper([new NotNullOrUndefinedCondition('aParameter', 'error')], nullCallback, (err) => {})).toThrowError(ValidationHelper.INVALID_RESOLVE_CALLBACK());
   });
 
   it('Cannot create with a undefined reject callback', () => {
     var undefinedReject;
   
-    expect(() => new CommonValidatorHelper([new NotNullOrUndefinedCondition('aParameter', 'error')], () => {}, undefinedReject)).toThrowError(CommonValidatorHelper.INVALID_REJECT_CALLBACK());
+    expect(() => new ValidationHelper([new NotNullOrUndefinedCondition('aParameter', 'error')], () => {}, undefinedReject)).toThrowError(ValidationHelper.INVALID_REJECT_CALLBACK());
   });
 
   it('Cannot create with a null reject callback', () => {
     var nullReject = null;
   
-    expect(() => new CommonValidatorHelper([new NotNullOrUndefinedCondition('aParameter', 'error')], () => {}, nullReject)).toThrowError(CommonValidatorHelper.INVALID_REJECT_CALLBACK());
+    expect(() => new ValidationHelper([new NotNullOrUndefinedCondition('aParameter', 'error')], () => {}, nullReject)).toThrowError(ValidationHelper.INVALID_REJECT_CALLBACK());
   });
 
   it('Cannot create with a non-array conditionList', () => {
     var nonArrayConditionList = {};
   
-    expect(() => new CommonValidatorHelper(nonArrayConditionList, () => {}, (err) => {})).toThrowError(CommonValidatorHelper.INVALID_CONDITION_LIST());
+    expect(() => new ValidationHelper(nonArrayConditionList, () => {}, (err) => {})).toThrowError(ValidationHelper.INVALID_CONDITION_LIST());
   });
 
   it('Cannot create with a array of non Condition conditionList', () => {
     var arrayOfNonConditionList = [{}];
   
-    expect(() => new CommonValidatorHelper(arrayOfNonConditionList, () => {}, (err) => {})).toThrowError(CommonValidatorHelper.INVALID_CONDITION_LIST());
+    expect(() => new ValidationHelper(arrayOfNonConditionList, () => {}, (err) => {})).toThrowError(ValidationHelper.INVALID_CONDITION_LIST());
   });
 
   it('Can create with a list of Conditions', () => {
     var listOfConditions = [new NotNullOrUndefinedCondition('parameter', 'error'), new NotNullOrUndefinedCondition('parameter', 'error')];
-    var validator = new CommonValidatorHelper(listOfConditions, () => {}, (err) => {});
+    var validator = new ValidationHelper(listOfConditions, () => {}, (err) => {});
 
     expect(validator._conditionList.length).toBe(listOfConditions.length);
   });
@@ -66,7 +66,7 @@ describe('CommonValidatorHelper', () => {
     mockedCondition.isValid = jest.fn(() => { return true });
 
     var listOfConditions = [mockedCondition, mockedCondition];
-    var validator = new CommonValidatorHelper(listOfConditions, () => {}, (err) => {});
+    var validator = new ValidationHelper(listOfConditions, () => {}, (err) => {});
 
     validator.execute();
 
@@ -84,7 +84,7 @@ describe('CommonValidatorHelper', () => {
     var reject = jest.fn((err) => {});
 
     var listOfConditions = [notValidConditionCondition , validConditionCondition];
-    var validator = new CommonValidatorHelper(listOfConditions, () => {}, reject);
+    var validator = new ValidationHelper(listOfConditions, () => {}, reject);
 
     validator.execute();
 
@@ -98,7 +98,7 @@ describe('CommonValidatorHelper', () => {
     var resolve = jest.fn(() => {});
 
     var listOfConditions = [validConditionCondition , validConditionCondition];
-    var validator = new CommonValidatorHelper(listOfConditions, resolve, (err) => {});
+    var validator = new ValidationHelper(listOfConditions, resolve, (err) => {});
 
     validator.execute();
 

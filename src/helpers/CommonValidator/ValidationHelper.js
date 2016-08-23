@@ -3,20 +3,20 @@ var Condition = require('./Condition');
 var NotNullOrUndefinedCondition = require('./NotNullOrUndefinedCondition');
 var CustomCondition = require('./CustomCondition');
 
-class CommonValidatorHelper{
+class ValidationHelper{
     constructor(conditionsList, resolveCallback, rejectCallback){
         if (isNullOrUndefined(conditionsList)) {
-            throw new Error(CommonValidatorHelper.INVALID_CONDITION_LIST());
+            throw new Error(ValidationHelper.INVALID_CONDITION_LIST());
         }else if (isNullOrUndefined(resolveCallback)) {
-            throw new Error(CommonValidatorHelper.INVALID_RESOLVE_CALLBACK());
+            throw new Error(ValidationHelper.INVALID_RESOLVE_CALLBACK());
         }else if (isNullOrUndefined(rejectCallback)) {
-            throw new Error(CommonValidatorHelper.INVALID_REJECT_CALLBACK());
+            throw new Error(ValidationHelper.INVALID_REJECT_CALLBACK());
         }else if(!(conditionsList instanceof Array)){
-            throw new Error(CommonValidatorHelper.INVALID_CONDITION_LIST());
+            throw new Error(ValidationHelper.INVALID_CONDITION_LIST());
         }else{
             conditionsList.forEach(function(element) {
                 if(!(element instanceof Condition)){
-                    throw new Error(CommonValidatorHelper.INVALID_CONDITION_LIST());
+                    throw new Error(ValidationHelper.INVALID_CONDITION_LIST());
                 }
             }, this);
 
@@ -55,4 +55,4 @@ class CommonValidatorHelper{
     }
 }
 
-module.exports = CommonValidatorHelper;
+module.exports = ValidationHelper;
