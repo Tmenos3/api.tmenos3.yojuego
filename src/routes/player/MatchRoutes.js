@@ -9,8 +9,15 @@ var apiService = new ApiService(UserMap, PlayerMap, MatchMap);
 var MatchRoutes = {
   setRoutes: function(server){
     server.get('/user/:username/matches/upcoming', function(req, res, cb) {
+      /*
+       Dudas: 
+          1- Que route deberiamos usar?
+             A- /user/:username/matches/upcoming
+             B- /user/:username/player/:idPlayer/matches/upcoming
+          2- Si utilizo la opcion B, cuando devuelvo el idPlayer? En el logIn?
+      */
+
         req.params.datefrom = moment().toISOString();
-        var token = req.headers.authorization;
 
         apiService.getUpcomingMatches(req)
         .then((ret) => {

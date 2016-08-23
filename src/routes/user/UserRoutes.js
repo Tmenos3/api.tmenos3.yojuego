@@ -9,19 +9,23 @@ var apiService = new ApiService(UserMap, PlayerMap, MatchMap);
 var UserRoutes = {
   setRoutes: function(server){
     server.post('/login', function(req, res, cb) {
+      /*
+       Dudas: 
+          1- Donde debo validar la obligatoriedad de los paramentros?
+          2- De quien es la responsabilidad de devoler armar el objeto que se devuelve?
+          3- De quien es la responsabilidad de generar el token?
+          4- Hay que definir un formato para el retorno? Ejemplo: {status: true, payload{...}}
+      */
         apiService.login(req)
         .then((ret) => {
-            console.log('login completed - ret: ' + ret); 
             var token = jwt.sign({id: ret.id}, config.secret, { expiresIn: config.expiresIn });
             res.json({status: true, token: token});
             return cb();
         }, (ret) => {
-            console.log('login completed with errors - ret: ' + ret);  
             res.json(ret);
             return cb(); 
         })
         .catch((err) => { 
-            console.log('login throw unexpected error - err: ' + err);  
             res.json(err);
             return cb(); 
         });

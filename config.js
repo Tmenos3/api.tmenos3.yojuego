@@ -5,5 +5,8 @@ module.exports = {
     //'database': 'mongodb://noder:noderauth&54;proximus.modulusmongo.net:27017/so9pojyN'
     'database': 'mongodb://localhost:27017/yojuego',
     'expiresIn': 3600, //Time in seconds
-    'port': 8080
+    'port': 8080,
+    'pathsWithoutAuthentication': ['/', 
+                                   '/login', 
+                                   '/signUp']
 };
