@@ -3,6 +3,7 @@
  var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
  var config = require('../../config');
  var moment = require('moment');
+ var CryptoJS = require('crypto-js');
  var ObjectId = require('mongodb').ObjectId;
 
 class ApiService{
@@ -86,7 +87,8 @@ class ApiService{
                 if (userReturned === undefined || userReturned === null){
                     reject({ status: false , message: ApiService.INVALID_CREDENTIALS()});
                 }else{
-                    if (userReturned.password !== password){
+                    var decryptedPassword = CryptoJS.AES.decrypt(userReturned.password, config.secret).toString(CryptoJS.enc.Utf8);
+                    if (decryptedPassword != password){
                         reject({ status: false, message: ApiService.INVALID_CREDENTIALS() });
                     }else{
                         resolve({id: userReturned._id});
@@ -125,7 +127,8 @@ class ApiService{
     }
 
     _createUser(username, password, resolve, reject){
-        var user = new this._UserMap({username: username, password: password});
+        var encriptedPasword = CryptoJS.AES.encrypt(password, config.secret);
+        var user = new this._UserMap({username: username, password: encriptedPasword});
         user.save((err) => {
             if (err){
                 reject({ status: false , message: ApiService.UNEXPECTED_ERROR()});

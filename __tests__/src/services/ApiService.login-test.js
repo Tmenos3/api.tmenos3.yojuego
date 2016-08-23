@@ -111,18 +111,20 @@ describe('ApiService.login', () => {
   });
 
   pit('When call login must use findOne from UserMap by username', () => {
+    var CryptoJS = require('crypto-js');
+    var config = require('../../../config');
     var user = {username: 'username', password: 'password'};
+    var userSaved = {username: user.username, password: CryptoJS.AES.encrypt(user.password, config.secret)};
     var request = { body: user };
 
-    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, user)}); 
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, userSaved)}); 
 
     var apiService = new ApiService(UserMap, {}, {});
     return apiService.login(request)
     .then((ret) => { 
-        expect(UserMap.findOne.mock.calls[0][0].username).toBe(user.username);
+        expect(UserMap.findOne.mock.calls[0][0].username).toEqual(user.username);
         expect(UserMap.findOne.mock.calls[0][1]).not.toBeUndefined();
-     }, (ret) => expect(false).toBe(true))
-    .catch((err) => expect(false).toBe(true));
+     }, (ret) => expect(false).toBe(true));
   });
 
   pit('if findOne from UserMap return error must execute reject', () => {
@@ -170,16 +172,18 @@ describe('ApiService.login', () => {
   });
 
   pit('If password match login must return info for token', () => {
+    var CryptoJS = require('crypto-js');
+    var config = require('../../../config');
     var user = {_id: 'anId', username: 'username', password: 'password'};
+    var userSaved = {_id: user._id, username: user.username, password: CryptoJS.AES.encrypt(user.password, config.secret)};
     var request = { body: user};
 
-    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, user)});
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, userSaved)});
     var apiService = new ApiService(UserMap, {}, {});
 
     return apiService.login(request)
     .then((ret) => {
-      expect(ret.id).toBe(user._id);
-    }, (ret) => expect(true).toBe(false))
-    .catch((err) => expect(true).toBe(false));
+      expect(ret.id).toEqual(user._id);
+    }, (ret) => expect(true).toBe(false));
   });
 });

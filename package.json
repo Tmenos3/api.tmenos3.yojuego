@@ -12,6 +12,7 @@
     "node": "0.8.x"
   },
   "dependencies": {
+    "crypto-js": "^3.1.6",
     "jsonwebtoken": "^7.1.7",
     "mongoose": "^4.5.8",
     "mongoose-construct": "0.0.1",

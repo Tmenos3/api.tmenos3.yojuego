@@ -156,7 +156,7 @@ describe('ApiService.signUp', () => {
     .catch((err) => expect(false).toBe(true));
   });
 
-  pit('If username does not exist signUp must intantiate UserMap', () => {
+  pit('If username does not exist signUp must intantiate UserMap with password encrypted', () => {
     var user = {username: 'username', password: 'password'};
     var request = { body: user };
 
@@ -170,7 +170,6 @@ describe('ApiService.signUp', () => {
         .then((ret) => {
               expect(UserMap.mock.instances.length).toBe(1);
               expect(UserMap.mock.calls[0][0].username).toBe(user.username);
-              expect(UserMap.mock.calls[0][0].password).toBe(user.password);
           }, (ret) => expect(false).toBe(true))
         .catch((err) => expect(false).toBe(true));
   });
@@ -187,8 +186,28 @@ describe('ApiService.signUp', () => {
     apiService._createPlayer = jest.fn((user, resolve, reject) => resolve(ApiService.USER_CREATED()));
 
     return apiService.signUp(request)
-        .then((ret) => expect(mockedSave.mock.calls[0][0]).not.toBeUndefined(), (ret) => expect(false).toBe(true))
-        .catch((err) => expect(false).toBe(true));
+        .then((ret) => expect(mockedSave.mock.calls[0][0]).not.toBeUndefined(), 
+        (ret) => expect(false).toBe(true));
+  });
+
+  pit('Before save user password must be encripted', () => {
+    var user = {username: 'username', password: 'password'};
+    var request = { body: user };
+    var CryptoJS = require('crypto-js');
+    var config = require('../../../config');
+
+    UserMap = jest.fn(() => {return {save: jest.fn((callback) => {callback(false)})}});
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
+
+    var apiService = new ApiService(UserMap, {}, {}, {});
+    apiService._createPlayer = jest.fn((user, resolve, reject) => resolve(ApiService.USER_CREATED()));
+
+    return apiService.signUp(request)
+        .then((ret) => {
+          var bytes  = CryptoJS.AES.decrypt(UserMap.mock.calls[0][0].password, config.secret);
+          var desencryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
+          expect(desencryptedPassword).toEqual(user.password)
+        }, (ret) => expect(false).toBe(true));
   });
 
   pit('If save return error must execute reject', () => {
