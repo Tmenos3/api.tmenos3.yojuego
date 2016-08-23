@@ -21,14 +21,11 @@ var MatchRoutes = {
 
         apiService.getUpcomingMatches(req)
         .then((ret) => {
-          console.log('getUserProfile completed - ret: ' + ret); 
           res.json(ret);
         }, (ret) => {
-          console.log('getUserProfile completed with errors - ret: ' + JSON.stringify(ret));  
           res.json(ret); 
         })
         .catch((err) => { 
-          console.log('getUserProfile throw unexpected error - err: ' + err);  
           res.json(err); 
         });
         return cb();

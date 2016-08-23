@@ -1,29 +1,13 @@
 var Condition = require('./Condition');
 
-var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
-
 class NotNullOrUndefinedCondition extends Condition {
     constructor(value, err){
         super(err);
-
-        if (isNullOrUndefined(err)) {
-            throw new Error(NotNullOrUndefinedCondition.INVALID_ERROR());
-        }else{
-            this._value = value;
-            this._err = err;
-        }
+        this._value = value;
     }
 
     isValid(){
-        return this._value !== null && this._value !== undefined;
-    }
-
-    getError(){
-        return this._err;
-    }
-
-    static INVALID_ERROR(){
-        return 'Debe proporcionar un error válido.';
+        return !(this._isNullOrUndefined(this._value));
     }
 }
 

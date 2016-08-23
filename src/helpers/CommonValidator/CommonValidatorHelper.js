@@ -15,7 +15,7 @@ class CommonValidatorHelper{
             throw new Error(CommonValidatorHelper.INVALID_CONDITION_LIST());
         }else{
             conditionsList.forEach(function(element) {
-                if(!(element instanceof NotNullOrUndefinedCondition) && !(element instanceof CustomCondition)){
+                if(!(element instanceof Condition)){
                     throw new Error(CommonValidatorHelper.INVALID_CONDITION_LIST());
                 }
             }, this);
