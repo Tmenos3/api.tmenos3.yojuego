@@ -19,7 +19,7 @@ var UserRoutes = {
         apiService.login(req)
         .then((ret) => {
             var token = jwt.sign({id: ret.id}, config.secret, { expiresIn: config.expiresIn });
-            res.json({status: true, token: token});
+            res.json({status: true, token: token, player: JSON.stringify(ret.player)});
             return cb();
         }, (ret) => {
             res.json(ret);
@@ -34,18 +34,17 @@ var UserRoutes = {
     server.post('/signUp', function(req, res, cb) {
         apiService.signUp(req)
         .then((ret) => {
-            console.log('signUp completed - ret: ' + ret); 
+            var token = jwt.sign({id: ret.id}, config.secret, { expiresIn: config.expiresIn });
+            res.json({status: true, token: token, player: JSON.stringify(ret.player)});
+            return cb();
+        }, (ret) => { 
             res.json(ret);
-        }, (ret) => {
-            console.log('signUp completed with errors - ret: ' + ret);  
-            res.json(ret); 
+            return cb(); 
         })
         .catch((err) => { 
-            console.log('signUp throw unexpected error - err: ' + err);  
-            res.json(err); 
+            res.json(err);
+            return cb(); 
         });
-
-        return cb();
       });
   }
 };

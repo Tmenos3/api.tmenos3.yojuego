@@ -1,19 +1,23 @@
 jest.mock('../../../src/models/mappings/UserMap');
+jest.mock('../../../src/models/mappings/PlayerMap');
 jest.unmock('../../../src/services/ApiService');
 
 import ApiService from '../../../src/services/ApiService';
 
-var UserMap;
 
 describe('ApiService.login', () => {
   var config = require('../../../config');
+  var UserMap;
+  var PlayerMap;
 
   beforeEach(function() {
     UserMap = require('../../../src/models/mappings/UserMap');
+    PlayerMap = require('../../../src/models/mappings/PlayerMap');
   });
 
   afterEach(function() {
     UserMap = null;
+    PlayerMap = null;
   });
 
   pit('Cannot login users if request is undefined', () => {
@@ -21,8 +25,7 @@ describe('ApiService.login', () => {
     var apiService = new ApiService({}, {}, {});
 
     return apiService.login(undefinedRequest)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()))
-    .catch((err) => expect(false).toBe(true));
+    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()));
   });
 
   pit('Cannot login users if request is null', () => {
@@ -30,8 +33,7 @@ describe('ApiService.login', () => {
     var apiService = new ApiService({}, {}, {});
 
     return apiService.login(nullRequest)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()))
-    .catch((err) => expect(false).toBe(true));
+    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST()));
   });
 
   pit('Cannot login users if body request is undefined', () => {
@@ -41,8 +43,7 @@ describe('ApiService.login', () => {
     var apiService = new ApiService({}, {}, {});
 
     return apiService.login(undefinedBodyRequest)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_BODY()))
-    .catch((err) => expect(false).toBe(true));
+    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_BODY()));
   });
 
   pit('Cannot login users if body request is null', () => {
@@ -52,8 +53,7 @@ describe('ApiService.login', () => {
     var apiService = new ApiService({}, {}, {});
 
     return apiService.login(nullBodyRequest)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_BODY()))
-    .catch((err) => expect(false).toBe(true));
+    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_REQUEST_BODY()));
   });
 
   pit('Cannot login users if username is undefined', () => {
@@ -65,8 +65,7 @@ describe('ApiService.login', () => {
     var apiService = new ApiService({}, {}, {});
 
     return apiService.login(undefinedUsername)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
-    .catch((err) => expect(false).toBe(true));
+    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()));
   });
 
   pit('Cannot login users if username is null', () => {
@@ -78,8 +77,7 @@ describe('ApiService.login', () => {
     var apiService = new ApiService({}, {}, {});
 
     return apiService.login(nullUsername)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
-    .catch((err) => expect(false).toBe(true));
+    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()));
   });
 
   pit('Cannot login users if password is undefined', () => {
@@ -92,8 +90,7 @@ describe('ApiService.login', () => {
     var apiService = new ApiService({}, {}, {});
 
     return apiService.login(undefinedPassword)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
-    .catch((err) => expect(false).toBe(true));
+    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()));
   });
 
   pit('Cannot login users if password is null', () => {
@@ -106,25 +103,27 @@ describe('ApiService.login', () => {
     var apiService = new ApiService({}, {}, {});
 
     return apiService.login(nullPassword)
-    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()))
-    .catch((err) => expect(false).toBe(true));
+    .then((ret) => expect(false).toBe(true), (ret) => expect(ret).toBe(ApiService.INVALID_CREDENTIALS()));
   });
 
   pit('When call login must use findOne from UserMap by username', () => {
     var CryptoJS = require('crypto-js');
     var config = require('../../../config');
-    var user = {username: 'username', password: 'password'};
+    var user = {_id: 'anId', username: 'username', password: 'password'};
+    var player = {_id: 'playerId', _idUser: user._id, profile: {nickname: 'nickname'}};
     var userSaved = {username: user.username, password: CryptoJS.AES.encrypt(user.password, config.secret)};
     var request = { body: user };
 
-    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, userSaved)}); 
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, userSaved)});
+    PlayerMap.findOne = jest.fn((criteria, callback) => {callback(false, player)});
 
-    var apiService = new ApiService(UserMap, {}, {});
+    var apiService = new ApiService(UserMap, PlayerMap, {});
+
     return apiService.login(request)
     .then((ret) => { 
         expect(UserMap.findOne.mock.calls[0][0].username).toEqual(user.username);
         expect(UserMap.findOne.mock.calls[0][1]).not.toBeUndefined();
-     }, (ret) => expect(false).toBe(true));
+     }, (ret) => {console.log('ret: ' + JSON.stringify(ret)); expect(false).toBe(true); });
   });
 
   pit('if findOne from UserMap return error must execute reject', () => {
@@ -139,8 +138,7 @@ describe('ApiService.login', () => {
           (ret) => {
             expect(ret.status).toBe(false);
             expect(ret.message).toBe(ApiService.UNEXPECTED_ERROR());
-          })
-    .catch((err) => expect(false).toBe(true));
+          });
   });
 
   pit('If username does not exist login must executes reject', () => {
@@ -152,8 +150,8 @@ describe('ApiService.login', () => {
     return apiService.login(request)
     .then((ret) => expect(false).toBe(true), (ret) => { 
       expect(ret.status).toBe(false);
-      expect(ret.message).toBe(ApiService.INVALID_CREDENTIALS()); })
-    .catch((err) => expect(false).toBe(true));
+      expect(ret.message).toBe(ApiService.INVALID_CREDENTIALS());
+    });
   });
 
   pit('If password does not match login must executes reject', () => {
@@ -167,23 +165,27 @@ describe('ApiService.login', () => {
     .then((ret) => expect(true).toBe(false), (ret) => { 
       expect(ret.status).toBe(false);
       expect(ret.message).toBe(ApiService.INVALID_CREDENTIALS());
-     })
-    .catch((err) => expect(true).toBe(false));
+     });
   });
 
-  pit('If password match login must return info for token', () => {
+  pit('If password match login must return info for token and player', () => {
     var CryptoJS = require('crypto-js');
     var config = require('../../../config');
     var user = {_id: 'anId', username: 'username', password: 'password'};
+    var player = {_id: 'playerId', _idUser: user._id, profile: {nickname: 'nickname'}};
     var userSaved = {_id: user._id, username: user.username, password: CryptoJS.AES.encrypt(user.password, config.secret)};
     var request = { body: user};
 
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, userSaved)});
-    var apiService = new ApiService(UserMap, {}, {});
+    PlayerMap.findOne = jest.fn((criteria, callback) => {callback(false, player)});
+    var apiService = new ApiService(UserMap, PlayerMap, {});
 
     return apiService.login(request)
     .then((ret) => {
       expect(ret.id).toEqual(user._id);
+      expect(ret.player._id).toEqual(player._id);
+      expect(ret.player._idUser).toEqual(player._idUser);
+      expect(ret.player.profile).toEqual(player.profile);
     }, (ret) => expect(true).toBe(false));
   });
 });

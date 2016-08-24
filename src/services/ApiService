@@ -83,7 +83,8 @@ class ApiService{
         this._findUserByUsername(username)
         .then(this._validateNotNullOrUndefined, () => reject({ status: false , message: ApiService.UNEXPECTED_ERROR()}))
         .then((user) => this._validatePassword(user, password), () => reject({ status: false, message: ApiService.INVALID_CREDENTIALS() }))
-        .then((user) => resolve({id: user._id}), () => reject({ status: false, message: ApiService.INVALID_CREDENTIALS() }));
+        .then((user) => this._findPlayerByIdUser(user._id), () => reject({ status: false, message: ApiService.INVALID_CREDENTIALS() }))
+        .then((player) => resolve({id: player._idUser, player: {_id: player._id, _idUser: player._idUser, profile: player.profile}}), () => reject({ status: false, message: ApiService.INVALID_CREDENTIALS() }));
     }
 
     _doAfterValidateGetUserProfile(idUser, resolve, reject){
@@ -97,7 +98,7 @@ class ApiService{
         .then(this._validateNullOrUndefined, () => reject({ status: false, message: ApiService.UNEXPECTED_ERROR() }))
         .then((user) => this._createUser(username, password), () => reject({ status: false , message: ApiService.USERNAME_IS_ALREADY_IN_USE()}))
         .then((user) => this._createPlayer(user), () => reject({ status: false , message: ApiService.UNEXPECTED_ERROR()}))
-        .then(resolve, () => reject({ status: false , message: ApiService.UNEXPECTED_ERROR()}));
+        .then((player) => resolve({id: player._idUser, player: {_id: player._id, _idUser: player._idUser, profile: player.profile}}), () => reject({ status: false, message: ApiService.UNEXPECTED_ERROR() }));
     }
 
     _doAfterValidateGetUpcomingMatches(idUser, datefrom, resolve, reject){
@@ -197,7 +198,7 @@ class ApiService{
                 if(err){
                     reject();
                 }else{
-                    resolve(ApiService.USER_CREATED());
+                    resolve(player);
                 }
             });
         });
@@ -221,10 +222,6 @@ class ApiService{
 
     _isValidRequestBody(req){
         return !(req.body === undefined || req.body === null);
-    }
-
-    _isValidAuthorization(req){
-        return !(req.headers.authorization === undefined || req.headers.authorization === null);
     }
 
     _isValidUsername(req){

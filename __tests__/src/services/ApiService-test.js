@@ -8,37 +8,37 @@ describe('ApiService', () => {
   it('Cannot create ApiService with an undefined UserMap', () => {
     var undefinedUserMap;
   
-    expect(() => new ApiService(undefinedUserMap, {}, {}, {})).toThrowError(ApiService.INVALID_USERMAP());
+    expect(() => new ApiService(undefinedUserMap, {}, {})).toThrowError(ApiService.INVALID_USERMAP());
   });
 
   it('Cannot create ApiService with an null UserMap', () => {
     var nullUserMap;
   
-    expect(() => new ApiService(nullUserMap, {}, {}, {})).toThrowError(ApiService.INVALID_USERMAP());
+    expect(() => new ApiService(nullUserMap, {}, {})).toThrowError(ApiService.INVALID_USERMAP());
   });
 
   it('Cannot create ApiService with an undefined PlayerMap', () => {
     var undefinedPlayerMap;
   
-    expect(() => new ApiService({}, undefinedPlayerMap, {}, {})).toThrowError(ApiService.INVALID_PLAYERMAP());
+    expect(() => new ApiService({}, undefinedPlayerMap, {})).toThrowError(ApiService.INVALID_PLAYERMAP());
   });
 
   it('Cannot create ApiService with an null PlayerMap', () => {
     var nullPlayerMap;
   
-    expect(() => new ApiService({}, nullPlayerMap, {}, {})).toThrowError(ApiService.INVALID_PLAYERMAP());
+    expect(() => new ApiService({}, nullPlayerMap, {})).toThrowError(ApiService.INVALID_PLAYERMAP());
   });
 
   it('Cannot create ApiService with an undefined MatchMap', () => {
     var undefinedMatchMap;
   
-    expect(() => new ApiService({}, {}, undefinedMatchMap, {})).toThrowError(ApiService.INVALID_MATCHMAP());
+    expect(() => new ApiService({}, {}, undefinedMatchMap)).toThrowError(ApiService.INVALID_MATCHMAP());
   });
 
   it('Cannot create ApiService with an null MatchMap', () => {
     var nullMatchMap;
   
-    expect(() => new ApiService({}, {}, nullMatchMap, {})).toThrowError(ApiService.INVALID_MATCHMAP());
+    expect(() => new ApiService({}, {}, nullMatchMap)).toThrowError(ApiService.INVALID_MATCHMAP());
   });
 
   pit('Can login after signUp with a new user', () => {

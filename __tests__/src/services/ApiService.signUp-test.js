@@ -277,4 +277,37 @@ describe('ApiService.signUp', () => {
             expect(ret.message).toBe(ApiService.UNEXPECTED_ERROR());
           });
   });
+
+  pit('must return info for token and player after save player', () => {
+    var CryptoJS = require('crypto-js');
+    var config = require('../../../config');
+    var user = {_id: 'idUser', username: 'username', password: 'password'};
+    var player = {_id: 'playerId', _idUser: user._id, profile: {nickname: 'nickname'}};
+    var request = { body: user};
+
+    PlayerMap = jest.fn(() => {return {
+      save: jest.fn((callback) => {callback(false)}),
+      _id: player._id,
+      _idUser: player._idUser,
+      profile: player.profile
+    }});
+    UserMap = jest.fn(() => {return {
+      save: jest.fn((callback) => {callback(false)}),
+      _id: user._id,
+      username: user.username
+    }});
+
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
+    PlayerMap.findOne = jest.fn((criteria, callback) => {callback(false, player)});
+
+    var apiService = new ApiService(UserMap, PlayerMap, {});
+
+    return apiService.signUp(request)
+        .then((ret) => {
+            expect(ret.id).toEqual(user._id);
+            expect(ret.player._id).toEqual(player._id);
+            expect(ret.player._idUser).toEqual(player._idUser);
+            expect(ret.player.profile).toEqual(player.profile);
+          }, (ret) => expect(false).toBe(true));
+  });
 });
