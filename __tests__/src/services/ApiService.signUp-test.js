@@ -116,14 +116,13 @@ describe('ApiService.signUp', () => {
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)}); 
 
     var apiService = new ApiService(UserMap, {}, {}, {});
-    apiService._createPlayer = jest.fn((user, resolve, reject) => resolve(ApiService.USER_CREATED()));
+    apiService._createPlayer = jest.fn((user) => {return new Promise((resolve, reject) => {resolve(ApiService.USER_CREATED())})});
 
     return apiService.signUp(request)
         .then((ret) => { 
               expect(UserMap.findOne.mock.calls[0][0].username).toBe(user.username);
               expect(UserMap.findOne.mock.calls[0][1]).not.toBeUndefined();
-          }, (ret) => expect(false).toBe(true))
-        .catch((err) => expect(false).toBe(true));
+          }, (ret) => expect(false).toBe(true));
   });
 
   pit('if findOne from UserMap return error must execute reject', () => {
@@ -164,7 +163,7 @@ describe('ApiService.signUp', () => {
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
 
     var apiService = new ApiService(UserMap, {}, {}, {});
-    apiService._createPlayer = jest.fn((user, resolve, reject) => resolve(ApiService.USER_CREATED()));
+    apiService._createPlayer = jest.fn((user) => {return new Promise((resolve, reject) => {resolve(ApiService.USER_CREATED())})});
 
     return apiService.signUp(request)
         .then((ret) => {
@@ -183,7 +182,7 @@ describe('ApiService.signUp', () => {
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
 
     var apiService = new ApiService(UserMap, {}, {}, {});
-    apiService._createPlayer = jest.fn((user, resolve, reject) => resolve(ApiService.USER_CREATED()));
+    apiService._createPlayer = jest.fn((user) => {return new Promise((resolve, reject) => {resolve(ApiService.USER_CREATED())})});
 
     return apiService.signUp(request)
         .then((ret) => expect(mockedSave.mock.calls[0][0]).not.toBeUndefined(), 
@@ -200,7 +199,7 @@ describe('ApiService.signUp', () => {
     UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
 
     var apiService = new ApiService(UserMap, {}, {}, {});
-    apiService._createPlayer = jest.fn((user, resolve, reject) => resolve(ApiService.USER_CREATED()));
+    apiService._createPlayer = jest.fn((user) => {return new Promise((resolve, reject) => {resolve(ApiService.USER_CREATED())})});
 
     return apiService.signUp(request)
         .then((ret) => {
