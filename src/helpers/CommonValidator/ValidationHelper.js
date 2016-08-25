@@ -1,6 +1,6 @@
-var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
-
 var Condition = require('./Condition');
+
+var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
 
 class ValidationHelper {
     constructor(conditionsList, resolveCallback, rejectCallback) {
