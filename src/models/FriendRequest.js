@@ -1,6 +1,6 @@
 'use strict'
 
-var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
 var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
 var NotIsTypeOfIntegerCondition = require('../helpers/CommonValidator/NotIsTypeOfIntegerCondition');
 var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
@@ -14,7 +14,7 @@ class FriendRequest {
             new NotIsTypeOfIntegerCondition(recipient, FriendRequest.INVALID_RECIPIENT()),
             new CustomCondition(() => { return sender !== recipient }, FriendRequest.INVALID_SENDER_AND_RECIPIENT_ARE_EQUALS())
         ];
-        var validator = new CommonValidatorHelper(conditions, () => {
+        var validator = new ValidationHelper(conditions, () => {
             this.sender = sender;
             this.recipient = recipient;
             this.state = FriendRequest.FRIEND_REQUEST_CREATED_STATE();

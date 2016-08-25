@@ -1,6 +1,6 @@
 'use strict'
 
-var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
 var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
 var NotIsTypeOfIntegerCondition = require('../helpers/CommonValidator/NotIsTypeOfIntegerCondition');
 var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
@@ -13,7 +13,7 @@ class Friendship {
             new NotIsTypeOfIntegerCondition(user, Friendship.INVALID_USER()),
             new NotIsTypeOfIntegerCondition(friend, Friendship.INVALIDAD_FRIEND())
         ];
-        var validator = new CommonValidatorHelper(conditions, () => {
+        var validator = new ValidationHelper(conditions, () => {
             this.user = user;
             this.friend = friend;
         }, (err) => { throw new Error(err); });

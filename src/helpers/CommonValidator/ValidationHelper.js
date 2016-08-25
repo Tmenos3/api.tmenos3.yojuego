@@ -1,11 +1,6 @@
 var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
 
 var Condition = require('./Condition');
-var NotHasBlankSpacesCondition = require('./NotHasBlankSpacesCondition');
-var NotIsTypeOfIntegerCondition = require('./NotIsTypeOfIntegerCondition');
-var NotLessCharacterLenghtCondition = require('./NotLessCharacterLenghtCondition');
-var NotNullOrUndefinedCondition = require('./NotNullOrUndefinedCondition');
-var CustomCondition = require('./CustomCondition');
 
 class ValidationHelper {
     constructor(conditionsList, resolveCallback, rejectCallback) {
@@ -22,7 +17,6 @@ class ValidationHelper {
                 if (!(element instanceof Condition)) {
                     throw new Error(ValidationHelper.INVALID_CONDITION_LIST());
                 }
-                throw new Error(CommonValidatorHelper.INVALID_CONDITION_LIST());
             }, this);
 
             this._conditionList = conditionsList;

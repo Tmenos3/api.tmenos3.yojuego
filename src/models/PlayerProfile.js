@@ -8,7 +8,7 @@ class PlayerProfile {
             new NotNullOrUndefinedCondition(playerID, PlayerProfile.INVALID_PALYERID()),
             new NotIsTypeOfIntegerCondition(playerID, PlayerProfile.INVALID_PALYERID()),
         ];
-        var validator = new CommonValidatorHelper(conditions, () => {
+        var validator = new ValidationHelper(conditions, () => {
             this.playerID = playerID;
         }, (err) => {
             throw new Error(err);

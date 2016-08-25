@@ -6,7 +6,6 @@
         var conditions = [new NotNullOrUndefinedCondition(source, MongoRepository.INVALID_SOURCE())];
         var validator = new ValidationHelper(conditions, () => this.source = source, (err) => { throw new Error(err) });
         validator.execute();
-        //var url = 'mongodb://localhost:27017/yojuego';
     }
 
     _connect(){

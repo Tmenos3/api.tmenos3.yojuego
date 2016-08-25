@@ -1,6 +1,6 @@
 'use strict'
 
-var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
 var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
 var NotHasBlankSpacesCondition = require('../helpers/CommonValidator/NotHasBlankSpacesCondition');
 var NotLessCharacterLenghtCondition = require('../helpers/CommonValidator/NotLessCharacterLenghtCondition');
@@ -15,7 +15,7 @@ class Player {
             new NotNullOrUndefinedCondition(userID, Player.INVALID_USER()),
             new NotIsTypeOfIntegerCondition(userID, Player.INVALID_USER_TYPE())
         ];
-        var validator = new CommonValidatorHelper(conditions, () => {
+        var validator = new ValidationHelper(conditions, () => {
             this.nickName = nickName;
             this.userID = userID;
         }, (err) => { throw new Error(err); });

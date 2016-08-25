@@ -1,25 +1,13 @@
-var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
+var Condition = require('./Condition');
 
-class NotIsTypeOfIntegerCondition {
+class NotIsTypeOfIntegerCondition extends Condition{
     constructor(value, err) {
-        if (isNullOrUndefined(err)) {
-            throw new Error(NotIsTypeOfIntegerCondition.INVALID_ERROR());
-        } else {
-            this._value = value;
-            this._err = err;
-        }
+        super(err);
+        this._value = value;
     }
 
     isValid() {
         return (Number.isInteger(this._value));
-    }
-
-    getError() {
-        return this._err;
-    }
-
-    static INVALID_ERROR() {
-        return 'Debe proporcionar un error válido.';
     }
 }
 
