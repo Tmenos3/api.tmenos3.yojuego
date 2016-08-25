@@ -3,18 +3,6 @@ jest.unmock('../../../../src/helpers/CommonValidator/CustomCondition');
 var CustomCondition = require('../../../../src/helpers/CommonValidator/CustomCondition');
 
 describe('CustomCondition', () => {
-  it('Cannot create with an undefined err', () => {
-    var undefinedErr;
-  
-    expect(() => new CustomCondition(() => { return true; } , undefinedErr)).toThrowError(CustomCondition.INVALID_ERROR());
-  });
-
-  it('Cannot create with an null err', () => {
-    var nullErr;
-  
-    expect(() => new CustomCondition(() => { return true; } , nullErr)).toThrowError(CustomCondition.INVALID_ERROR());
-  });
-
   it('Cannot create with an undefined customAction', () => {
     var undefinedCustomAction;
   
@@ -61,12 +49,5 @@ describe('CustomCondition', () => {
     var condition = new CustomCondition(trueCustomAction, 'error');
   
     expect(condition.isValid()).toBe(true);
-  });
-
-  it('getError returns the error wich Condition was created', () => {
-    var error = 'error';
-    var condition = new CustomCondition(() => { return true; }, error);
-  
-    expect(condition.getError()).toBe(error);
   });
 });

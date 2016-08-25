@@ -1,33 +1,44 @@
 jest.unmock('../../../src/services/ApiService');
-jest.mock('../../../src/repositories/MongoRepository');
-jest.mock('jsonwebtoken');
+jest.mock('../../../src/models/mappings/UserMap');
 
 import ApiService from '../../../src/services/ApiService';
 
 describe('ApiService', () => {
 
-  it('Cannot create ApiService with an undefined repo', () => {
-    var undefinedRepo;
+  it('Cannot create ApiService with an undefined UserMap', () => {
+    var undefinedUserMap;
   
-    expect(() => new ApiService(undefinedRepo)).toThrowError(ApiService.INVALID_REPOSITORY());
+    expect(() => new ApiService(undefinedUserMap, {}, {})).toThrowError(ApiService.INVALID_USERMAP());
   });
 
-  it('Cannot create ApiService with an null repo', () => {
-    var nullRepo;
+  it('Cannot create ApiService with an null UserMap', () => {
+    var nullUserMap;
   
-    expect(() => new ApiService(nullRepo)).toThrowError(ApiService.INVALID_REPOSITORY());
+    expect(() => new ApiService(nullUserMap, {}, {})).toThrowError(ApiService.INVALID_USERMAP());
   });
 
-  it('Cannot create ApiService with an undefined jwt', () => {
-    var undefinedJwt;
+  it('Cannot create ApiService with an undefined PlayerMap', () => {
+    var undefinedPlayerMap;
   
-    expect(() => new ApiService({}, undefinedJwt)).toThrowError(ApiService.INVALID_JWT());
+    expect(() => new ApiService({}, undefinedPlayerMap, {})).toThrowError(ApiService.INVALID_PLAYERMAP());
   });
 
-  it('Cannot create ApiService with an null jwt', () => {
-    var nullJwt;
+  it('Cannot create ApiService with an null PlayerMap', () => {
+    var nullPlayerMap;
   
-    expect(() => new ApiService({}, nullJwt)).toThrowError(ApiService.INVALID_JWT());
+    expect(() => new ApiService({}, nullPlayerMap, {})).toThrowError(ApiService.INVALID_PLAYERMAP());
+  });
+
+  it('Cannot create ApiService with an undefined MatchMap', () => {
+    var undefinedMatchMap;
+  
+    expect(() => new ApiService({}, {}, undefinedMatchMap)).toThrowError(ApiService.INVALID_MATCHMAP());
+  });
+
+  it('Cannot create ApiService with an null MatchMap', () => {
+    var nullMatchMap;
+  
+    expect(() => new ApiService({}, {}, nullMatchMap)).toThrowError(ApiService.INVALID_MATCHMAP());
   });
 
   pit('Can login after signUp with a new user', () => {
@@ -38,14 +49,20 @@ describe('ApiService', () => {
     */
     var user = {username: 'username', password: 'password'};
     var request = { body: user};
-    var token = 'aToken';
     
-    var jwt = require('jsonwebtoken');
-    var MongoRepository = require('../../../src/repositories/MongoRepository');
-    var mongoRep = new MongoRepository('validSource');
-    mongoRep.getOne =  jest.fn((document, criteria) => {return new Promise((resolve, reject) => { resolve({}); })});
-    jwt.sign = jest.fn((object, secret, options) => { return token });
-    var apiService = new ApiService(mongoRep, jwt);
+    var UserMap = require('../../../src/models/mappings/UserMap');
+    var PlayerMap = require('../../../src/models/mappings/PlayerMap');
+
+    var mockedSave = jest.fn((callback) => {callback(false)});
+    PlayerMap = jest.fn(() => {return {save: jest.fn((callback) => {callback(true)})}});
+    UserMap = jest.fn(() => {return {
+      save: jest.fn(() => {return {save: mockedSave}}),
+      _id: idUser,
+      username: user.username
+    }});
+    UserMap.findOne = jest.fn((criteria, callback) => {callback(false, null)});
+
+    var apiService = new ApiService(UserMap, PlayerMap, {});
 
     return apiService.login(request)
     .then((ret) => expect(true).toBe(false), 
@@ -59,13 +76,10 @@ describe('ApiService', () => {
 
                           apiService.login(request)
                               .then((ret) => {
-                                expect(ret.status).toBe(true);
-                                expect(ret.token).toBe(token);
-                              }, (ret) => expect(true).toBe(false))
-                              .catch((err) => expect(true).toBe(false));
-                      }, (ret) => expect(false).toBe(true))
-                    .catch((err) => expect(false).toBe(true));
-          })
-    .catch((err) => expect(true).toBe(false));
+                                expect(ret.username).toBe(user.username);
+                                expect(ret.password).toBe(user.password);
+                              }, (ret) => expect(true).toBe(false));
+                      }, (ret) => expect(false).toBe(true));
+          });
   });
 });

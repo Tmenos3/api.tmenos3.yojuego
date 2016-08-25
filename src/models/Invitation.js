@@ -1,6 +1,6 @@
 'use strict'
 
-var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
 var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
 var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
 
@@ -11,7 +11,7 @@ class Invitation {
             new NotNullOrUndefinedCondition(match, Invitation.INVALID_MATCH())
         ];
 
-        var validator = new CommonValidatorHelper(conditions, () => {
+        var validator = new ValidationHelper(conditions, () => {
             this.sender = sender;
             this.match = match;
         }, (err) => { throw new Error(err); });

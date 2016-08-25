@@ -1,11 +1,10 @@
 var Condition = require('./Condition');
-var isNullOrUndefined = (element) => { return (element === undefined || element === null); };
 
 class CustomCondition extends Condition {
     constructor(customAction, err) {
         super(err);
 
-        if (isNullOrUndefined(customAction)) {
+        if (this._isNullOrUndefined(customAction)) {
             throw new Error(CustomCondition.INVALID_CUSTOM_ACTION());
         } else if (typeof customAction !== 'function') {
             throw new Error(CustomCondition.INVALID_CUSTOM_ACTION());

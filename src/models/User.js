@@ -1,6 +1,6 @@
 'use strict'
 
-var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
 var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
 var NotHasBlankSpacesCondition = require('../helpers/CommonValidator/NotHasBlankSpacesCondition');
 var NotLessCharacterLenghtCondition = require('../helpers/CommonValidator/NotLessCharacterLenghtCondition');
@@ -19,7 +19,7 @@ class User {
             new CustomCondition(() => { return username !== password }, User.PASSWORD_CANNOT_BE_EQUAL_TO_USERNAME())
         ];
 
-        var validator = new CommonValidatorHelper(conditions, () => {
+        var validator = new ValidationHelper(conditions, () => {
             this.username = username;
             this.password = password;
             this.eMail = email;

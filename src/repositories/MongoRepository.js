@@ -1,10 +1,10 @@
- var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+ var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
  var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
 
  class MongoRepository {
     constructor(source){
         var conditions = [new NotNullOrUndefinedCondition(source, MongoRepository.INVALID_SOURCE())];
-        var validator = new CommonValidatorHelper(conditions, () => this.source = source, (err) => { throw new Error(err) });
+        var validator = new ValidationHelper(conditions, () => this.source = source, (err) => { throw new Error(err) });
         validator.execute();
         //var url = 'mongodb://localhost:27017/yojuego';
     }
@@ -23,7 +23,7 @@
                 new NotNullOrUndefinedCondition(childDocument, MongoRepository.INVALID_CHILD_DOCUMENT())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateInsert(rootDocument, childDocument, resolve, reject); }, (err) => reject(err));
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateInsert(rootDocument, childDocument, resolve, reject); }, (err) => reject(err));
             validator.execute();
         });
     }
@@ -36,7 +36,7 @@
                 new NotNullOrUndefinedCondition(toUpdate, MongoRepository.INVALID_DATA_TO_UPDATE())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateUpdate(rootDocument, id, toUpdate, resolve, reject); }, (err) => reject(err));
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateUpdate(rootDocument, id, toUpdate, resolve, reject); }, (err) => reject(err));
             validator.execute();
         });
     }
@@ -48,7 +48,7 @@
                 new NotNullOrUndefinedCondition(criteria, MongoRepository.INVALID_CRITERIA())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidaDelete(rootDocument, criteria, resolve, reject); }, (err) => reject(err));
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidaDelete(rootDocument, criteria, resolve, reject); }, (err) => reject(err));
             validator.execute();
         });
     }
@@ -60,7 +60,19 @@
                 new NotNullOrUndefinedCondition(criteria, MongoRepository.INVALID_CRITERIA())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateGetOne(rootDocument, criteria, resolve, reject); }, (err) => reject(err));
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateGetOne(rootDocument, criteria, resolve, reject); }, (err) => reject(err));
+            validator.execute();
+        });
+    }
+
+    getBy(rootDocument, criteria){
+        return new Promise( (resolve, reject) => {
+            var conditions = [
+                new NotNullOrUndefinedCondition(rootDocument, MongoRepository.INVALID_DOCUMENT()),
+                new NotNullOrUndefinedCondition(criteria, MongoRepository.INVALID_CRITERIA())
+            ];
+            
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateGetBy(rootDocument, criteria, resolve, reject); }, (err) => reject(err));
             validator.execute();
         });
     }
@@ -71,7 +83,7 @@
                 new NotNullOrUndefinedCondition(rootDocument, MongoRepository.INVALID_DOCUMENT())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateGetAll(rootDocument, resolve, reject); }, (err) => reject(err));
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateGetAll(rootDocument, resolve, reject); }, (err) => reject(err));
             validator.execute();
         });
     }
@@ -117,6 +129,17 @@
             var ret = db.collection(rootDocument).findOne(criteria);
             db.close();
             resolve(ret);
+        }, (err) => reject(err))
+        .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
+    }
+
+    _doAfterValidateGetBy(rootDocument, criteria, resolve, reject){
+        this._connect()
+        .then((db) => {
+             db.collection(rootDocument).find(criteria).toArray((err, documents) => {
+               db.close();
+               resolve(documents);
+             });
         }, (err) => reject(err))
         .catch((err) => reject(MongoRepository.UNEXPECTED_ERROR()));
     }

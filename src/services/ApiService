@@ -1,62 +1,24 @@
- var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+ var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
  var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
  var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
  var config = require('../../config');
-
-var profile = {
-    get: (userId) => {},
-    update: () => {}
-}
-
-var invitations = {
-    getAll: (userId) => {},
-    getPending: (userId) => {},
-    getSended: (userId) => {},
-    create: () => {},
-    accept: (invitationId) => {},
-    reject: (invitationId) => {},
-    remove: (invitationId) => {}
-}
-
-var friends = {
-    getAll: (userId) => {},
-    accept: (userId, acceptedUserId) => {},
-    invite: (userId, invitedUserId) => {},
-    remove: (userId, removedUserId) => {}
-}
-
-var groups = {
-    getAll: (userId) => {},
-    inviteTo: (userId, groupId, userToInviteId) => {},
-    joinTo: (userId, groupId) => {},
-    remove: (userId, groupId) => {},
-    create: () => {}
-} 
-
-var matches = {
-    getAll: (userId) => {},
-    getNextMatches: (userId) => {},
-    getPastMatches: (userId) => {},
-    remove: (matchId) => {},
-    create: () => {}
-}  
+ var moment = require('moment');
+ var CryptoJS = require('crypto-js');
+ var ObjectId = require('mongodb').ObjectId;
 
 class ApiService{
-    constructor(repo, jwt){
+    constructor(UserMap, PlayerMap, MatchMap){
         var conditions = [
-            new NotNullOrUndefinedCondition(repo, ApiService.INVALID_REPOSITORY()),
-            new NotNullOrUndefinedCondition(jwt, ApiService.INVALID_JWT()),
+            new NotNullOrUndefinedCondition(UserMap, ApiService.INVALID_USERMAP()),
+            new NotNullOrUndefinedCondition(PlayerMap, ApiService.INVALID_PLAYERMAP()),
+            new NotNullOrUndefinedCondition(MatchMap, ApiService.INVALID_MATCHMAP())
         ];
         
-        var validator = new CommonValidatorHelper(conditions, () => {
-            this._repo = repo; 
-            this._profile = profile;
-            this._invitations = invitations;
-            this._friends = friends;
-            this._groups = groups;
-            this._matches = matches;
-            this._repo = repo; 
-            this._jwt = jwt}, (err) => { throw new Error(err); });
+        var validator = new ValidationHelper(conditions, () => {
+            this._UserMap = UserMap;
+            this._PlayerMap = PlayerMap;
+            this._MatchMap = MatchMap; 
+        }, (err) => { throw new Error(err); });
 
         validator.execute();
     }
@@ -70,11 +32,10 @@ class ApiService{
                 new CustomCondition(() => { return this._isValidPassword(req); }, ApiService.INVALID_CREDENTIALS())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateLogin(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateLogin(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
             validator.execute();
         });
     }
-
 
     signUp(req){
         return new Promise((resolve, reject) => {
@@ -85,42 +46,178 @@ class ApiService{
                  new CustomCondition(() => { return this._isValidPassword(req); }, ApiService.INVALID_CREDENTIALS())
             ];
             
-            var validator = new CommonValidatorHelper(conditions, () => { this._doAfterValidateSignUp(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateSignUp(req.body.username, req.body.password, resolve, reject) }, (err) => { reject(err); });
+            validator.execute();
+        });
+    }
+
+    getPlayerProfile(req){
+        return new Promise((resolve, reject) => {
+            var conditions = [
+                new CustomCondition(() => { return this._isValidRequest(req); }, ApiService.INVALID_REQUEST()),
+                new CustomCondition(() => { return this._isValidRequestUser(req); }, ApiService.INVALID_REQUEST_USER()),
+                new CustomCondition(() => { return this._isValidIdUser(req); }, ApiService.UNAUTHORIZED())
+            ];
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateGetUserProfile(req.user.id, resolve, reject) }, 
+                                                                    (err) => { reject({ status: false, code: 400, message: err}); });
+            validator.execute();
+        });
+    }
+
+    getUpcomingMatches(req){
+        return new Promise((resolve, reject) => {
+            var conditions = [
+                new CustomCondition(() => { return this._isValidRequest(req); }, ApiService.INVALID_REQUEST()),
+                new CustomCondition(() => { return this._isValidRequestUser(req); }, ApiService.INVALID_REQUEST_USER()),
+                new CustomCondition(() => { return this._isValidIdUser(req); }, ApiService.UNAUTHORIZED()),
+                new CustomCondition(() => { return this._isValidRequestParams(req); }, ApiService.INVALID_REQUEST_PARAMS()),
+                new CustomCondition(() => { return this._isValidDatefrom(req); }, ApiService.INVALID_DATEFROM())
+            ];
+            var validator = new ValidationHelper(conditions, () => { this._doAfterValidateGetUpcomingMatches(req.user.id, req.params.datefrom, resolve, reject) }, 
+                                                                    (err) => reject({ status: false, code: 400, message: err}));
             validator.execute();
         });
     }
 
     _doAfterValidateLogin(username, password, resolve, reject){
-        this._repo.getOne('users', {username: username})
-            .then((userReturned) => { 
-                if (userReturned.password === password){
-                    var token = this._jwt.sign({username: userReturned.username, password: userReturned.password}, config.secret, { expiresIn: config.expiresIn });
-                    resolve({ status: true, token: token });
-                }else{
-                    reject({ status: false, message: ApiService.INVALID_CREDENTIALS() });
-                }
-             }, 
-                  (err) => { reject({ status: false, message: err }); })
-            .catch((err) => { reject({ status: false , message: err}); });
+        this._findUserByUsername(username)
+        .then(this._validateNotNullOrUndefined, () => reject({ status: false , message: ApiService.UNEXPECTED_ERROR()}))
+        .then((user) => this._validatePassword(user, password), () => reject({ status: false, message: ApiService.INVALID_CREDENTIALS() }))
+        .then((user) => this._findPlayerByIdUser(user._id), () => reject({ status: false, message: ApiService.INVALID_CREDENTIALS() }))
+        .then((player) => resolve({id: player._idUser, player: {_id: player._id, _idUser: player._idUser, profile: player.profile}}), () => reject({ status: false, message: ApiService.INVALID_CREDENTIALS() }));
+    }
+
+    _doAfterValidateGetUserProfile(idUser, resolve, reject){
+        this._findPlayerByIdUser(idUser)
+        .then(this._validateNotNullOrUndefined, () => reject({ status: false , message: ApiService.UNEXPECTED_ERROR()}))
+        .then((player) => resolve(player.profile), () => reject({ status: false, code: 401, message: ApiService.UNAUTHORIZED() }));
     }
 
     _doAfterValidateSignUp(username, password, resolve, reject){
-        this._repo.getOne('users', {username: username})
-            .then((userReturned) => { 
-                        //if(userReturned.username !== undefined){
-                        if(userReturned !== null && userReturned !== undefined){
-                            reject({ status: false, message: ApiService.USERNAME_IS_ALREADY_IN_USE() });
-                        }else{
-                            this._repo.insert('users', {username: username, password: password});
-                            resolve(ApiService.USER_CREATED());
-                        }
-                    }, 
-                  (err) => { reject({ status: false, message: err }); })
-            .catch((err) => { reject({ status: false , message: err}); });
+        this._findUserByUsername(username)
+        .then(this._validateNullOrUndefined, () => reject({ status: false, message: ApiService.UNEXPECTED_ERROR() }))
+        .then((user) => this._createUser(username, password), () => reject({ status: false , message: ApiService.USERNAME_IS_ALREADY_IN_USE()}))
+        .then((user) => this._createPlayer(user), () => reject({ status: false , message: ApiService.UNEXPECTED_ERROR()}))
+        .then((player) => resolve({id: player._idUser, player: {_id: player._id, _idUser: player._idUser, profile: player.profile}}), () => reject({ status: false, message: ApiService.UNEXPECTED_ERROR() }));
+    }
+
+    _doAfterValidateGetUpcomingMatches(idUser, datefrom, resolve, reject){
+        this._findPlayerByIdUser(idUser)
+        .then(this._validateNotNullOrUndefined,() => reject({ status: false , message: ApiService.UNEXPECTED_ERROR()}))
+        .then((player) => this._findMatchByPlayerAndDate(player, datefrom), () => reject({ status: false, code: 401, message: ApiService.UNAUTHORIZED() }))
+        .then(resolve, () => reject({ status: false , message: ApiService.UNEXPECTED_ERROR()}));
+    }
+
+    _findPlayerByIdUser(idUser){
+        return new Promise((resolve, reject) => {
+            this._PlayerMap.findOne({_idUser: idUser}, (err, playerReturned) => {
+                if(err){
+                    reject();
+                }else{
+                    resolve(playerReturned);
+                }
+            });
+        });
+    }
+
+    _findMatchByPlayerAndDate(player, datefrom){
+        return new Promise((resolve, reject) => {
+            this._MatchMap.find({ datetime: {$gte: new Date(datefrom).toISOString()}, confirmed: [player._id]}, (err, mathcesReturned) => {
+                if(err){
+                    reject();
+                }else{
+                    resolve(mathcesReturned);
+                }
+            });
+        });
+    }
+
+    _findUserByUsername(username){
+        return new Promise((resolve, reject) => {
+            this._UserMap.findOne({username: username}, (err, userReturned) => {
+                if (err){
+                    reject();
+                }else{
+                    resolve(userReturned);
+                }
+            }
+        )});
+    }
+
+    _validateNotNullOrUndefined(object){
+        return new Promise((resolve, reject) => {
+            if(object === undefined || object === null){
+                reject();
+            }else{
+                resolve(object);
+            }
+        });
+    }
+
+    _validateNullOrUndefined(object){
+        return new Promise((resolve, reject) => {
+            if(object === undefined || object === null){
+                resolve(object);
+            }else{
+                reject();
+            }
+        });
+    }
+
+    _validatePassword(user, password){
+        return new Promise((resolve, reject) => {
+            if (this._getDesencryptedData_2(user.password) != password){
+                reject();
+            }else{
+                resolve(user);
+            }
+        });
+    }
+
+    _createUser(username, password){
+        return new Promise((resolve, reject) => {
+            var user = new this._UserMap({username: username, password: this._getEncryptedData(password)});
+            user.save((err) => {
+                if (err){
+                    reject();
+                }else{
+                    resolve(user);
+                }
+            });
+        });
+    }
+
+    _createPlayer(user){
+        return new Promise((resolve, reject) => {
+            var player = new this._PlayerMap({
+                _idUser: user._id, 
+                profile: {nickname: user.username}}
+                );
+
+            player.save((err) => {
+                if(err){
+                    reject();
+                }else{
+                    resolve(player);
+                }
+            });
+        });
+    }
+
+    _getDesencryptedData_2(data){
+        return CryptoJS.AES.decrypt(data, config.secret).toString(CryptoJS.enc.Utf8);
+    }
+
+    _getEncryptedData(data){
+        return CryptoJS.AES.encrypt(data, config.secret);
     }
 
     _isValidRequest(req){
         return !(req === undefined || req === null);
+    }
+
+    _isValidRequestHeader(req){
+        return !(req.headers === undefined || req.headers === null);
     }
 
     _isValidRequestBody(req){
@@ -135,20 +232,52 @@ class ApiService{
         return !(req.body.password === undefined || req.body.password === null);
     }
 
+    _isValidRequestParams(req){
+        return !(req.params === undefined || req.params === null);
+    }
+
+    _isValidDatefrom(req){
+        return (!(req.params.datefrom === undefined || req.params.datefrom === null)) && moment(req.params.datefrom, [moment.ISO_8601], true).isValid();
+    }
+
+    _isValidRequestUser(req){
+        return !(req.user === undefined || req.user === null);
+    }
+
+    _isValidIdUser(req){
+        return !(req.user.id === undefined || req.user.id === null);
+    }
+
+    static UNAUTHORIZED(){
+        return 'Unauthorized';
+    }
+
     static INVALID_REQUEST(){
         return 'Request inválido';
+    }
+
+    static INVALID_REQUEST_PARAMS(){
+        return 'Los parámetros del request no son válidos.';
+    }
+
+    static INVALID_REQUEST_USER(){
+        return 'EL req.user no es válido.';
     }
 
     static INVALID_REQUEST_BODY(){
         return 'Body request inválido';
     }
 
-    static INVALID_REPOSITORY(){
-        return 'El password es inválido';
+    static INVALID_USERMAP(){
+        return 'El USERMAP es inválido.';
     }
 
-    static INVALID_JWT(){
-        return 'El jwt es inválido';
+    static INVALID_PLAYERMAP(){
+        return 'El PLAYERMAP es inválido.';
+    }
+
+    static INVALID_MATCHMAP(){
+        return 'El MATCHMAP es inválido.';
     }
 
     static INVALID_CALLBACK(){
@@ -160,11 +289,27 @@ class ApiService{
     }
 
     static USERNAME_IS_ALREADY_IN_USE(){
-        return 'El nombre d eusuario ya está siendo utilizado.';
+        return 'El nombre de usuario ya está siendo utilizado.';
+    }
+
+    static INVALID_ID_USER(){
+        return 'El id de usuario es inválido.';
     }
 
     static USER_CREATED(){
         return 'El usuario ha sido creado.';
+    }
+
+    static USER_DOES_NOT_EXIST(){
+        return 'Usuario inexistente.';
+    }
+
+    static UNEXPECTED_ERROR(){
+        return 'Error inexperado.';
+    }
+
+    static INVALID_DATEFROM(){
+        return 'El parametro datefrom debe existeir en el request.params';
     }
 }
 

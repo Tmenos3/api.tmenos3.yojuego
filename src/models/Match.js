@@ -1,6 +1,6 @@
 'use strict'
 
-var CommonValidatorHelper = require('../helpers/CommonValidator/CommonValidatorHelper');
+var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
 var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
 var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
 
@@ -13,7 +13,7 @@ class Match {
             new NotNullOrUndefinedCondition(creator, Match.INVALID_CREATOR())
         ];
 
-        var validator = new CommonValidatorHelper(conditions, () => {
+        var validator = new ValidationHelper(conditions, () => {
             this.date = date;
             this.time = time;
             this.location = location;
@@ -28,7 +28,7 @@ class Match {
         var conditions = [
             new NotNullOrUndefinedCondition(player, Match.INVALID_PLAYER())
         ];
-        var validator = new CommonValidatorHelper(conditions, () => {
+        var validator = new ValidationHelper(conditions, () => {
             this.players.push(player);
         }, (err) => { throw new Error(err); });
         validator.execute();
@@ -38,7 +38,7 @@ class Match {
         var conditions = [
             new NotNullOrUndefinedCondition(player, Match.INVALID_PLAYER())
         ];
-        var validator = new CommonValidatorHelper(conditions, () => {
+        var validator = new ValidationHelper(conditions, () => {
             this.players = this.players.filter(function (element) {
                 return element.username !== player.username;
             });
