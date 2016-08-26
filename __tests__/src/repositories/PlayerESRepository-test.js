@@ -5,7 +5,7 @@ describe('PlayerESRepository', () => {
   it('Cannot create with an undefined source', () => {
     var undefinedSource;
   
-    expect(() => new PlayerESRepository(undefinedSource)).toThrowError(ESRepository.INVALID_SOURCE());
+    expect(() => new PlayerESRepository(undefinedSource)).toThrowError(ESRepository.INVALID_SOURCE);
   });
 /*
   it('Cannot create with a source null', () => {
