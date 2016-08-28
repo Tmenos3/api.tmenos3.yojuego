@@ -14,8 +14,6 @@
   "dependencies": {
     "crypto-js": "^3.1.6",
     "jsonwebtoken": "^7.1.7",
-    "mongoose": "^4.5.8",
-    "mongoose-construct": "0.0.1",
     "node-fetch": "^1.6.0",
     "restify": "4.1.x",
     "restify-jwt": "^0.4.0"
@@ -27,8 +25,6 @@
     "babel-preset-react": "*",
     "jest": "*",
     "moment": "^2.14.1",
-    "mongodb": "^2.2.5",
-    "mongoose": "^4.5.9",
     "react": "^15.3.0"
   },
   "jest": {
