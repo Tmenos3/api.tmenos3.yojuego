@@ -2,16 +2,15 @@
 
 var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
 var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
-var NotIsTypeOfIntegerCondition = require('../helpers/CommonValidator/NotIsTypeOfIntegerCondition');
 var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
 
 class FriendRequest {
     constructor(sender, recipient) {
         var conditions = [
             new NotNullOrUndefinedCondition(sender, FriendRequest.INVALID_SENDER()),
-            new NotIsTypeOfIntegerCondition(sender, FriendRequest.INVALID_SENDER()),
+
             new NotNullOrUndefinedCondition(recipient, FriendRequest.INVALID_RECIPIENT()),
-            new NotIsTypeOfIntegerCondition(recipient, FriendRequest.INVALID_RECIPIENT()),
+
             new CustomCondition(() => { return sender !== recipient }, FriendRequest.INVALID_SENDER_AND_RECIPIENT_ARE_EQUALS())
         ];
         var validator = new ValidationHelper(conditions, () => {

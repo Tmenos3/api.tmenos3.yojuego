@@ -2,7 +2,7 @@
 
 var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
 var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
-var NotIsTypeOfIntegerCondition = require('../helpers/CommonValidator/NotIsTypeOfIntegerCondition');
+var InstanceOfCondition = require('../helpers/CommonValidator/InstanceOfCondition');
 var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
 
 class Friendship {
@@ -10,8 +10,8 @@ class Friendship {
         var conditions = [
             new NotNullOrUndefinedCondition(user, Friendship.INVALID_USER()),
             new NotNullOrUndefinedCondition(friend, Friendship.INVALIDAD_FRIEND()),
-            new NotIsTypeOfIntegerCondition(user, Friendship.INVALID_USER()),
-            new NotIsTypeOfIntegerCondition(friend, Friendship.INVALIDAD_FRIEND())
+            new InstanceOfCondition(user, Number, Friendship.INVALID_USER()),
+            new InstanceOfCondition(friend, Number, Friendship.INVALIDAD_FRIEND())
         ];
         var validator = new ValidationHelper(conditions, () => {
             this.user = user;
