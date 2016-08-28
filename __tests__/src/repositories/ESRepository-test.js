@@ -18,7 +18,7 @@ describe('ESRepository', () => {
   
     expect(() => new ESRepository(invalidSource)).toThrowError(ESRepository.INVALID_SOURCE);
   });
-
+/*
   it('Can create a valid ESRepository', () => {
     var url = 'http://localhost/';
     var repo = new ESRepository(url);
@@ -26,7 +26,7 @@ describe('ESRepository', () => {
     expect(repo.Source).toEqual(url);
   });
 
-/*
+
   pit('Connect must execute the resolve callback if connection succesful', () => {
     var mongoRep = new PlayerESRepository("aValidUrl");
     
