@@ -2,137 +2,82 @@ jest.unmock('../../../src/models/Match');
 
 import Match from '../../../src/models/Match';
 import Player from '../../../src/models/Player';
-import User from '../../../src/models/User';
 
 describe('Match', () => {
-  it('Cannot create with a Date undefined', () => {
+  it('Cannot create with an undefined tittle', () => {
+    var undefinedTittle;
+
+    expect(() => new Match(undefinedTittle, new Date(2010, 10, 10), '00:00:00', 'Lanus', 1)).toThrowError(Match.INVALID_TITTLE());
+  });
+
+  it('Cannot create with a null tittle', () => {
+    var nullTittle = null;
+
+    expect(() => new Match(nullTittle, new Date(2010, 10, 10), '00:00:00', 'Lanus', 1)).toThrowError(Match.INVALID_TITTLE());
+  });
+
+  it('Cannot create with a undefined Date', () => {
     var undefinedDate;
 
-    expect(() => new Match(undefinedDate, '00:00:00', 'Lanus')).toThrowError(Match.INVALID_DATE());
+    expect(() => new Match('titulo', undefinedDate, '00:00:00', 'Lanus', 1)).toThrowError(Match.INVALID_DATE());
   });
 
-  it('Cannot create with a Date null', () => {
+  it('Cannot create with a null Date', () => {
     var nullDate = null;
 
-    expect(() => new Match(nullDate, '00:00:00', 'Lanus')).toThrowError(Match.INVALID_DATE());
+    expect(() => new Match('titulo', nullDate, '00:00:00', 'Lanus', 1)).toThrowError(Match.INVALID_DATE());
   });
 
-  it('Cannot create with a Time undefined', () => {
+  it('Cannot create with a Date if it is not Date type', () => {
+    var aDate = 'No soy un tipo Date';
+
+    expect(() => new Match('titulo', aDate, '00:00:00', 'Lanus', 1)).toThrowError(Match.INVALID_DATE_TYPE());
+  });
+
+  it('Cannot create with an undefined Time', () => {
     var undefinedTime;
 
-    expect(() => new Match('20000101', undefinedTime, 'Lanus')).toThrowError(Match.INVALID_TIME());
+    expect(() => new Match('Titulo', new Date(2010, 10, 10), undefinedTime, 'Lanus', 1)).toThrowError(Match.INVALID_TIME());
   });
 
-  it('Cannot create with a Time null', () => {
+  it('Cannot create with a null Time', () => {
     var nullTime = null;
-    expect(() => new Match('20000101', nullTime, 'Lanus')).toThrowError(Match.INVALID_TIME());
+    expect(() => new Match('Titulo', new Date(2010, 10, 10), nullTime, 'Lanus', 1)).toThrowError(Match.INVALID_TIME());
   });
 
-  it('Cannot create with a Location undefined', () => {
+  it('Cannot create with an undefined Location', () => {
     var undefinedLocation;
-    expect(() => new Match('20000101', '00:00:00', undefinedLocation)).toThrowError(Match.INVALID_LOCATION());
+    expect(() => new Match('Titulo', new Date(2010, 10, 10), '00:00:00', undefinedLocation, 1)).toThrowError(Match.INVALID_LOCATION());
   });
 
-  it('Cannot create with a Location null', () => {
+  it('Cannot create with a null Location', () => {
     var nullLocation = null;
-    expect(() => new Match('20000101', '00:00:00', nullLocation)).toThrowError(Match.INVALID_LOCATION());
+    expect(() => new Match('Titulo', new Date(2010, 10, 10), '00:00:00', nullLocation, 1)).toThrowError(Match.INVALID_LOCATION());
   });
 
-  it('Cannot create with a Creator undefined', () => {
+  it('Cannot create with an undefined Creator', () => {
     var undefinedCreator;
-    expect(() => new Match('20000101', '00:00:00', 'Lanus', undefinedCreator)).toThrowError(Match.INVALID_CREATOR());
+    expect(() => new Match('Titulo', new Date(2010, 10, 10), '00:00:00', 'Lanus', undefinedCreator)).toThrowError(Match.INVALID_CREATOR());
   });
 
   it('Cannot create with a Creator null', () => {
     var nullCreator = null;
-    expect(() => new Match('20000101', '00:00:00', 'Lanus', nullCreator)).toThrowError(Match.INVALID_CREATOR());
-  });
-
-  it('Cannot add a players undefined', () => {
-    var anUndefinedPlayer;
-    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'qqq@qqq.com'));
-
-    expect(() => match.addPlayer(anUndefinedPlayer)).toThrowError(Match.INVALID_PLAYER());
-  });
-
-  it('Cannot add a players null', () => {
-    var aNullPlayer = null;
-    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'email@email.com'));
-
-    expect(() => match.addPlayer(aNullPlayer)).toThrowError(Match.INVALID_PLAYER());
-  });
-
-  it('Cannot remove a players undefined', () => {
-    var anUndefinedPlayer;
-    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'email@email.com'));
-
-    expect(() => match.removePlayer(anUndefinedPlayer)).toThrowError(Match.INVALID_PLAYER());
-  });
-
-  it('Cannot remove a players null', () => {
-    var aNullPlayer = null;
-    var match = new Match('19000101', '00:00:00', 'aLocation', new User('aUserName', 'aShortPassword', 'email@email.com'));
-
-    expect(() => match.removePlayer(aNullPlayer)).toThrowError(Match.INVALID_PLAYER());
+    expect(() => new Match('Titulo', new Date(2010, 10, 10), '00:00:00', 'Lanus', nullCreator)).toThrowError(Match.INVALID_CREATOR());
   });
 
   it('Can create a valid Match', () => {
-    var aDate = '19000101';
+    var aTittle = 'Título';
+    var aDate = new Date(2010, 10, 10);
     var aTime = '00:00:00';
     var aLocation = 'aLocation';
-    var aUser = new User('aUsername', 'aPassword', 'email@email.com');
+    var aCreator = 1;
 
-    var match = new Match(aDate, aTime, aLocation, aUser);
+    var match = new Match(aTittle, aDate, aTime, aLocation, aCreator);
 
+    expect(match.tittle).toBe(aTittle);
     expect(match.date).toBe(aDate);
     expect(match.time).toBe(aTime);
     expect(match.location).toBe(aLocation);
-    expect(match.creator.equal(aUser)).toBe(true);
-  });
-
-  it('Can add a valid player', () => {
-    var aDate = '19000101';
-    var aTime = '00:00:00';
-    var aLocation = 'aLocation';
-    var aUser = new User('aUsername', 'aPassword', 'email@email.com');
-    var aPlayer = new Player('nickName', 1);
-    var match = new Match(aDate, aTime, aLocation, aUser);
-
-    //Creo que está mal agregar un user como creador, siempre se trabaja con el player
-    //El user solo se usaría con fines de login en principio, luego y eventualmente,
-    //segun el tipo de cuenta se pueden considerar otra cosas.
-    //Entiendo que la relacion sería: 
-    // User 
-    //   >> Player
-    //       >> Match
-    //       >> Invitation
-    //       >> Group
-    //       >> Friends
-    expect('').toBe('Analizar este test');
-
-    match.addPlayer(aPlayer);
-    expect(match.date).toBe(aDate);
-    expect(match.time).toBe(aTime);
-    expect(match.location).toBe(aLocation);
-    expect(match.creator.equal(aUser)).toBe(true);
-    expect(match.players[0].equal(aPlayer)).toBe(true);
-    expect(match.players.length).toBe(1);
-  });
-
-  it('Can remove a valid player', () => {
-    var aDate = '19000101';
-    var aTime = '00:00:00';
-    var aLocation = 'aLocation';
-    var aUser = new User('aUsername', 'aPassword', 'aEMail@email.com');
-    var aPlayer = new Player('nickName', 1);
-    var match = new Match(aDate, aTime, aLocation, aUser);
-
-    match.addPlayer(aPlayer);
-    match.removePlayer(aPlayer);
-    expect(match.date).toBe(aDate);
-    expect(match.time).toBe(aTime);
-    expect(match.location).toBe(aLocation);
-    expect(match.creator.equal(aUser)).toBe(true);
-    expect(match.players.length).toBe(0);
+    expect(match.creator).toBe(aCreator);
   });
 })

@@ -5,14 +5,16 @@ var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrU
 var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
 
 class Invitation {
-    constructor(sender, match) {
+    constructor(sender, recipient, match) {
         var conditions = [
             new NotNullOrUndefinedCondition(sender, Invitation.INVALID_SENDER()),
+            new NotNullOrUndefinedCondition(recipient, Invitation.INVALID_RECIPIENT()),
             new NotNullOrUndefinedCondition(match, Invitation.INVALID_MATCH())
         ];
 
         var validator = new ValidationHelper(conditions, () => {
             this.sender = sender;
+            this.recipient = recipient;
             this.match = match;
         }, (err) => { throw new Error(err); });
         validator.execute();
@@ -26,6 +28,10 @@ class Invitation {
 
     static INVALID_MATCH() {
         return 'El partido debe tener un valor';
+    }
+
+    static INVALID_RECIPIENT() {
+        return 'El DESTINATARIO debe contener un valor.';
     }
 }
 
