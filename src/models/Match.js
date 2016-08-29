@@ -13,8 +13,7 @@ class Match {
             new NotNullOrUndefinedCondition(time, Match.INVALID_TIME()),
             new NotNullOrUndefinedCondition(location, Match.INVALID_LOCATION()),
             new NotNullOrUndefinedCondition(creator, Match.INVALID_CREATOR()),
-            new InstanceOfCondition(date, Date, Match.INVALID_DATE_TYPE()),
-            new InstanceOfCondition(creator, Integer, Match.INVALID_CREATOR_TYPE())
+            new InstanceOfCondition(date, Date, Match.INVALID_DATE_TYPE())
         ];
 
         var validator = new ValidationHelper(conditions, () => {
@@ -25,7 +24,9 @@ class Match {
             this.creator = creator;
         }, (err) => { throw new Error(err); });
         validator.execute();
-
+        if (!this.creator instanceof Number) {
+            throw new Error('No es number!!!');
+        }
         this.players = [];
     }
 
@@ -42,7 +43,7 @@ class Match {
         return 'El creador es inválido.';
     }
     static INVALID_CREATOR_TYPE() {
-        return 'El creador debe ser del tipo INTEGEER.';
+        return 'El creador debe ser del tipo Number.';
     }
     static INVALID_PLAYER() {
         return 'El jugardor es inválido.'
