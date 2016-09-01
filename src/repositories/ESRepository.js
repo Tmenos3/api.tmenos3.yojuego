@@ -6,18 +6,14 @@ import RegexCondition from '../helpers/CommonValidator/RegexCondition';
 const uriRegex = "(http|ftp|https)://[\w-]+(\.[\w-]+)+([\w.,@?^=%&amp;:/~+#-]*[\w@?^=%&amp;/~+#-])?";
 
 class ESRepository {
-    constructor(uri) {
+    constructor(client) {
         let conditions = [
-            new NotNullOrUndefinedCondition(uri, ESRepository.INVALID_SOURCE),
+            new NotNullOrUndefinedCondition(client, ESRepository.INVALID_CLIENT),
             //new RegexCondition(uri, uriRegex, ESRepository.INVALID_SOURCE)
         ];
 
         new ValidationHelper(conditions, () => {
-            this._soruce = uri;
-            this._esclient = new ElasticSearch.Client({
-                host: uri + ':9200',
-                log: 'trace'
-            });
+            this.esclient = client;
         }, (err) => { throw new Error(err); })
             .execute();
     }
@@ -47,7 +43,7 @@ class ESRepository {
     }
 
     static get INVALID_CLIENT() {
-        return "Invalid Source";
+        return "Invalid Client";
     }
 }
 
