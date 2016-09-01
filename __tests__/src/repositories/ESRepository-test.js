@@ -2,13 +2,13 @@ import ESRepository from '../../../src/repositories/ESRepository';
 
 describe('ESRepository', () => {
   it('Cannot create with an undefined source', () => {
-    var undefinedSource;
+    let undefinedSource;
 
     expect(() => new ESRepository(undefinedSource)).toThrowError(ESRepository.INVALID_SOURCE);
   });
 
   it('Cannot create with a source null', () => {
-    var nullSource = null;
+    let nullSource = null;
 
     expect(() => new ESRepository(nullSource)).toThrowError(ESRepository.INVALID_SOURCE);
   });
@@ -22,8 +22,8 @@ describe('ESRepository', () => {
   */
 
   it('Can create a valid ESRepository', () => {
-    var url = 'http://localhost:9200/';
-    var repo = new ESRepository(url);
+    let url = 'http://localhost:9200/';
+    let repo = new ESRepository(url);
 
     expect(repo.Source).toEqual(url);
     expect(repo.ESClient && repo.ESClient != null).toEqual(true);

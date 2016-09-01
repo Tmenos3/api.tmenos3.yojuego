@@ -5,9 +5,9 @@ class PlayerESRepository extends ESRepository {
     return "Invalid Player";
   }
 
-  add(player) {
+  add(player) { 
     return new Promise(function (resolve, reject) {
-      if (!player) {
+      if (!player && player != null) {
         reject(PlayerESRepository.INVALID_PLAYER);
       }
     });
