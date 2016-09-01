@@ -32,9 +32,22 @@ describe('ESRepository', () => {
     var client = new es.Client();
     client.search = jes.fn((criteria, callback) => { console.log('cuando llame al seacrh, vas a ver esto'); callback(false, 'algo que retorne'); }); // Simulo el comportamiento que deseo
     
+        //     index: app,
+        //     type: type,
+        //     body: {
+        //         query: {
+        //             match: {
+        //                 _id: id
+        //             }
+        //         }
+        //     }
+    
     let repo = new ESRepository(client);
-
-    expect(repo.esclient.search.mock.calls.length).toEqual(2);
-    expect(repo.esclient.search.mock.calls[1][0].host).toEqual('http://localhost:9200/');
+    repo.getById('id', 'index', 'type'); //ejecuto el metodo, pero creo que tenes que armar un promise
+    .then((objectReturned) => {
+        expect(repo.esclient.search.mock.calls[0][0].index).toEqual('index');
+        expect(repo.esclient.search.mock.calls[0][1].type).toEqual('type');
+        expect(repo.esclient.search.mock.calls[0][2].body.query.match._id).toEqual('id');
+    });
   });
 });
