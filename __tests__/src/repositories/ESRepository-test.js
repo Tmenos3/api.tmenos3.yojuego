@@ -1,16 +1,16 @@
 import ESRepository from '../../../src/repositories/ESRepository';
 
 describe('ESRepository', () => {
-  it('Cannot create with an undefined source', () => {
-    let undefinedSource;
+  it('Cannot create with an undefined ESClient', () => {
+    let undefinedESClient;
 
-    expect(() => new ESRepository(undefinedSource)).toThrowError(ESRepository.INVALID_SOURCE);
+    expect(() => new ESRepository(undefinedESClient)).toThrowError(ESRepository.INVALID_CLIENT);
   });
 
-  it('Cannot create with a source null', () => {
-    let nullSource = null;
+  it('Cannot create with a null ESClient', () => {
+    let nullESClient = null;
 
-    expect(() => new ESRepository(nullSource)).toThrowError(ESRepository.INVALID_SOURCE);
+    expect(() => new ESRepository(nullESClient)).toThrowError(ESRepository.INVALID_CLIENT);
   });
 
   /*

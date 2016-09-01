@@ -1,28 +1,43 @@
+jest.mock('elasticsearch');
+
 import PlayerESRepository from '../../../src/repositories/PlayerESRepository';
 
 describe('PlayerESRepository', () => {
-  pit('Cannot add an undefined Player', () => {
-    let undefinedPlayer;
+  // pit('Cannot add an undefined Player', () => {
+  //   let undefinedPlayer;
+  //   let playerRepo = new PlayerESRepository('http://localhost:9200/');
+
+  //   return playerRepo.add(undefinedPlayer)
+  //     .then((objReturned) => {
+  //       expect(true).toBe(false);
+  //     }, (err) => {
+  //       expect(err).toBe(PlayerESRepository.INVALID_PLAYER);
+  //     });
+  // });
+
+  // pit('Cannot add a null Player', () => {
+  //   let nullPlayer = null;
+  //   let playerRepo = new PlayerESRepository('http://localhost:9200/');
+
+  //   return playerRepo.add(nullPlayer)
+  //     .then((objReturned) => {
+  //       expect(true).toBe(false);
+  //     }, (err) => {
+  //       expect(err).toBe(PlayerESRepository.INVALID_PLAYER);
+  //     });
+  // });
+
+  pit('Can getById a player ', () => {
+    var es = require('elasticsearch');
+    es.Client = jest.fn();
+    var x = new es.Client();
     let playerRepo = new PlayerESRepository('http://localhost:9200/');
 
-    return playerRepo.add(undefinedPlayer)
-      .then((objReturned) => {
-        expect(true).toBe(false);
-      }, (err) => {
-        expect(err).toBe(PlayerESRepository.INVALID_PLAYER);
-      });
-  });
 
-  pit('Cannot add a null Player', () => {
-    let nullPlayer = null;
-    let playerRepo = new PlayerESRepository('http://localhost:9200/');
-
-    return playerRepo.add(nullPlayer)
-      .then((objReturned) => {
-        expect(true).toBe(false);
-      }, (err) => {
-        expect(err).toBe(PlayerESRepository.INVALID_PLAYER);
-      });
+    console.log(JSON.stringify(es.Client.mock.calls.length));
+    console.log(JSON.stringify(playerRepo._es.mock));
+    expect(playerRepo._es.Client.mock.calls.length).toEqual(2);
+    expect(playerRepo._es.Client.mock.calls[1][0].host).toEqual('http://localhost:9200/');
   });
 
   /*

@@ -1,29 +1,55 @@
 var restify = require('restify');
-var jwt = require('restify-jwt');
 var config = require('./config');
-var mongoose = require('mongoose');
-var FriendRoutes = require('./src/routes/player/FriendRoutes');
-var GroupRoutes = require('./src/routes/player/GroupRoutes');
-var InvitationRoutes = require('./src/routes/player/InvitationRoutes');
-var MatchRoutes = require('./src/routes/player/MatchRoutes');
-var PlayerRoutes = require('./src/routes/player/PlayerRoutes');
-var UserRoutes = require('./src/routes/user/UserRoutes');
+var es = require('elasticsearch');
 
-mongoose.connect(config.database);
+var cli = new es.Client({  
+    host: 'http://localhost:9200',
+    log: 'info'
+});
 
 var server = restify.createServer();
 server.use(restify.bodyParser());
-server.use(jwt({ secret: config.secret}).unless({path: config.pathsWithoutAuthentication}));
 
+server.get(id, (req, res, next) => { 
+  cli.search({  
+    index: 'app',
+    type: 'player',
+    body: {
+        query: {
+            match: {
+                _id: id
+            }
+        }
+    }
+  },function (error, response,status) {
+      if (error){
+        res.json(error);
+      }
+      else {
+        response.hits.hits.forEach(function(hit){
+          console.log(JSON.stringify(hit));
+          res.json(hit);
+        });
+      }
+  });
+}); //echo
 
-FriendRoutes.setRoutes(server);
-GroupRoutes.setRoutes(server);
-InvitationRoutes.setRoutes(server);
-MatchRoutes.setRoutes(server);
-PlayerRoutes.setRoutes(server);
-UserRoutes.setRoutes(server);
-
-server.post('/echo', (req, res, next) => { res.send(req.body); }); //echo
+server.get('/echo1', (req, res, next) => { 
+  cli.create({
+    index: 'app',
+    type: 'player',
+    id: '1',
+    body: {
+      title: 'Test 1',
+      tags: ['y', 'z'],
+      published: true,
+      published_at: '2013-01-01',
+      counter: 1
+    }
+  }, function (error, response) {
+    // ...
+  });
+});
 
 server.listen(config.port, function() {
   console.log('%s listening at %s', server.name, server.url);
