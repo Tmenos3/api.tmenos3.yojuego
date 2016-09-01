@@ -1,6 +1,7 @@
 import ESRepository from './ESRepository';
 
 class PlayerESRepository extends ESRepository {
+  
   static get INVALID_PLAYER() {
     return "Invalid Player";
   }
@@ -14,7 +15,7 @@ class PlayerESRepository extends ESRepository {
   }
 
   getById(playerId) {
-    return null;
+    super.getById('app', 'player', playerId)
   }
 }
 
