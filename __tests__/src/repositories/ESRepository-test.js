@@ -4,7 +4,7 @@ import ESRepository from '../../../src/repositories/ESRepository';
 
 describe('ESRepository', () => {
   var es = require('elasticsearch');
-  
+
   it('Cannot create with an undefined ESClient', () => {
     let undefinedESClient;
 
@@ -21,33 +21,107 @@ describe('ESRepository', () => {
     let es = require('elasticsearch');
     es.Client = jest.fn();
     let client = new es.Client();
-    
+
     let repo = new ESRepository(client);
 
     expect(repo.esclient).toEqual(client);
   });
 
+  //hay que testear que ni el id, ni el index, ni el type sean null o undefined
   pit('Can get a document by id ', () => {
-    //let es = require('elasticsearch'); lo pongo a nivel de clase
+    var toReturn = { obj: 'any object to return' };
     var client = new es.Client();
-    client.search = jes.fn((criteria, callback) => { console.log('cuando llame al seacrh, vas a ver esto'); callback(false, 'algo que retorne'); }); // Simulo el comportamiento que deseo
-    
-        //     index: app,
-        //     type: type,
-        //     body: {
-        //         query: {
-        //             match: {
-        //                 _id: id
-        //             }
-        //         }
-        //     }
-    
+    client.search = jest.fn((criteria, callback) => { callback(false, { hits: { hits: [toReturn] } }); });
+
     let repo = new ESRepository(client);
-    repo.getById('id', 'index', 'type'); //ejecuto el metodo, pero creo que tenes que armar un promise
-    .then((objectReturned) => {
-        expect(repo.esclient.search.mock.calls[0][0].index).toEqual('index');
-        expect(repo.esclient.search.mock.calls[0][1].type).toEqual('type');
-        expect(repo.esclient.search.mock.calls[0][2].body.query.match._id).toEqual('id');
-    });
+    return repo.getById('id', 'index', 'type')
+      .then((objectReturned) => {
+        expect(client.search.mock.calls[0][0].index).toEqual('index');
+        expect(client.search.mock.calls[0][0].type).toEqual('type');
+        expect(client.search.mock.calls[0][0].body.query.match._id).toEqual('id');
+        expect(objectReturned).toEqual(toReturn);
+      }, (err) => expect(true).toEqual(false));
+  });
+
+  pit('If element does not exist getById returns null', () => {
+    var client = new es.Client();
+    client.search = jest.fn((criteria, callback) => { callback(false, { hits: { hits: [] } }); });
+
+    let repo = new ESRepository(client);
+    return repo.getById('id', 'index', 'type')
+      .then((objectReturned) => {
+        expect(objectReturned).toBeNull();
+      }, (err) => expect(true).toEqual(false));
+  });
+
+  pit('If element esClient returns error getById must execute reject', () => {
+    var client = new es.Client();
+    client.search = jest.fn((criteria, callback) => { callback(true, {}); });
+
+    let repo = new ESRepository(client);
+    return repo.getById('id', 'index', 'type')
+      .then((objectReturned) => expect(true).toEqual(false), (err) => expect(err).toEqual(ESRepository.UNEXPECTED_ERROR));
+  });
+
+  //hay que testear que ni el id, ni el index, ni el type sean null o undefined
+  pit('Can get documents by criteria', () => {
+    var arrayToReturn = [{ obj: 'object_one' }, { obj: 'object_two' }];
+    var criteria = { field1: '1', field2: 2 };
+    var client = new es.Client();
+    client.search = jest.fn((criteria, callback) => { callback(false, { hits: { hits: arrayToReturn } }); });
+
+    let repo = new ESRepository(client);
+    return repo.getBy(criteria, 'index', 'type')
+      .then((list) => {
+        expect(client.search.mock.calls[0][0].index).toEqual('index');
+        expect(client.search.mock.calls[0][0].type).toEqual('type');
+        expect(client.search.mock.calls[0][0].body.query.match).toEqual(criteria);
+        expect(list.length).toEqual(arrayToReturn.length);
+      }, (err) => expect(true).toEqual(false));
+  });
+
+  pit('If element does not exist getBy returns []', () => {
+    var client = new es.Client();
+    client.search = jest.fn((criteria, callback) => { callback(false, { hits: { hits: [] } }); });
+    //Hay que ver que devuelve ES cuando no encuentra registros, dependiendo de ese resultado
+    //quizas haya que refactorizar el test
+
+    let repo = new ESRepository(client);
+    return repo.getBy({ criteria: 'id' }, 'index', 'type')
+      .then((list) => expect(list).toEqual([]), (err) => expect(true).toEqual(false));
+  });
+
+  pit('If element esClient returns error getBy must execute reject', () => {
+    var client = new es.Client();
+    client.search = jest.fn((criteria, callback) => { callback(true, {}); });
+
+    let repo = new ESRepository(client);
+    return repo.getBy({ criteria: 'id' }, 'index', 'type')
+      .then((list) => expect(true).toEqual(false), (err) => expect(err).toEqual(ESRepository.UNEXPECTED_ERROR));
+  });
+
+  //hay que testear que ni el id, ni el index, ni el type sean null o undefined
+  pit('Can add documents', () => {
+    var document = { field1: '1', field2: 2 };
+    var client = new es.Client();
+    client.index = jest.fn((criteria, callback) => { callback(false, { }); });
+
+    let repo = new ESRepository(client);
+    return repo.add(document, 'index', 'type')
+      .then((resp) => {
+        expect(client.index.mock.calls[0][0].index).toEqual('index');
+        expect(client.index.mock.calls[0][0].type).toEqual('type');
+        expect(client.index.mock.calls[0][0].body).toEqual(document);
+        expect(resp).toEqual(ESRepository.DOCUMENT_INSERTED);
+      }, (err) => expect(true).toEqual(false));
+  });
+
+  pit('If element esClient returns error add must execute reject', () => {
+    var client = new es.Client();
+    client.index = jest.fn((criteria, callback) => { callback(true, {}); });
+
+    let repo = new ESRepository(client);
+    return repo.add({ document: 'id' }, 'index', 'type')
+      .then((list) => expect(true).toEqual(false), (err) => expect(err).toEqual(ESRepository.UNEXPECTED_ERROR));
   });
 });
