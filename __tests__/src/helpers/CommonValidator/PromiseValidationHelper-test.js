@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/PromiseValidationHelper');
-
 var Condition = require('../../../../src/helpers/CommonValidator/Condition');
 var NotNullOrUndefinedCondition = require('../../../../src/helpers/CommonValidator/NotNullOrUndefinedCondition');
 var CustomCondition = require('../../../../src/helpers/CommonValidator/CustomCondition');

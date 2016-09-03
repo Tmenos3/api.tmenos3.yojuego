@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/NotNullOrUndefinedCondition');
-
 var NotNullOrUndefinedCondition = require('../../../../src/helpers/CommonValidator/NotNullOrUndefinedCondition');
 
 describe('NotNullOrUndefinedCondition', () => {

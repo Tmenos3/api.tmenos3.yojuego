@@ -1,5 +1,3 @@
-jest.unmock('../../../src/models/Match');
-
 import Match from '../../../src/models/Match';
 import Player from '../../../src/models/Player';
 

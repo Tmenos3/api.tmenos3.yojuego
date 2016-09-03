@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/ValidMailCondition');
-
 var ValidMailCondition = require('../../../../src/helpers/CommonValidator/ValidMailCondition');
 
 describe('ValidMailCondition', () => {

@@ -1,5 +1,3 @@
-jest.unmock('../../../src/models/Invitation');
-
 import Invitation from '../../../src/models/Invitation';
 
 describe('Invitation', () => {

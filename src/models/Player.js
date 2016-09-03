@@ -1,35 +1,34 @@
 'use strict'
-import Enum from 'es6-enum';
-var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
-var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
-var NotHasBlankSpacesCondition = require('../helpers/CommonValidator/NotHasBlankSpacesCondition');
-var NotLessCharacterLenghtCondition = require('../helpers/CommonValidator/NotLessCharacterLenghtCondition');
-var InstanceOfCondition = require('../helpers/CommonValidator/InstanceOfCondition');
+
+import { Validator,
+    CustomCondition,
+    NotNullOrUndefinedCondition,
+    HasNotBlankSpacesCondition,
+    NotLessCharacterLenghtCondition,
+    InstanceOfCondition } from 'no-if-validator';
 
 class Player {
     constructor(nickName, birthDate, state) {
-        var conditions = [
-            new NotNullOrUndefinedCondition(nickName, Player.INVALID_NICKNAME()),
-            new NotHasBlankSpacesCondition(nickName, Player.INVALID_NICKNAME_HAS_BLANKSPACES()),
-            new NotLessCharacterLenghtCondition(nickName, 5, Player.INVALID_NICKNAME_IS_SHORT()),
-            new NotNullOrUndefinedCondition(birthDate, Player.INVALID_BIRTHDATE()),
-            new InstanceOfCondition(birthDate, Date, Player.INVALID_DATE_TYPE()),
-            new NotNullOrUndefinedCondition(state, Player.INVALID_STATE())
-        ];
-        var validator = new ValidationHelper(conditions, () => {
+        var validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(nickName).throw(new Error(Player.INVALID_NICKNAME())));
+        validator.addCondition(new HasNotBlankSpacesCondition(nickName).throw(new Error(Player.INVALID_NICKNAME_HAS_BLANKSPACES())));
+        validator.addCondition(new CustomCondition(() => { return nickName.length >= 5 }).throw(new Error(Player.INVALID_NICKNAME_IS_SHORT())));
+        validator.addCondition(new NotNullOrUndefinedCondition(birthDate).throw(new Error(Player.INVALID_BIRTHDATE())));
+        validator.addCondition(new InstanceOfCondition(birthDate, Date).throw(new Error(Player.INVALID_DATE_TYPE())));
+        validator.addCondition(new NotNullOrUndefinedCondition(state).throw(new Error(Player.INVALID_STATE())));
+        validator.execute(() => {
             this.nickName = nickName;
             this.birthDate = birthDate;
             this.state = state;
-        }, (err) => { throw new Error(err); });
-        validator.execute();
+        }, (err) => { throw err; });
     }
 
 
     static playerStates() {
-       return STATES = {
-           NEW: { value: 0, name: "new" },
-           OLD: { value: 1, name: "old" }
-       };
+        return STATES = {
+            NEW: { value: 0, name: "new" },
+            OLD: { value: 1, name: "old" }
+        };
     }
 
     equal(otherPlayer) {

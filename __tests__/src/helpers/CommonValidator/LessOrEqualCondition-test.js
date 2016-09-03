@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/LessOrEqualCondition');
-
 var LessOrEqualCondition = require('../../../../src/helpers/CommonValidator/LessOrEqualCondition');
 
 describe('LessOrEqualCondition', () => {
