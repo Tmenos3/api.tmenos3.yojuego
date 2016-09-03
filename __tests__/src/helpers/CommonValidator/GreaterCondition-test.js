@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/GreaterCondition');
-
 var GreaterCondition = require('../../../../src/helpers/CommonValidator/GreaterCondition');
 
 describe('GreaterCondition', () => {

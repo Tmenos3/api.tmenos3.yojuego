@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/CustomCondition');
-
 var CustomCondition = require('../../../../src/helpers/CommonValidator/CustomCondition');
 
 describe('CustomCondition', () => {

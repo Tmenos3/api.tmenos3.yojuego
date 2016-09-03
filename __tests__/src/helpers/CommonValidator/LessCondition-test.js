@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/LessCondition');
-
 var LessCondition = require('../../../../src/helpers/CommonValidator/LessCondition');
 
 describe('LessCondition', () => {

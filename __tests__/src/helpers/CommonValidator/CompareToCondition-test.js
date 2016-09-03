@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/CompareToCondition');
-
 var CompareToCondition = require('../../../../src/helpers/CommonValidator/CompareToCondition');
 
 describe('CompareToCondition', () => {

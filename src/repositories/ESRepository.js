@@ -1,59 +1,86 @@
 import ElasticSearch from 'elasticsearch';
-import ValidationHelper from '../helpers/CommonValidator/ValidationHelper';
-import NotNullOrUndefinedCondition from '../helpers/CommonValidator/NotNullOrUndefinedCondition';
+import { Validator, NotNullOrUndefinedCondition } from 'no-if-validator';
 
 class ESRepository {
     constructor(client) {
-        let conditions = [new NotNullOrUndefinedCondition(client, ESRepository.INVALID_CLIENT)];
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(client).throw(new Error(ESRepository.INVALID_CLIENT)));
 
-        var validator = new ValidationHelper(conditions, () => {
+        validator.execute(() => {
             this.esclient = client;
-        }, (err) => { throw new Error(err); });
-
-        validator.execute();
+        }, (err) => { throw err; });
     }
 
     getById(id, index, type) {
         return new Promise((resolve, reject) => {
-            this.esclient.search(this._getQueryForSearchBy({ _id: id }, index, type), (error, response, status) => {
-                if (error) {
-                    reject(ESRepository.UNEXPECTED_ERROR);
-                }
-                else {
-                    if (response.hits.hits.length > 0) {
-                        resolve(response.hits.hits[0]);
-                    } else {
-                        resolve(null);
+            let validator = new Validator();
+            validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.INVALID_ID)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+
+            validator.execute(() => {
+                this.esclient.search(this._getQueryForSearchBy({ _id: id }, index, type), (error, response, status) => {
+                    if (error) {
+                        reject(ESRepository.UNEXPECTED_ERROR);
                     }
-                }
-            });
+                    else {
+                        if (response.hits.hits.length > 0) {
+                            resolve(response.hits.hits[0]);
+                        } else {
+                            resolve(null);
+                        }
+                    }
+                });
+            }, (err) => { throw err; });
         });
     }
 
     getBy(criteria, index, type) {
         return new Promise((resolve, reject) => {
-            this.esclient.search(this._getQueryForSearchBy(criteria, index, type), (error, response, status) => {
-                if (error) {
-                    reject(ESRepository.UNEXPECTED_ERROR);
-                }
-                else {
-                    resolve(response.hits.hits);
-                }
-            });
+            let validator = new Validator();
+            validator.addCondition(new NotNullOrUndefinedCondition(criteria).throw(new Error(ESRepository.INVALID_CRITERIA)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+
+            validator.execute(() => {
+                this.esclient.search(this._getQueryForSearchBy(criteria, index, type), (error, response, status) => {
+                    if (error) {
+                        reject(ESRepository.UNEXPECTED_ERROR);
+                    }
+                    else {
+                        resolve(response.hits.hits);
+                    }
+                });
+            }, (err) => { throw err; });
         });
     }
 
     add(document, index, type) {
         return new Promise((resolve, reject) => {
-            this.esclient.index(this._getQueryForAdd(document, index, type), (error, resp) => {
-                if (error) {
-                    reject(ESRepository.UNEXPECTED_ERROR);
-                }
-                else {
-                    resolve(ESRepository.DOCUMENT_INSERTED);
-                }
-            });
+            let validator = new Validator();
+            validator.addCondition(new NotNullOrUndefinedCondition(document).throw(new Error(ESRepository.INVALID_DOCUMENT)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+
+            validator.execute(() => {
+                this.esclient.index(this._getQueryForAdd(document, index, type), (error, resp) => {
+                    if (error) {
+                        reject(ESRepository.UNEXPECTED_ERROR);
+                    }
+                    else {
+                        resolve(ESRepository.DOCUMENT_INSERTED);
+                    }
+                });
+            }, (err) => { throw err; });
         });
+    }
+
+    delete(id, index, type) {
+        throw new Error('must be implemented');
+    }
+
+    update(id, index, type) {
+        throw new Error('must be implemented');
     }
 
     _getQueryForSearchBy(criteria, index, type) {
@@ -78,6 +105,26 @@ class ESRepository {
 
     static get INVALID_CLIENT() {
         return "Invalid Client";
+    }
+
+    static get INVALID_ID() {
+        return "Invalid id";
+    }
+
+    static get INVALID_CRITERIA() {
+        return "Invalid criteria";
+    }
+
+    static get INVALID_DOCUMENT() {
+        return "Invalid document";
+    }
+
+    static get INVALID_INDEX() {
+        return "Invalid index";
+    }
+
+    static get INVALID_TYPE() {
+        return "Invalid type";
     }
 
     static get DOCUMENT_INSERTED() {

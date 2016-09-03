@@ -1,4 +1,4 @@
-var Condition = require('./Condition');
+import Condition from './Condition';
 
 class CompareToCondition extends Condition {
     constructor(x, compareCriteria, y, err) {
@@ -11,7 +11,6 @@ class CompareToCondition extends Condition {
             this._y = y;
             this._compareCriteria = compareCriteria;
         }
-        //(['a', 'b', 'c'].indexOf(str) >= 0)
     }
 
     isValid() {

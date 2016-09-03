@@ -1,9 +1,12 @@
-jest.mock('elasticsearch');
-
 import ESRepository from '../../../src/repositories/ESRepository';
 
 describe('ESRepository', () => {
-  var es = require('elasticsearch');
+    let getMockedClient = (err, ret) => {
+      return {
+        search: jest.fn((criteria, callback) => { callback(err, ret); }),
+        index: jest.fn((criteria, callback) => { callback(err, ret); })
+      }
+    };
 
   it('Cannot create with an undefined ESClient', () => {
     let undefinedESClient;
@@ -18,20 +21,69 @@ describe('ESRepository', () => {
   });
 
   it('Can create a valid ESRepository', () => {
-    let es = require('elasticsearch');
-    es.Client = jest.fn();
-    let client = new es.Client();
+    let validClient = {};
+    let repo = new ESRepository(validClient);
 
-    let repo = new ESRepository(client);
-
-    expect(repo.esclient).toEqual(client);
+    expect(repo.esclient).toEqual(validClient);
   });
 
-  //hay que testear que ni el id, ni el index, ni el type sean null o undefined
+  pit('Cannot getById with undefined id', () => {
+    let undefinedId;
+    let repo = new ESRepository({});
+
+    return repo.getById(undefinedId, 'index', 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_ID));
+  });
+
+  pit('Cannot getById with null id', () => {
+    let nullId = null;
+    let repo = new ESRepository({});
+
+    return repo.getById(nullId, 'index', 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_ID));
+  });
+
+  pit('Cannot getById with undefined index', () => {
+    let undefinedIndex;
+    let repo = new ESRepository({});
+
+    return repo.getById('id', undefinedIndex, 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
+  });
+
+  pit('Cannot getById with null index', () => {
+    let nullIndex = null;
+    let repo = new ESRepository({});
+
+    return repo.getById('id', nullIndex, 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
+  });
+
+  pit('Cannot getById with undefined type', () => {
+    let undefinedType;
+    let repo = new ESRepository({});
+
+    return repo.getById('id', 'index', undefinedType)
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
+  });
+
+  pit('Cannot getById with null type', () => {
+    let nullType = null;
+    let repo = new ESRepository({});
+
+    return repo.getById('id', 'index', nullType)
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
+  });
+
   pit('Can get a document by id ', () => {
     var toReturn = { obj: 'any object to return' };
-    var client = new es.Client();
-    client.search = jest.fn((criteria, callback) => { callback(false, { hits: { hits: [toReturn] } }); });
+    let client = getMockedClient(false, { hits: { hits: [toReturn] } });
 
     let repo = new ESRepository(client);
     return repo.getById('id', 'index', 'type')
@@ -44,8 +96,7 @@ describe('ESRepository', () => {
   });
 
   pit('If element does not exist getById returns null', () => {
-    var client = new es.Client();
-    client.search = jest.fn((criteria, callback) => { callback(false, { hits: { hits: [] } }); });
+    let client = getMockedClient(false, { hits: { hits: [] } });
 
     let repo = new ESRepository(client);
     return repo.getById('id', 'index', 'type')
@@ -55,20 +106,73 @@ describe('ESRepository', () => {
   });
 
   pit('If element esClient returns error getById must execute reject', () => {
-    var client = new es.Client();
-    client.search = jest.fn((criteria, callback) => { callback(true, {}); });
+    let client = getMockedClient(true, {});
 
     let repo = new ESRepository(client);
     return repo.getById('id', 'index', 'type')
       .then((objectReturned) => expect(true).toEqual(false), (err) => expect(err).toEqual(ESRepository.UNEXPECTED_ERROR));
   });
 
-  //hay que testear que ni el id, ni el index, ni el type sean null o undefined
+  pit('Cannot getBy with undefined criteria', () => {
+    let undefinedCriteria;
+    let repo = new ESRepository({});
+
+    return repo.getBy(undefinedCriteria, 'index', 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_CRITERIA));
+  });
+
+  pit('Cannot getBy with null criteria', () => {
+    let nullCriteria = null;
+    let repo = new ESRepository({});
+
+    return repo.getBy(nullCriteria, 'index', 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_CRITERIA));
+  });
+
+  pit('Cannot getBy with undefined index', () => {
+    let undefinedIndex;
+    let repo = new ESRepository({});
+
+    return repo.getBy({ criteria: 'criteria' }, undefinedIndex, 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
+  });
+
+  pit('Cannot getBy with null index', () => {
+    let nullIndex = null;
+    let repo = new ESRepository({});
+
+    return repo.getBy({ criteria: 'criteria' }, nullIndex, 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
+  });
+
+  pit('Cannot getBy with undefined type', () => {
+    let undefinedType;
+    let repo = new ESRepository({});
+
+    return repo.getBy({ criteria: 'criteria' }, 'index', undefinedType)
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
+  });
+
+  pit('Cannot getBy with null type', () => {
+    let nullType = null;
+    let repo = new ESRepository({});
+
+    return repo.getBy({ criteria: 'criteria' }, 'index', nullType)
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
+  });
+
   pit('Can get documents by criteria', () => {
     var arrayToReturn = [{ obj: 'object_one' }, { obj: 'object_two' }];
     var criteria = { field1: '1', field2: 2 };
-    var client = new es.Client();
-    client.search = jest.fn((criteria, callback) => { callback(false, { hits: { hits: arrayToReturn } }); });
+    var client = {
+      search: jest.fn((criteria, callback) => { callback(false, { hits: { hits: arrayToReturn } }); })
+    };
 
     let repo = new ESRepository(client);
     return repo.getBy(criteria, 'index', 'type')
@@ -81,8 +185,8 @@ describe('ESRepository', () => {
   });
 
   pit('If element does not exist getBy returns []', () => {
-    var client = new es.Client();
-    client.search = jest.fn((criteria, callback) => { callback(false, { hits: { hits: [] } }); });
+    let client = getMockedClient(false, { hits: { hits: [] } });
+
     //Hay que ver que devuelve ES cuando no encuentra registros, dependiendo de ese resultado
     //quizas haya que refactorizar el test
 
@@ -92,19 +196,70 @@ describe('ESRepository', () => {
   });
 
   pit('If element esClient returns error getBy must execute reject', () => {
-    var client = new es.Client();
-    client.search = jest.fn((criteria, callback) => { callback(true, {}); });
+    let client = getMockedClient(true, {});
 
     let repo = new ESRepository(client);
     return repo.getBy({ criteria: 'id' }, 'index', 'type')
       .then((list) => expect(true).toEqual(false), (err) => expect(err).toEqual(ESRepository.UNEXPECTED_ERROR));
   });
 
-  //hay que testear que ni el id, ni el index, ni el type sean null o undefined
+  pit('Cannot add document with undefined document', () => {
+    let undefinedDocument;
+    let repo = new ESRepository({});
+
+    return repo.add(undefinedDocument, 'index', 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_DOCUMENT));
+  });
+
+  pit('Cannot add document with null document', () => {
+    let nullDocument = null;
+    let repo = new ESRepository({});
+
+    return repo.add(nullDocument, 'index', 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_DOCUMENT));
+  });
+
+  pit('Cannot add document with undefined index', () => {
+    let undefinedIndex;
+    let repo = new ESRepository({});
+
+    return repo.add({ document: 'document' }, undefinedIndex, 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
+  });
+
+  pit('Cannot add document with null index', () => {
+    let nullIndex = null;
+    let repo = new ESRepository({});
+
+    return repo.getBy({ document: 'document' }, nullIndex, 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
+  });
+
+  pit('Cannot add document with undefined type', () => {
+    let undefinedType;
+    let repo = new ESRepository({});
+
+    return repo.add({ document: 'document' }, 'index', undefinedType)
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
+  });
+
+  pit('Cannot add document with null type', () => {
+    let nullType = null;
+    let repo = new ESRepository({});
+
+    return repo.add({ document: 'document' }, 'index', nullType)
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
+  });
+
   pit('Can add documents', () => {
     var document = { field1: '1', field2: 2 };
-    var client = new es.Client();
-    client.index = jest.fn((criteria, callback) => { callback(false, { }); });
+    let client = getMockedClient(false, {});
 
     let repo = new ESRepository(client);
     return repo.add(document, 'index', 'type')
@@ -117,8 +272,7 @@ describe('ESRepository', () => {
   });
 
   pit('If element esClient returns error add must execute reject', () => {
-    var client = new es.Client();
-    client.index = jest.fn((criteria, callback) => { callback(true, {}); });
+    let client = getMockedClient(true, {});
 
     let repo = new ESRepository(client);
     return repo.add({ document: 'id' }, 'index', 'type')

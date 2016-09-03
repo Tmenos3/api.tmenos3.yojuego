@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/InstanceOfCondition');
-
 var InstanceOfCondition = require('../../../../src/helpers/CommonValidator/InstanceOfCondition');
 
 describe('InstanceOfCondition', () => {

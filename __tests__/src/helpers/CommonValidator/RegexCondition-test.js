@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/RegexCondition');
-
 var RegexCondition = require('../../../../src/helpers/CommonValidator/RegexCondition');
 
 describe('RegexCondition', () => {

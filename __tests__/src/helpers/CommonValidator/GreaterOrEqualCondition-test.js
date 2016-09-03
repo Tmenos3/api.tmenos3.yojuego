@@ -1,5 +1,3 @@
-jest.unmock('../../../../src/helpers/CommonValidator/GreaterOrEqualCondition');
-
 var GreaterOrEqualCondition = require('../../../../src/helpers/CommonValidator/GreaterOrEqualCondition');
 
 describe('GreaterOrEqualCondition', () => {
