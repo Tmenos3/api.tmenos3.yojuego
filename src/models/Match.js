@@ -6,22 +6,34 @@ var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
 var InstanceOfCondition = require('../helpers/CommonValidator/InstanceOfCondition');
 
 class Match {
-    constructor(tittle, date, time, location, creator) {
+    constructor(tittle, date, fromTime, toTime, location, creator, matchType) {
         var conditions = [
             new NotNullOrUndefinedCondition(tittle, Match.INVALID_TITTLE()),
             new NotNullOrUndefinedCondition(date, Match.INVALID_DATE()),
-            new NotNullOrUndefinedCondition(time, Match.INVALID_TIME()),
+            new NotNullOrUndefinedCondition(fromTime, Match.INVALID_TIME()),
+            new CustomCondition(() => {
+                var regex = /([01]\d|2[0-3]):([0-5]\d)/;
+                return regex.test(fromTime)
+            }, Match.INVALID_TIME_FORMAT()),
+            new NotNullOrUndefinedCondition(toTime, Match.INVALID_TIME()),
+            new CustomCondition(() => {
+                var regex = /([01]\d|2[0-3]):([0-5]\d)/;
+                return regex.test(toTime)
+            }, Match.INVALID_TIME_FORMAT()),
             new NotNullOrUndefinedCondition(location, Match.INVALID_LOCATION()),
             new NotNullOrUndefinedCondition(creator, Match.INVALID_CREATOR()),
-            new InstanceOfCondition(date, Date, Match.INVALID_DATE_TYPE())
+            new InstanceOfCondition(date, Date, Match.INVALID_DATE_TYPE()),
+            new NotNullOrUndefinedCondition(matchType, Match.INVALID_MATCH_TYPE()),
         ];
 
         var validator = new ValidationHelper(conditions, () => {
             this.tittle = tittle;
             this.date = date;
-            this.time = time;
+            this.fromTime = fromTime;
+            this.toTime = toTime;
             this.location = location;
             this.creator = creator;
+            this.matchType = matchType;
         }, (err) => { throw new Error(err); });
         validator.execute();
         if (!this.creator instanceof Number) {
@@ -35,6 +47,9 @@ class Match {
     }
     static INVALID_TIME() {
         return 'La hora no debe ser invalida.';
+    }
+    static INVALID_TIME_FORMAT() {
+        return 'El formato de la hora es inválido.';
     }
     static INVALID_LOCATION() {
         return 'La ubicación no debe ser invalida.';
@@ -53,6 +68,9 @@ class Match {
     }
     static INVALID_DATE_TYPE() {
         return 'La fecha debe ser del tipo Date.'
+    }
+    static INVALID_MATCH_TYPE() {
+        return 'El tipo de partido no puede ser nulo o indefinido.';
     }
 }
 
