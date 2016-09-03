@@ -13,6 +13,7 @@ class Invitation {
         ];
 
         var validator = new ValidationHelper(conditions, () => {
+            this.id;
             this.sender = sender;
             this.recipient = recipient;
             this.match = match;

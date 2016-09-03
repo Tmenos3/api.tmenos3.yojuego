@@ -8,9 +8,7 @@ class FriendRequest {
     constructor(sender, recipient) {
         var conditions = [
             new NotNullOrUndefinedCondition(sender, FriendRequest.INVALID_SENDER()),
-
             new NotNullOrUndefinedCondition(recipient, FriendRequest.INVALID_RECIPIENT()),
-
             new CustomCondition(() => { return sender !== recipient }, FriendRequest.INVALID_SENDER_AND_RECIPIENT_ARE_EQUALS())
         ];
         var validator = new ValidationHelper(conditions, () => {

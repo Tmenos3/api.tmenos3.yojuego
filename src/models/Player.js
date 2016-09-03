@@ -1,35 +1,31 @@
 'use strict'
-import Enum from 'es6-enum';
+
 var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
 var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
 var NotHasBlankSpacesCondition = require('../helpers/CommonValidator/NotHasBlankSpacesCondition');
 var NotLessCharacterLenghtCondition = require('../helpers/CommonValidator/NotLessCharacterLenghtCondition');
 var InstanceOfCondition = require('../helpers/CommonValidator/InstanceOfCondition');
-
+import PlayerAdminState from '../../src/constants/PlayerAdminState';
 class Player {
-    constructor(nickName, birthDate, state) {
+    constructor(nickName, birthDate, state, adminState) {
         var conditions = [
             new NotNullOrUndefinedCondition(nickName, Player.INVALID_NICKNAME()),
             new NotHasBlankSpacesCondition(nickName, Player.INVALID_NICKNAME_HAS_BLANKSPACES()),
             new NotLessCharacterLenghtCondition(nickName, 5, Player.INVALID_NICKNAME_IS_SHORT()),
             new NotNullOrUndefinedCondition(birthDate, Player.INVALID_BIRTHDATE()),
             new InstanceOfCondition(birthDate, Date, Player.INVALID_DATE_TYPE()),
-            new NotNullOrUndefinedCondition(state, Player.INVALID_STATE())
+            new NotNullOrUndefinedCondition(state, Player.INVALID_STATE()),
+            new NotNullOrUndefinedCondition(adminState, Player.INVALID_ADMIN_STATE())//,
+            //new InstanceOfCondition(adminState, PlayerAdminState, Player.INVALID_ADMIN_STATE_TYPE()),
         ];
         var validator = new ValidationHelper(conditions, () => {
+            this.id;
             this.nickName = nickName;
             this.birthDate = birthDate;
             this.state = state;
+            this.adminState = adminState;
         }, (err) => { throw new Error(err); });
         validator.execute();
-    }
-
-
-    static playerStates() {
-       return STATES = {
-           NEW: { value: 0, name: "new" },
-           OLD: { value: 1, name: "old" }
-       };
     }
 
     equal(otherPlayer) {
@@ -54,10 +50,16 @@ class Player {
         return 'El la fecha de nacimiento no es del tipo DATE.';
     }
     static INVALID_STATE() {
-        return 'El estado es inválido. No debe ser nul ni indefinido.';
+        return 'El estado es inválido. No debe ser nulo ni indefinido.';
     }
 
+    static INVALID_ADMIN_STATE() {
+        return 'El estado administrativo es inválido. No debe ser nulo ni indefinido.';
+    }
 
+    static INVALID_ADMIN_STATE_TYPE() {
+        return 'El estado administrativo no es del tipo PlayerAdminState.';
+    }
 }
 
 module.exports = Player;
