@@ -23,12 +23,7 @@ describe('PlayerRoutes', () => {
         };
         let playerRoutes = new PlayerRoutes();
         playerRoutes.add(serverMocked)
-        //GET: player
-        //GET: player/getBy/:params
-        //GET: player/:id
-        //POST: player/create
-        //POST: player/:id/update
-        //DELETE: player/:id
+
         expect(serverMocked.get.mock.calls.length).toEqual(3);
         expect(serverMocked.post.mock.calls.length).toEqual(2);
         expect(serverMocked.delete.mock.calls.length).toEqual(1);

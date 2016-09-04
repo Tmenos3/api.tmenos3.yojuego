@@ -10,7 +10,7 @@ describe('PlayerESRepository', () => {
     };
 
     pit('Can get a player by id ', () => {
-        var player = new Player('playerID', 'aValidNickname', new Date(2010, 10, 10), 'aValidState');
+        var player = new Player('aValidNickname', new Date(2010, 10, 10), 'aValidState', 'adminState');
         let client = getMockedClient(false, { hits: { hits: [player] } });
 
         let repo = new PlayerESRepository(client);
@@ -25,10 +25,10 @@ describe('PlayerESRepository', () => {
 
     pit('Can get list a players by criteria ', () => {
         var players = [
-            {_id: 'anyValidId', source: {nickName: 'nickName', birthDate: '2016-09-03T19:00:00Z', state: 'developing...'}},
-            {_id: 'otherValidId', source: {nickName: 'other_nickName', birthDate: '2016-09-03T19:00:00Z', state: 'developing...'}},
-            ];
-        var criteria = {criteria: 'anyCriteria'};
+            { _id: 'anyValidId', source: { nickName: 'nickName', birthDate: '2016-09-03T19:00:00Z', state: 'developing...', adminState: 'adminState' } },
+            { _id: 'otherValidId', source: { nickName: 'other_nickName', birthDate: '2016-09-03T19:00:00Z', state: 'developing...', adminState: 'adminState_2' } },
+        ];
+        var criteria = { criteria: 'anyCriteria' };
         let client = getMockedClient(false, { hits: { hits: players } });
 
         let repo = new PlayerESRepository(client);
@@ -42,7 +42,7 @@ describe('PlayerESRepository', () => {
     });
 
     pit('Can add a player', () => {
-        var player = new Player('playerID', 'aValidNickname', new Date(2010, 10, 10), 'aValidState');
+        var player = new Player('aValidNickname', new Date(2010, 10, 10), 'aValidState', 'adminState');
         let client = getMockedClient(false, {});
 
         let repo = new PlayerESRepository(client);
@@ -53,6 +53,7 @@ describe('PlayerESRepository', () => {
                 expect(client.index.mock.calls[0][0].body.nickName).toEqual(player.nickName);
                 expect(client.index.mock.calls[0][0].body.birthDate).toEqual(player.birthDate);
                 expect(client.index.mock.calls[0][0].body.state).toEqual(player.state);
+                expect(client.index.mock.calls[0][0].body.adminState).toEqual(player.adminState);
                 expect(resp).toEqual(PlayerESRepository.DOCUMENT_INSERTED);
             }, (err) => expect(true).toEqual(false));
     });

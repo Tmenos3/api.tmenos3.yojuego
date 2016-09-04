@@ -1,30 +1,30 @@
 'use strict'
 
 import { Validator,
-    CustomCondition,
     NotNullOrUndefinedCondition,
     HasNotBlankSpacesCondition,
-    NotLessCharacterLenghtCondition,
+    CustomCondition,
     InstanceOfCondition } from 'no-if-validator';
 
 class Player {
-    constructor(id, nickName, birthDate, state) {
+    constructor(nickName, birthDate, state, adminState) {
         var validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(Player.INVALID_ID)));
         validator.addCondition(new NotNullOrUndefinedCondition(nickName).throw(new Error(Player.INVALID_NICKNAME)));
         validator.addCondition(new HasNotBlankSpacesCondition(nickName).throw(new Error(Player.INVALID_NICKNAME_HAS_BLANKSPACES)));
         validator.addCondition(new CustomCondition(() => { return nickName.length >= 5 }).throw(new Error(Player.INVALID_NICKNAME_IS_SHORT)));
         validator.addCondition(new NotNullOrUndefinedCondition(birthDate).throw(new Error(Player.INVALID_BIRTHDATE)));
         validator.addCondition(new InstanceOfCondition(birthDate, Date).throw(new Error(Player.INVALID_DATE_TYPE)));
         validator.addCondition(new NotNullOrUndefinedCondition(state).throw(new Error(Player.INVALID_STATE)));
+        validator.addCondition(new NotNullOrUndefinedCondition(adminState).throw(new Error(Player.INVALID_ADMIN_STATE)));
+
         validator.execute(() => {
             this.nickName = nickName;
             this.birthDate = birthDate;
             this.state = state;
-            this.id = id;
+            this.adminState = adminState;
+            this.id = '';
         }, (err) => { throw err; });
     }
-
 
     static playerStates() {
         return STATES = {
@@ -62,6 +62,10 @@ class Player {
 
     static get INVALID_ID() {
         return 'El ID es inválido. No debe ser null ni indefinido.';
+    }
+
+    static get INVALID_ADMIN_STATE_TYPE() {
+        return 'El estado administrativo no es del tipo PlayerAdminState.';
     }
 }
 

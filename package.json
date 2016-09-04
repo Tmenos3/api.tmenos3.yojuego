@@ -15,17 +15,20 @@
     "crypto-js": "^3.1.6",
     "elasticsearch": "^11.0.1",
     "jsonwebtoken": "^7.1.7",
+    "no-if-validator": "^1.0.0-4",
     "node-fetch": "^1.6.0",
+    "passport-restify": "^1.0.1",
+    "react": "^15.3.1",
     "restify": "4.1.x",
     "restify-jwt": "^0.4.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.11.4",
-    "babel-jest": "^15.0.0",
+    "babel-cli": "*",
+    "babel-jest": "*",
     "babel-preset-es2015": "*",
-    "jest": "^15.1.1",
-    "moment": "^2.14.1",
-    "no-if-validator": "^1.0.0-4"
+    "babel-preset-react": "*",
+    "jest": "*",
+    "moment": "*"
   },
   "repository": {
     "type": "git",
