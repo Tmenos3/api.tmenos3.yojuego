@@ -1,37 +1,33 @@
 'use strict'
 
-var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
-var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
-var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
+import { Validator,
+         NotNullOrUndefinedCondition } from 'no-if-validator';
 
 class Invitation {
     constructor(sender, recipient, match) {
-        var conditions = [
-            new NotNullOrUndefinedCondition(sender, Invitation.INVALID_SENDER()),
-            new NotNullOrUndefinedCondition(recipient, Invitation.INVALID_RECIPIENT()),
-            new NotNullOrUndefinedCondition(match, Invitation.INVALID_MATCH())
-        ];
+        var validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(sender).throw(new Error(Invitation.INVALID_SENDER)));
+        validator.addCondition(new NotNullOrUndefinedCondition(recipient).throw(new Error(Invitation.INVALID_RECIPIENT)));
+        validator.addCondition(new NotNullOrUndefinedCondition(match, recipient).throw(new Error(Invitation.INVALID_MATCH)));
 
-        var validator = new ValidationHelper(conditions, () => {
+        validator.execute(() => {
             this.id;
             this.sender = sender;
             this.recipient = recipient;
             this.match = match;
-        }, (err) => { throw new Error(err); });
-        validator.execute();
-
-        this.guests = [];
+            this.guests = [];
+        }, (err) => { throw err; });
     }
 
-    static INVALID_SENDER() {
+    static get INVALID_SENDER() {
         return 'El remitente debe contener un valor.';
     }
 
-    static INVALID_MATCH() {
+    static get INVALID_MATCH() {
         return 'El partido debe tener un valor';
     }
 
-    static INVALID_RECIPIENT() {
+    static get INVALID_RECIPIENT() {
         return 'El DESTINATARIO debe contener un valor.';
     }
 }

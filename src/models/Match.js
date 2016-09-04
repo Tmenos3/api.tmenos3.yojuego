@@ -1,32 +1,31 @@
 'use strict'
 
-var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
-var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
-var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
-var InstanceOfCondition = require('../helpers/CommonValidator/InstanceOfCondition');
+import { Validator,
+    NotNullOrUndefinedCondition,
+    InstanceOfCondition,
+    CustomCondition } from 'no-if-validator';
 
 class Match {
     constructor(tittle, date, fromTime, toTime, location, creator, matchType) {
-        var conditions = [
-            new NotNullOrUndefinedCondition(tittle, Match.INVALID_TITTLE()),
-            new NotNullOrUndefinedCondition(date, Match.INVALID_DATE()),
-            new NotNullOrUndefinedCondition(fromTime, Match.INVALID_TIME()),
-            new CustomCondition(() => {
-                var regex = /([01]\d|2[0-3]):([0-5]\d)/;
-                return regex.test(fromTime)
-            }, Match.INVALID_TIME_FORMAT()),
-            new NotNullOrUndefinedCondition(toTime, Match.INVALID_TIME()),
-            new CustomCondition(() => {
-                var regex = /([01]\d|2[0-3]):([0-5]\d)/;
-                return regex.test(toTime)
-            }, Match.INVALID_TIME_FORMAT()),
-            new NotNullOrUndefinedCondition(location, Match.INVALID_LOCATION()),
-            new NotNullOrUndefinedCondition(creator, Match.INVALID_CREATOR()),
-            new InstanceOfCondition(date, Date, Match.INVALID_DATE_TYPE()),
-            new NotNullOrUndefinedCondition(matchType, Match.INVALID_MATCH_TYPE()),
-        ];
+        var validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(tittle).throw(new Error(Match.INVALID_TITTLE)));
+        validator.addCondition(new NotNullOrUndefinedCondition(date).throw(new Error(Match.INVALID_DATE)));
+        validator.addCondition(new NotNullOrUndefinedCondition(fromTime).throw(new Error(Match.INVALID_TIME)));
+        validator.addCondition(new CustomCondition(() => {
+            var regex = /([01]\d|2[0-3]):([0-5]\d)/;
+            return regex.test(fromTime)
+        }).throw(new Error(Match.INVALID_TIME_FORMAT)));
+        validator.addCondition(new NotNullOrUndefinedCondition(toTime).throw(new Error(Match.INVALID_TIME)));
+        validator.addCondition(new CustomCondition(() => {
+            var regex = /([01]\d|2[0-3]):([0-5]\d)/;
+            return regex.test(toTime)
+        }).throw(new Error(Match.INVALID_TIME_FORMAT)));
+        validator.addCondition(new NotNullOrUndefinedCondition(location).throw(new Error(Match.INVALID_LOCATION)));
+        validator.addCondition(new NotNullOrUndefinedCondition(creator).throw(new Error(Match.INVALID_CREATOR)));
+        validator.addCondition(new InstanceOfCondition(date, Date).throw(new Error(Match.INVALID_DATE_TYPE)));
+        validator.addCondition(new NotNullOrUndefinedCondition(matchType).throw(new Error(Match.INVALID_MATCH_TYPE)));
 
-        var validator = new ValidationHelper(conditions, () => {
+        validator.execute(() => {
             this.tittle = tittle;
             this.date = date;
             this.fromTime = fromTime;
@@ -34,12 +33,12 @@ class Match {
             this.location = location;
             this.creator = creator;
             this.matchType = matchType;
-        }, (err) => { throw new Error(err); });
-        validator.execute();
-        if (!this.creator instanceof Number) {
-            throw new Error('No es number!!!');
-        }
-        this.players = [];
+            this.players = [];
+
+            if (!this.creator instanceof Number) {
+                throw new Error('No es number!!!');
+            }
+        }, (err) => { throw err; });
     }
 
     static INVALID_DATE() {

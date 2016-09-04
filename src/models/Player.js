@@ -1,63 +1,63 @@
 'use strict'
 
-var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
-var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
-var NotHasBlankSpacesCondition = require('../helpers/CommonValidator/NotHasBlankSpacesCondition');
-var NotLessCharacterLenghtCondition = require('../helpers/CommonValidator/NotLessCharacterLenghtCondition');
-var InstanceOfCondition = require('../helpers/CommonValidator/InstanceOfCondition');
+import { Validator,
+    NotNullOrUndefinedCondition,
+    HasNotBlankSpacesCondition,
+    CustomCondition,
+    InstanceOfCondition } from 'no-if-validator';
+
 import PlayerAdminState from '../../src/constants/PlayerAdminState';
+
 class Player {
     constructor(nickName, birthDate, state, adminState) {
-        var conditions = [
-            new NotNullOrUndefinedCondition(nickName, Player.INVALID_NICKNAME()),
-            new NotHasBlankSpacesCondition(nickName, Player.INVALID_NICKNAME_HAS_BLANKSPACES()),
-            new NotLessCharacterLenghtCondition(nickName, 5, Player.INVALID_NICKNAME_IS_SHORT()),
-            new NotNullOrUndefinedCondition(birthDate, Player.INVALID_BIRTHDATE()),
-            new InstanceOfCondition(birthDate, Date, Player.INVALID_DATE_TYPE()),
-            new NotNullOrUndefinedCondition(state, Player.INVALID_STATE()),
-            new NotNullOrUndefinedCondition(adminState, Player.INVALID_ADMIN_STATE())//,
-            //new InstanceOfCondition(adminState, PlayerAdminState, Player.INVALID_ADMIN_STATE_TYPE()),
-        ];
-        var validator = new ValidationHelper(conditions, () => {
+        var validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(nickName).throw(new Error(Player.INVALID_NICKNAME)));
+        validator.addCondition(new HasNotBlankSpacesCondition(nickName).throw(new Error(Player.INVALID_NICKNAME_HAS_BLANKSPACES)));
+        validator.addCondition(new CustomCondition(() => { return nickName.length >= 5 }).throw(new Error(Player.INVALID_NICKNAME_IS_SHORT)));
+        validator.addCondition(new NotNullOrUndefinedCondition(birthDate).throw(new Error(Player.INVALID_BIRTHDATE)));
+        validator.addCondition(new InstanceOfCondition(birthDate, Date).throw(new Error(Player.INVALID_DATE_TYPE)));
+        validator.addCondition(new NotNullOrUndefinedCondition(state).throw(new Error(Player.INVALID_STATE)));
+        validator.addCondition(new NotNullOrUndefinedCondition(adminState).throw(new Error(Player.INVALID_ADMIN_STATE)));
+
+        validator.execute(() => {
             this.id;
             this.nickName = nickName;
             this.birthDate = birthDate;
             this.state = state;
             this.adminState = adminState;
-        }, (err) => { throw new Error(err); });
-        validator.execute();
+        }, (err) => { throw err; });
     }
 
     equal(otherPlayer) {
         return this.nickName == otherPlayer.nickName;
     }
 
-    static INVALID_NICKNAME() {
+    static get INVALID_NICKNAME() {
         return 'El nickName es inválido. No puede ser nulo ni indefinido.';
     }
-    static INVALID_NICKNAME_HAS_BLANKSPACES() {
+    static get INVALID_NICKNAME_HAS_BLANKSPACES() {
         return 'El nickName es inválido. No debe tener espacios en blanco.';
     }
 
-    static INVALID_NICKNAME_IS_SHORT() {
+    static get INVALID_NICKNAME_IS_SHORT() {
         return 'El nickName es inválido. No debe tener menos de 5 caracteres.';
     }
 
-    static INVALID_BIRTHDATE() {
+    static get INVALID_BIRTHDATE() {
         return 'La fecha de nacimiento es inválida. No puede ser nula ni indefinida.';
     }
-    static INVALID_DATE_TYPE() {
+    static get INVALID_DATE_TYPE() {
         return 'El la fecha de nacimiento no es del tipo DATE.';
     }
-    static INVALID_STATE() {
+    static get INVALID_STATE() {
         return 'El estado es inválido. No debe ser nulo ni indefinido.';
     }
 
-    static INVALID_ADMIN_STATE() {
+    static get INVALID_ADMIN_STATE() {
         return 'El estado administrativo es inválido. No debe ser nulo ni indefinido.';
     }
 
-    static INVALID_ADMIN_STATE_TYPE() {
+    static get INVALID_ADMIN_STATE_TYPE() {
         return 'El estado administrativo no es del tipo PlayerAdminState.';
     }
 }

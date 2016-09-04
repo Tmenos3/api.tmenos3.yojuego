@@ -2,7 +2,7 @@
   "name": "api.tmenos3.yojuego",
   "subdomain": "api.tmenos3.yojuego",
   "description": "YoJuego!",
-  "version": "0.0.0-13",
+  "version": "0.0.0-1",
   "license": "UNLICENSED",
   "scripts": {
     "start": "server.js",
@@ -14,26 +14,20 @@
   "dependencies": {
     "crypto-js": "^3.1.6",
     "jsonwebtoken": "^7.1.7",
+    "no-if-validator": "^1.0.0-4",
     "node-fetch": "^1.6.0",
+    "passport-restify": "^1.0.1",
+    "react": "^15.3.1",
     "restify": "4.1.x",
     "restify-jwt": "^0.4.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.11.4",
+    "babel-cli": "*",
     "babel-jest": "*",
     "babel-preset-es2015": "*",
-    "babel-preset-react": "*",
+    "babel-preset-react": "^6.11.1",
     "jest": "*",
-    "moment": "^2.14.1",
-    "react": "^15.3.0"
-  },
-  "jest": {
-    "automock": false,
-    "unmockedModulePathPatterns": [
-      "<rootDir>/node_modules/react/",
-      "<rootDir>/node_modules/react-dom/",
-      "<rootDir>/node_modules/react-addons-test-utils/"
-    ]
+    "moment": "^2.14.1"
   },
   "repository": {
     "type": "git",

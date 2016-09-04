@@ -1,22 +1,21 @@
 'use strict'
 
-var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
-var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
-var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
+import { Validator,
+         NotNullOrUndefinedCondition,
+         CustomCondition } from 'no-if-validator';
 
 class FriendRequest {
     constructor(sender, recipient) {
-        var conditions = [
-            new NotNullOrUndefinedCondition(sender, FriendRequest.INVALID_SENDER()),
-            new NotNullOrUndefinedCondition(recipient, FriendRequest.INVALID_RECIPIENT()),
-            new CustomCondition(() => { return sender !== recipient }, FriendRequest.INVALID_SENDER_AND_RECIPIENT_ARE_EQUALS())
-        ];
-        var validator = new ValidationHelper(conditions, () => {
+        var validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(sender).throw(new Error(FriendRequest.INVALID_SENDER)));
+        validator.addCondition(new NotNullOrUndefinedCondition(recipient).throw(new Error(FriendRequest.INVALID_RECIPIENT)));
+        validator.addCondition(new CustomCondition(() => { return sender !== recipient }).throw(new Error(FriendRequest.INVALID_SENDER_AND_RECIPIENT_ARE_EQUALS)));
+
+        validator.execute(() => {
             this.sender = sender;
             this.recipient = recipient;
             this.state = FriendRequest.FRIEND_REQUEST_CREATED_STATE();
-        }, (err) => { throw new Error(err); });
-        validator.execute();
+        }, (err) => { throw err; });
     }
 
     acceptRequest() {
@@ -25,24 +24,24 @@ class FriendRequest {
     rejectedRequest() {
         this.state = FriendRequest.FRIEND_REQUEST_REJECTED_STATE();
     }
-    static FRIEND_REQUEST_CREATED_STATE() {
+    static get FRIEND_REQUEST_CREATED_STATE() {
         return 'created';
     }
-    static FRIEND_REQUEST_ACCEPTED_STATE() {
+    static get FRIEND_REQUEST_ACCEPTED_STATE() {
         return 'accepted';
     }
-    static FRIEND_REQUEST_REJECTED_STATE() {
+    static get FRIEND_REQUEST_REJECTED_STATE() {
         return 'rejected';
     }
-    static INVALID_SENDER() {
+    static get INVALID_SENDER() {
         return 'El remitente es indefinido, nulo ó no es del tipo integer.';
     }
 
-    static INVALID_RECIPIENT() {
+    static get INVALID_RECIPIENT() {
         return 'El destinatario es indefinido, nulo ó no es del tipo integer.';
     }
 
-    static INVALID_SENDER_AND_RECIPIENT_ARE_EQUALS() {
+    static get INVALID_SENDER_AND_RECIPIENT_ARE_EQUALS() {
         return 'El remitente y el destinatario no pueden ser el mismo';
     }
 }

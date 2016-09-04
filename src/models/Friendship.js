@@ -1,32 +1,30 @@
 'use strict'
 
-var ValidationHelper = require('../helpers/CommonValidator/ValidationHelper');
-var NotNullOrUndefinedCondition = require('../helpers/CommonValidator/NotNullOrUndefinedCondition');
-var InstanceOfCondition = require('../helpers/CommonValidator/InstanceOfCondition');
-var CustomCondition = require('../helpers/CommonValidator/CustomCondition');
-var NotEqualCondition = require('../helpers/CommonValidator/NotEqualCondition');
+import { Validator,
+         NotNullOrUndefinedCondition,
+         CustomCondition,
+         EqualCondition } from 'no-if-validator';
 
 class Friendship {
     constructor(sender, recipient) {
-        var conditions = [
-            new NotNullOrUndefinedCondition(sender, Friendship.INVALID_SENDER()),
-            new NotNullOrUndefinedCondition(recipient, Friendship.INVALID_RECIPIENT()),
-            new NotEqualCondition(sender, recipient, Friendship.INVALIDAD_FRIENDSHIP())
-        ];
-        var validator = new ValidationHelper(conditions, () => {
+        var validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(sender).throw(new Error(Friendship.INVALID_SENDER)));
+        validator.addCondition(new NotNullOrUndefinedCondition(recipient).throw(new Error(Friendship.INVALID_RECIPIENT)));
+        validator.addCondition(new EqualCondition(sender, recipient).not().throw(new Error(Friendship.INVALIDAD_FRIENDSHIP)));
+
+        validator.execute(() => {
             this.sender = sender;
             this.recipient = recipient;
-        }, (err) => { throw new Error(err); });
-        validator.execute();
+        }, (err) => { throw err; });
     }
 
-    static INVALID_SENDER() {
+    static get INVALID_SENDER() {
         return "El REMITENTE es indefinido, nulo ó no es del tipo integer.";
     }
-    static INVALID_RECIPIENT() {
+    static get INVALID_RECIPIENT() {
         return "El DESTINATARIO es indefinido, nulo ó no es del tipo integer.";
     }
-    static INVALIDAD_FRIENDSHIP() {
+    static get INVALIDAD_FRIENDSHIP() {
         return "El remitente y el destinatario no deben ser el mismo.";
     }
 }

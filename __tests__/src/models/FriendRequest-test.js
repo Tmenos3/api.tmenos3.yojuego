@@ -1,4 +1,3 @@
-jest.unmock('../../../src/models/FriendRequest');
 import FriendRequest from '../../../src/models/FriendRequest';
 
 describe('FriendRequest', () => {
