@@ -4,6 +4,7 @@ import Player from '../../../src/models/Player';
 describe('PlayerESRepository', () => {
     let getMockedClient = (err, ret) => {
         return {
+            get: jest.fn((criteria, callback) => { callback(err, ret); }),
             search: jest.fn((criteria, callback) => { callback(err, ret); }),
             index: jest.fn((criteria, callback) => { callback(err, ret); })
         }
@@ -11,14 +12,15 @@ describe('PlayerESRepository', () => {
 
     pit('Can get a player by id ', () => {
         var player = new Player('aValidNickname', new Date(2010, 10, 10), 'aValidState', 'adminState');
-        let client = getMockedClient(false, { hits: { hits: [player] } });
+        player.id = 'id';
+        let client = getMockedClient(false, { _id: player.id, source: player });
 
         let repo = new PlayerESRepository(client);
         return repo.getById(player.id)
             .then((playerReturned) => {
-                expect(client.search.mock.calls[0][0].index).toEqual('app');
-                expect(client.search.mock.calls[0][0].type).toEqual('player');
-                expect(client.search.mock.calls[0][0].body.query.match._id).toEqual(player.id);
+                expect(client.get.mock.calls[0][0].index).toEqual('app');
+                expect(client.get.mock.calls[0][0].type).toEqual('player');
+                expect(client.get.mock.calls[0][0].id).toEqual(player.id);
                 expect(playerReturned).toEqual(player);
             }, (err) => expect(true).toEqual(false));
     });

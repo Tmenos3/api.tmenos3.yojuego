@@ -1,9 +1,12 @@
 var restify = require('restify');
 var config = require('./config');
 var es = require('elasticsearch');
+var Router = require('./src/routes/Router');
+
+var router = new Router();
 
 var cli = new es.Client({
-  host: 'http://localhost:9200',
+  host: config.database,
   log: 'info'
 });
 
@@ -39,20 +42,22 @@ server.get('/echo1', (req, res, next) => {
   cli.search({
     index: 'app',
     type: 'player',
-    body: {
-      query: {
-        match: {_id: 'AVbjkO6ZpN0HqK6A8pD1'}
-      }
+  body: {
+    "query": {
+        "match_all": {}
     }
+  }
   }, (error, response, status) => {
     if (error) {
       res.json(400, JSON.stringify(error));
     }
     else {
-      res.json(JSON.stringify(response.hits.hits))
+      res.json(JSON.stringify(response.source))
     }
   });
 });
+
+router.addAll(server);
 
 server.listen(config.port, function () {
   console.log('%s listening at %s', server.name, server.url);

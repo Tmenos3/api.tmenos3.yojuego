@@ -3,6 +3,7 @@ import ESRepository from '../../../src/repositories/ESRepository';
 describe('ESRepository', () => {
   let getMockedClient = (err, ret) => {
     return {
+      get: jest.fn((criteria, callback) => { callback(err, ret); }),
       search: jest.fn((criteria, callback) => { callback(err, ret); }),
       index: jest.fn((criteria, callback) => { callback(err, ret); })
     }
@@ -82,21 +83,21 @@ describe('ESRepository', () => {
   });
 
   pit('Can get a document by id ', () => {
-    var toReturn = { obj: 'any object to return' };
-    let client = getMockedClient(false, { hits: { hits: [toReturn] } });
+    var toReturn = { _id: 'id', source: {} };
+    let client = getMockedClient(false, toReturn);
 
     let repo = new ESRepository(client);
     return repo.getById('id', 'index', 'type')
       .then((objectReturned) => {
-        expect(client.search.mock.calls[0][0].index).toEqual('index');
-        expect(client.search.mock.calls[0][0].type).toEqual('type');
-        expect(client.search.mock.calls[0][0].body.query.match._id).toEqual('id');
+        expect(client.get.mock.calls[0][0].index).toEqual('index');
+        expect(client.get.mock.calls[0][0].type).toEqual('type');
+        expect(client.get.mock.calls[0][0].id).toEqual('id');
         expect(objectReturned).toEqual(toReturn);
       }, (err) => expect(true).toEqual(false));
   });
 
   pit('If element does not exist getById returns null', () => {
-    let client = getMockedClient(false, { hits: { hits: [] } });
+    let client = getMockedClient({ status: 404 }, {});
 
     let repo = new ESRepository(client);
     return repo.getById('id', 'index', 'type')

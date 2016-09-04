@@ -10,7 +10,8 @@ class PlayerESRepository extends ESRepository {
         return new Promise((resolve, reject) => {
             super.getById(playerId, 'app', 'player')
                 .then((objRet) => {
-                    var player = new Player(objRet.nickName, new Date(objRet.birthDate), objRet.state, objRet.adminState);
+                    var player = new Player(objRet.source.nickName, new Date(objRet.source.birthDate), objRet.source.state, objRet.source.adminState);
+                    player.id = objRet._id;
                     resolve(player);
                 }, reject);
         });

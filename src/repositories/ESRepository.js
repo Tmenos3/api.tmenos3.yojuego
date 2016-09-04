@@ -19,16 +19,16 @@ class ESRepository {
             validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
 
             validator.execute(() => {
-                this.esclient.search(this._getQueryForSearchBy({ _id: id }, index, type), (error, response, status) => {
+                this.esclient.get(this._getQueryForGetById(id, index, type), (error, response, status) => {
                     if (error) {
-                        reject(ESRepository.UNEXPECTED_ERROR);
+                        if (error.status == 404) {
+                            resolve(null);
+                        } else {
+                            reject(ESRepository.UNEXPECTED_ERROR);
+                        }
                     }
                     else {
-                        if (response.hits.hits.length > 0) {
-                            resolve(response.hits.hits[0]);
-                        } else {
-                            resolve(null);
-                        }
+                        resolve(response);
                     }
                 });
             }, (err) => { throw err; });
@@ -81,6 +81,14 @@ class ESRepository {
 
     update(id, index, type) {
         throw new Error('must be implemented');
+    }
+
+    _getQueryForGetById(id, index, type) {
+        return {
+            index: index,
+            type: type,
+            id: id
+        }
     }
 
     _getQueryForSearchBy(criteria, index, type) {
