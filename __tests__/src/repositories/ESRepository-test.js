@@ -1,12 +1,12 @@
 import ESRepository from '../../../src/repositories/ESRepository';
 
 describe('ESRepository', () => {
-    let getMockedClient = (err, ret) => {
-      return {
-        search: jest.fn((criteria, callback) => { callback(err, ret); }),
-        index: jest.fn((criteria, callback) => { callback(err, ret); })
-      }
-    };
+  let getMockedClient = (err, ret) => {
+    return {
+      search: jest.fn((criteria, callback) => { callback(err, ret); }),
+      index: jest.fn((criteria, callback) => { callback(err, ret); })
+    }
+  };
 
   it('Cannot create with an undefined ESClient', () => {
     let undefinedESClient;
