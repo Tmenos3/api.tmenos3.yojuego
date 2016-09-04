@@ -1,4 +1,4 @@
-import Routes from './Routes';
+var Routes = require('./Routes');
 
 class MatchRoutes extends Routes{
     constructor() { 
@@ -10,7 +10,7 @@ class MatchRoutes extends Routes{
         server.get('/match/:id/invitations', (req, res, next) => { });
         server.post('/match/:id/addInvitation', (req, res, next) => { });
         server.post('/match/:id/removeInvitation', (req, res, next) => { });
-        server.delete('/match/:id', (req, res, next) => { });
+        server.del('/match/:id', (req, res, next) => { });
     }
 }
 

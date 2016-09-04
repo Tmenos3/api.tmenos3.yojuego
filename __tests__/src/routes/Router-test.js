@@ -5,14 +5,14 @@ describe('Router', () => {
         let serverMocked = {
             get: jest.fn((url, callback) => { }),
             post: jest.fn((url, callback) => { }),
-            delete: jest.fn((url, callback) => { })
+            del: jest.fn((url, callback) => { })
         };
         let router = new Router();
         router.addAll(serverMocked)
 
         expect(serverMocked.get.mock.calls.length).toEqual(9);
         expect(serverMocked.post.mock.calls.length).toEqual(12);
-        expect(serverMocked.delete.mock.calls.length).toEqual(3);
+        expect(serverMocked.del.mock.calls.length).toEqual(3);
 
         expect(serverMocked.get.mock.calls[0][0]).toEqual('/invitation/:id');
         expect(serverMocked.get.mock.calls[1][0]).toEqual('/logIn/facebook/callback');
@@ -37,8 +37,8 @@ describe('Router', () => {
         expect(serverMocked.post.mock.calls[10][0]).toEqual('/signUp/facebook');
         expect(serverMocked.post.mock.calls[11][0]).toEqual('/signUp/google');
 
-        expect(serverMocked.delete.mock.calls[0][0]).toEqual('/invitation/:id');
-        expect(serverMocked.delete.mock.calls[1][0]).toEqual('/match/:id');
-        expect(serverMocked.delete.mock.calls[2][0]).toEqual('/player/:id');
+        expect(serverMocked.del.mock.calls[0][0]).toEqual('/invitation/:id');
+        expect(serverMocked.del.mock.calls[1][0]).toEqual('/match/:id');
+        expect(serverMocked.del.mock.calls[2][0]).toEqual('/player/:id');
     });
 });

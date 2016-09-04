@@ -1,4 +1,4 @@
-import Routes from './Routes';
+var Routes = require('./Routes');
 
 class InvitationRoutes extends Routes{
     constructor() { 
@@ -9,7 +9,7 @@ class InvitationRoutes extends Routes{
         server.get('/invitation/:id', (req, res, next) => { });
         server.post('/invitation/:id/accept', (req, res, next) => { });
         server.post('/invitation/:id/reject', (req, res, next) => { });
-        server.delete('/invitation/:id', (req, res, next) => { });
+        server.del('/invitation/:id', (req, res, next) => { });
     }
 }
 

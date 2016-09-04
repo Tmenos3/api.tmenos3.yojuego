@@ -1,4 +1,4 @@
-import Routes from './Routes';
+var Routes = require('./Routes');
 
 class SignUpRoutes extends Routes{
     constructor() { 

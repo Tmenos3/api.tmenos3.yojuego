@@ -1,4 +1,4 @@
-import Routes from './Routes';
+var Routes = require('./Routes');
 
 class PlayerRoutes extends Routes{
     constructor() { 
@@ -10,7 +10,7 @@ class PlayerRoutes extends Routes{
         server.get('/player/:id/upcomingMatches', (req, res, next) => { });
         server.post('/player/create', (req, res, next) => { });
         server.post('/player/:id/update', (req, res, next) => { });
-        server.delete('/player/:id', (req, res, next) => { });
+        server.del('/player/:id', (req, res, next) => { });
     }
 }
 

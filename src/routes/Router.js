@@ -1,13 +1,11 @@
-import InvitationRoutes from './InvitationRoutes';
-import LogInRoutes from './LogInRoutes';
-import MatchRoutes from './MatchRoutes';
-import PlayerRoutes from './PlayerRoutes';
-import SignUpRoutes from './SignUpRoutes';
+var InvitationRoutes = require('./InvitationRoutes');
+var LogInRoutes = require('./LogInRoutes');
+var MatchRoutes = require('./MatchRoutes');
+var PlayerRoutes = require('./PlayerRoutes');
+var SignUpRoutes = require('./SignUpRoutes');
 
 class Router {
-    constructor() {
-
-    }
+    constructor() { }
 
     addAll(server) {
         new InvitationRoutes().add(server);
