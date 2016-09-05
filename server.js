@@ -1,4 +1,5 @@
 var restify = require('restify');
+var jwt = require('restify-jwt');
 var config = require('./config');
 var es = require('elasticsearch');
 var Router = require('./src/routes/Router');
@@ -13,6 +14,7 @@ var cli = new es.Client({
 
 var server = restify.createServer();
 server.use(restify.bodyParser());
+server.use(jwt({ secret: config.secret}).unless({path: config.pathsWithoutAuthentication}));
 
 server.get('/echo', (req, res, next) => {
   cli.search({
