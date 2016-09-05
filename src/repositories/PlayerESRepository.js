@@ -12,6 +12,7 @@ class PlayerESRepository extends ESRepository {
                 .then((objRet) => {
                     var player = new Player(objRet.source.nickName, new Date(objRet.source.birthDate), objRet.source.state, objRet.source.adminState);
                     player.id = objRet._id;
+                    player.account = objRet.source.account;
                     resolve(player);
                 }, reject);
         });
@@ -26,6 +27,7 @@ class PlayerESRepository extends ESRepository {
                     for (let i = 0; i < list.length; i++) {
                         var player = new Player(list[i]._source.nickName, new Date(list[i]._source.birthDate), list[i]._source.state, list[i]._source.adminState);
                         player.id = list[i]._id;
+                        player.account = list[i]._source.account;
                         ret.push(player);
                     }
 

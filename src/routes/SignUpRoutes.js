@@ -16,9 +16,9 @@ class SignUpRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/signUp/facebook/callback', (req, res, next) => { next({ id: 'id', player: 'player' }, res); }, , this._generateToken);
-        server.get('/signUp/google/callback', (req, res, next) => { next({ id: 'id', player: 'player' }, res); }, , this._generateToken);
-        server.post('/signUp/local', this._signUpLocal, this,_createPlayerLocal, this._generateToken);
+        server.get('/signUp/facebook/callback', (req, res, next) => { });
+        server.get('/signUp/google/callback', (req, res, next) => { });
+        server.post('/signUp/local', this._signUpLocal, this._createPlayerLocal, this._generateToken);
         server.post('/signUp/facebook', (req, res, next) => { });
         server.post('/signUp/google', (req, res, next) => { });
     }
@@ -28,50 +28,46 @@ class SignUpRoutes extends Routes {
 
         repo.getBy({ "account.mail": mail })
             .then((result) => {
-                var existe = false;
+                let existe = false;
                 //Esta basura la estoy haciendo porque no me funca el filtro
                 //lo tengo que solucionar
                 for (let i = 0; i < result.length; i++) {
-                    if (result[i]._source.account.mail == mail) {
+                    if (result[i].account.mail == mail) {
                         existe = true;
                     }
                 }
 
-                //if (result.length > 0) {
+                // //if (result.length > 0) {
                 if (existe) {
                     res.json(400, 'La cuenta está en uso');
                 } else {
-                    var params = {
-                        mail = mail,
-                        password: req.params.password,
-                        nickName: req.params.nickName,
-                        birthDate: req.params.birthDate,
-                        state: req.params.state,
-                        adminState: req.params.adminState
-                    };
-                    next(params, res);
+                    next();
                 }
             }, (err) => { res.json(400, err); })
             .catch((err) => { res.json(500, err); });
     }
 
     _createPlayerLocal(req, res, next) {
-        var newPlayer = new Player(req.nickName, new Date(req.birthDate), req.state, req.adminState);
+        var newPlayer = new Player(req.params.nickName, new Date(req.params.birthDate), req.params.state, req.params.adminState);
         newPlayer.account = {
             type: 'local',
-            mail: req.mail,
-            password: req.password
+            mail: req.params.email,
+            password: req.params.password
         };
 
         repo.add(newPlayer)
             .then((resp) => {
-                next({ id: resp.resp._id, player: newPlayer }, res, next);
+                req.info = { 
+                    id: resp.resp._id, 
+                    player: newPlayer 
+                };
+                next();
             }, (err) => { res.json(400, err); });
     }
 
     _generateToken(req, res, next) {
-        var token = jwt.sign(req.id, config.secret);
-        res.json(200, { token: token, player: req.player });
+        var token = jwt.sign(req.info.id, config.secret);
+        res.json(200, { token: token, player: req.info.player });
         next();
     }
 
@@ -136,10 +132,6 @@ class SignUpRoutes extends Routes {
     //         }, (err) => { res.json(400, err); })
     //         .catch((err) => { res.json(500, err); });
     // }
-
-    static get INVALID_PASSPORT() {
-        return 'Invalid Passport';
-    }
 }
 
 module.exports = SignUpRoutes;

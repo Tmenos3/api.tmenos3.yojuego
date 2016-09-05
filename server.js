@@ -3,7 +3,6 @@ var jwt = require('restify-jwt');
 var config = require('./config');
 var es = require('elasticsearch');
 var Router = require('./src/routes/Router');
-var passport = require('passport-restify');
 
 var router = new Router();
 
@@ -60,7 +59,7 @@ server.get('/echo1', (req, res, next) => {
   });
 });
 
-router.addAll(server, passport);
+router.addAll(server);
 
 server.listen(config.port, function () {
   console.log('%s listening at %s', server.name, server.url);
