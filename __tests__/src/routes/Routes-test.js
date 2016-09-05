@@ -9,7 +9,7 @@ describe('Routes', () => {
     });
 
     it('Cannot add routes with an null server', () => {
-        let nullServer;
+        let nullServer = null;
         let routes = new Routes();
 
         expect(() => routes.add(nullServer)).toThrowError(Routes.INVALID_SERVER);

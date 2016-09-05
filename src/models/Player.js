@@ -1,10 +1,9 @@
 'use strict'
-
-import { Validator,
-    NotNullOrUndefinedCondition,
-    HasNotBlankSpacesCondition,
-    CustomCondition,
-    InstanceOfCondition } from 'no-if-validator';
+var Validator = require('no-if-validator').Validator;
+var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+var HasNotBlankSpacesCondition = require('no-if-validator').HasNotBlankSpacesCondition;
+var CustomCondition = require('no-if-validator').CustomCondition;
+var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
 
 class Player {
     constructor(nickName, birthDate, state, adminState) {

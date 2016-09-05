@@ -1,5 +1,6 @@
-import ElasticSearch from 'elasticsearch';
-import { Validator, NotNullOrUndefinedCondition } from 'no-if-validator';
+var ElasticSearch = require('elasticsearch');
+var Validator = require('no-if-validator').Validator;
+var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 
 class ESRepository {
     constructor(client) {
@@ -68,7 +69,7 @@ class ESRepository {
                         reject(ESRepository.UNEXPECTED_ERROR);
                     }
                     else {
-                        resolve(ESRepository.DOCUMENT_INSERTED);
+                        resolve({message: ESRepository.DOCUMENT_INSERTED, resp: resp});
                     }
                 });
             }, (err) => { throw err; });
@@ -95,11 +96,7 @@ class ESRepository {
         return {
             index: index,
             type: type,
-            body: {
-                query: {
-                    match: criteria
-                }
-            }
+            query: criteria
         }
     }
 

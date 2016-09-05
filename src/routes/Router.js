@@ -7,12 +7,12 @@ var SignUpRoutes = require('./SignUpRoutes');
 class Router {
     constructor() { }
 
-    addAll(server) {
+    addAll(server, passport) {
         new InvitationRoutes().add(server);
         new LogInRoutes().add(server);
         new MatchRoutes().add(server);
         new PlayerRoutes().add(server);
-        new SignUpRoutes().add(server);
+        new SignUpRoutes(passport).add(server);
     }
 }
 

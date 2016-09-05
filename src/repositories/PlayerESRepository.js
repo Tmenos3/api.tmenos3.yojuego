@@ -1,5 +1,5 @@
-import ESRepository from './ESRepository';
-import Player from '../models/Player';
+var ESRepository = require('./ESRepository');
+var Player = require('../models/Player');
 
 class PlayerESRepository extends ESRepository {
     constructor(client) {
@@ -24,7 +24,7 @@ class PlayerESRepository extends ESRepository {
                     var ret = [];
 
                     for (let i = 0; i < list.length; i++) {
-                        var player = new Player(list[i].source.nickName, new Date(list[i].source.birthDate), list[i].source.state, list[i].source.adminState);
+                        var player = new Player(list[i]._source.nickName, new Date(list[i]._source.birthDate), list[i]._source.state, list[i]._source.adminState);
                         player.id = list[i]._id;
                         ret.push(player);
                     }

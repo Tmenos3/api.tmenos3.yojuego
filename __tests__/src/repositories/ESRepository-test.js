@@ -180,7 +180,7 @@ describe('ESRepository', () => {
       .then((list) => {
         expect(client.search.mock.calls[0][0].index).toEqual('index');
         expect(client.search.mock.calls[0][0].type).toEqual('type');
-        expect(client.search.mock.calls[0][0].body.query.match).toEqual(criteria);
+        expect(client.search.mock.calls[0][0].query).toEqual(criteria);
         expect(list.length).toEqual(arrayToReturn.length);
       }, (err) => expect(true).toEqual(false));
   });
@@ -268,7 +268,8 @@ describe('ESRepository', () => {
         expect(client.index.mock.calls[0][0].index).toEqual('index');
         expect(client.index.mock.calls[0][0].type).toEqual('type');
         expect(client.index.mock.calls[0][0].body).toEqual(document);
-        expect(resp).toEqual(ESRepository.DOCUMENT_INSERTED);
+        expect(resp.message).toEqual(ESRepository.DOCUMENT_INSERTED);
+        expect(resp.resp).toEqual({});
       }, (err) => expect(true).toEqual(false));
   });
 
