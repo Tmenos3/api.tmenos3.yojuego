@@ -12,6 +12,7 @@ var client = new es.Client({
     host: config.database,
     log: 'info'
 });
+console.log('PlayerESRepository: ' + JSON.stringify(PlayerESRepository));
 var repo = new PlayerESRepository(client);
 
 class SignUpRoutes extends Routes {
@@ -40,6 +41,10 @@ class SignUpRoutes extends Routes {
     }
 
     _signUpLocal(req, email, password, done) {
+        //TEST: It must search by email into repo and return 400 if exist
+        //TEST: It must search by mail into repo and execute done if does not exist
+        //TEST: what happend if repo returns error?
+        //TEST:  what happend if some error is raised?
         repo.getBy({ "account.mail": email })
             .then((result) => {
                 let existe = false;
@@ -75,7 +80,10 @@ class SignUpRoutes extends Routes {
     }
 
     _createPlayerLocal(req, res, next) {
-        //testear
+        //TEST: If req.statusCode it must execute res.json with message
+        //TEST: If !req.statusCode it must add player and execute next
+        //TEST: what happend if repo returns error?
+        //TEST:  what happend if some error is raised?
         if (req.statusCode !== undefined && req.statusCode !== null) {
             res.json(req.statusCode, req.statusMessage);
         } else {
@@ -92,6 +100,9 @@ class SignUpRoutes extends Routes {
     }
 
     _generateToken(req, res, next) {
+        //TEST: it must generate token with player.id and execute res.json with token and execute next
+        //TEST: what happend if repo returns error?
+        //TEST:  what happend if some error is raised?
         //testear
         var token = jwt.sign(req.player.id, config.secret);
         res.json(200, { token: token, player: req.player });
