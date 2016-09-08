@@ -104,7 +104,9 @@ class SignUpRoutes extends Routes {
                         adminState: req.params.adminState
                     };
 
-                    return done(null, newPlayer);
+                    //return done(null, newPlayer);
+                    req.params = newPlayer;
+                    next();
                 }
             }, (err) => { return done({ code: 400, message: err }, null); })
             .catch((err) => {
