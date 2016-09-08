@@ -12,7 +12,7 @@ var client = new es.Client({
     host: config.database,
     log: 'info'
 });
-console.log('PlayerESRepository: ' + JSON.stringify(PlayerESRepository));
+
 var repo = new PlayerESRepository(client);
 
 class SignUpRoutes extends Routes {
@@ -31,22 +31,18 @@ class SignUpRoutes extends Routes {
     _addAllRoutes(server, passport) {
         this._configurePassport(server, passport);
 
-        server.get('/signup/facebook/callback', passport.authenticate('facebook', { session: false }), (req, res, next) => {
-            res.json(req.user);
+        server.get('/signup/facebook/callback', passport.authenticate('facebook', { session: false }), this._signUpFacebook, this._createPlayer, (req, res, next) => {
+            res.redirect('/signup/facebook/success/id=' + req.user.id, next);
         });
         server.get('/signup/google/callback', passport.authenticate('google'), (req, res, next) => {
             res.json(req.user);
         });
-        server.get('/signup/local', passport.authenticate('local'), this._createPlayerLocal, this._generateToken);
+        server.get('/signup/local', passport.authenticate('local'), this._createPlayer, this._generateToken);
         server.get('/signup/facebook', passport.authenticate('facebook', { session: false, scope: ['public_profile', 'email'] }));
         server.get('/signup/google', (req, res, next) => { });
     }
 
     _signUpLocal(req, email, password, done) {
-        //TEST: It must search by email into repo and return 400 if exist
-        //TEST: It must search by mail into repo and execute done if does not exist
-        //TEST: what happend if repo returns error?
-        //TEST:  what happend if some error is raised?
         repo.getBy({ "account.mail": email })
             .then((result) => {
                 let existe = false;
@@ -73,7 +69,7 @@ class SignUpRoutes extends Routes {
                         adminState: req.params.adminState
                     };
 
-                    return done(null, newPlayer)
+                    return done(null, newPlayer);
                 }
             }, (err) => { return done({ code: 400, message: err }, null); })
             .catch((err) => {
@@ -81,16 +77,51 @@ class SignUpRoutes extends Routes {
             });
     }
 
-    _createPlayerLocal(req, res, next) {
-        //TEST: If req.statusCode it must execute res.json with message
-        //TEST: If !req.statusCode it must add player and execute next
-        //TEST: what happend if repo returns error?
-        //TEST:  what happend if some error is raised?
+    _signUpFacebook(req, res, next)  {
+        repo.getBy({ "account.mail": email })
+            .then((result) => {
+                let existe = false;
+                //Esta basura la estoy haciendo porque no me funca el filtro
+                //lo tengo que solucionar
+                for (let i = 0; i < result.length; i++) {
+                    if (result[i].account.mail == email) {
+                        existe = true;
+                    }
+                }
+
+                // //if (result.length > 0) {
+                if (existe) {
+                    req.statusCode = 400;
+                    req.statusMessage = 'La cuenta está en uso';
+                    return done({ code: 400, message: 'La cuenta está en uso' }, null);
+                } else {
+                    var newPlayer = {
+                        mail: email,
+                        password: password,
+                        nickName: req.params.nickName,
+                        birthDate: req.params.birthDate,
+                        state: req.params.state,
+                        adminState: req.params.adminState
+                    };
+
+                    return done(null, newPlayer);
+                }
+            }, (err) => { return done({ code: 400, message: err }, null); })
+            .catch((err) => {
+                return done({ code: 500, message: err }, null);
+            });
+    }
+
+    _createPlayer(req, res, next) {
         if (req.statusCode !== undefined && req.statusCode !== null) {
             res.json(req.statusCode, req.statusMessage);
         } else {
-            //testear
-            var newPlayer = this._getNewPlayer(req.params);
+            var newPlayer = new Player(req.params.nickName, new Date(req.params.birthDate), req.params.state, req.params.adminState);
+            newPlayer.account = {
+                type: 'local',
+                mail: req.params.email,
+                password: req.params.password
+            };
 
             repo.add(newPlayer)
                 .then((resp) => {
@@ -101,11 +132,27 @@ class SignUpRoutes extends Routes {
         }
     }
 
+    // _createPlayerFacebook(req, res, next) {
+    //     if (req.statusCode !== undefined && req.statusCode !== null) {
+    //         res.json(req.statusCode, req.statusMessage);
+    //     } else {
+    //         var newPlayer = new Player(req.user.displayName, new Date(req.params.birthDate), req.params.state, req.params.adminState);
+    //         newPlayer.account = {
+    //             type: 'local',
+    //             mail: req.params.email,
+    //             password: req.params.password
+    //         };
+
+    //         repo.add(newPlayer)
+    //             .then((resp) => {
+    //                 newPlayer.id = resp.resp._id
+    //                 req.player = newPlayer;
+    //                 next();
+    //             }, (err) => { res.json(400, err); });
+    //     }
+    // }
+
     _generateToken(req, res, next) {
-        //TEST: it must generate token with player.id and execute res.json with token and execute next
-        //TEST: what happend if repo returns error?
-        //TEST:  what happend if some error is raised?
-        //testear
         var token = jwt.sign(req.player.id, config.secret);
         res.json(200, { token: token, player: req.player });
         next();
@@ -129,17 +176,6 @@ class SignUpRoutes extends Routes {
         passport.serializeUser((player, done) => {
             done(null, player);
         });
-    }
-
-    _getNewPlayer(params) {
-        var newPlayer = new Player(params.nickName, new Date(params.birthDate), params.state, params.adminState);
-        newPlayer.account = {
-            type: 'local',
-            mail: params.email,
-            password: params.password
-        };
-
-        return newPlayer;
     }
 
     static get INVALID_PASSPORT() {
