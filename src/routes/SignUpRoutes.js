@@ -116,7 +116,9 @@ class SignUpRoutes extends Routes {
             clientID: config.facebook.appId,
             clientSecret: config.facebook.appSecret,
             callbackURL: config.facebook.callback,
-        }, (token, refreshToken, profile, done) => { }));
+        }, (token, refreshToken, profile, done) => {
+            return done(null, profile);
+        }));
 
         passport.use('local', new LocalStrategy({
             usernameField: 'email',
