@@ -11,12 +11,12 @@ module.exports = {
     'pathsWithoutAuthentication': ['/', 
                                    '/signup/facebook/callback', 
                                    '/signup/google/callback',
-                                   '/signup/local',
+                                   '/signup/yojuego',
                                    '/signup/facebook',
                                    '/signup/google',
-                                   '/logIn/facebook/callback',
-                                   '/logIn/google/callback',
-                                   '/logIn/local',
-                                   '/logIn/facebook',
-                                   '/logIn/google']
+                                   '/login/facebook/callback',
+                                   '/login/google/callback',
+                                   '/login/yojuego',
+                                   '/login/facebook',
+                                   '/login/google']
 };

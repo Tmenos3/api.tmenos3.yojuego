@@ -31,25 +31,23 @@ class SignUpRoutes extends Routes {
     _addAllRoutes(server, passport) {
         this._configurePassport(server, passport);
 
-        server.get('/signup/facebook/callback', passport.authenticate('facebook', { session: false }), this._signUpFacebook, this._createPlayer, (req, res, next) => {
-            res.redirect('/signup/facebook/success/id=' + req.user.id, next);
+        server.get('/signup/facebook/callback', passport.authenticate('facebook', { session: false }), this._createPlayer, (req, res, next) => {
+            res.redirect('/signup/facebook/success/token=' + req.token, next);
         });
-        server.get('/signup/google/callback', passport.authenticate('google'), (req, res, next) => {
-            res.json(req.user);
-        });
-        server.get('/signup/local', passport.authenticate('local'), this._createPlayer, this._generateToken);
+        server.get('/signup/google/callback', passport.authenticate('google'), (req, res, next) => { });
+        server.get('/signup/yojuego', passport.authenticate('yojuego'), this._createPlayer, this._generateToken, (req, res, next) => { res.json(200, { token: req.token }); });
         server.get('/signup/facebook', passport.authenticate('facebook', { session: false, scope: ['public_profile', 'email'] }));
         server.get('/signup/google', (req, res, next) => { });
     }
 
     _signUpLocal(req, email, password, done) {
-        repo.getBy({ "account.mail": email })
+        repo.getBy({ 'account.type': 'yojuego', 'account.id': email })
             .then((result) => {
                 let existe = false;
                 //Esta basura la estoy haciendo porque no me funca el filtro
                 //lo tengo que solucionar
                 for (let i = 0; i < result.length; i++) {
-                    if (result[i].account.mail == email) {
+                    if (result[i].account.id == email) {
                         existe = true;
                     }
                 }
@@ -61,30 +59,39 @@ class SignUpRoutes extends Routes {
                     return done({ code: 400, message: 'La cuenta está en uso' }, null);
                 } else {
                     var newPlayer = {
-                        mail: email,
-                        password: password,
+                        account: {
+                            type: 'yojuego',
+                            id: email,
+                            password: password 
+                        },
                         nickName: req.params.nickName,
                         birthDate: req.params.birthDate,
                         state: req.params.state,
                         adminState: req.params.adminState
                     };
-
+                    req.newPlayer = newPlayer;
                     return done(null, newPlayer);
                 }
-            }, (err) => { return done({ code: 400, message: err }, null); })
+            }, (err) => {
+                req.statusCode = 400;
+                req.statusMessage = err; 
+                return done({ code: 400, message: err }, null); 
+            })
             .catch((err) => {
+                req.statusCode = 400;
+                req.statusMessage = err; 
                 return done({ code: 500, message: err }, null);
             });
     }
 
-    _signUpFacebook(req, res, next)  {
-        repo.getBy({ "account.mail": email })
+    _signUpFacebook(req, token, refreshToken, profile, done)  {
+        repo.getBy({ 'account.type': 'facebook', 'account.id': profile.id })
             .then((result) => {
                 let existe = false;
                 //Esta basura la estoy haciendo porque no me funca el filtro
                 //lo tengo que solucionar
                 for (let i = 0; i < result.length; i++) {
-                    if (result[i].account.mail == email) {
+                    if (result[i].account.type == 'facebook' && result[i].account.id == profile.id) {
                         existe = true;
                     }
                 }
@@ -95,21 +102,28 @@ class SignUpRoutes extends Routes {
                     req.statusMessage = 'La cuenta está en uso';
                     return done({ code: 400, message: 'La cuenta está en uso' }, null);
                 } else {
+                    //aca hay que ver como me devuelve facebook esta info y sale con fritas
                     var newPlayer = {
-                        mail: email,
-                        password: password,
-                        nickName: req.params.nickName,
-                        birthDate: req.params.birthDate,
-                        state: req.params.state,
-                        adminState: req.params.adminState
+                        account: {
+                            type: 'facebook',
+                            id: profile.id 
+                        },
+                        nickName: 'profile.nickName',
+                        birthDate: '1987-03-13T13:15:30Z', //profile.birthDate,
+                        state: 'profile.state',
+                        adminState: 'profile.adminState'
                     };
-
-                    //return done(null, newPlayer);
-                    req.params = newPlayer;
-                    next();
+                    req.newPlayer = newPlayer;
+                    return done(null, profile);
                 }
-            }, (err) => { return done({ code: 400, message: err }, null); })
+            }, (err) => {
+                req.statusCode = 400;
+                req.statusMessage = err; 
+                return done({ code: 400, message: err }, null); 
+            })
             .catch((err) => {
+                req.statusCode = 400;
+                req.statusMessage = err; 
                 return done({ code: 500, message: err }, null);
             });
     }
@@ -118,12 +132,8 @@ class SignUpRoutes extends Routes {
         if (req.statusCode !== undefined && req.statusCode !== null) {
             res.json(req.statusCode, req.statusMessage);
         } else {
-            var newPlayer = new Player(req.params.nickName, new Date(req.params.birthDate), req.params.state, req.params.adminState);
-            newPlayer.account = {
-                type: 'local',
-                mail: req.params.email,
-                password: req.params.password
-            };
+            var newPlayer = new Player(req.newPlayer.nickName, new Date(req.newPlayer.birthDate), req.newPlayer.state, req.newPlayer.adminState);
+            newPlayer.account = req.newPlayer.account;
 
             repo.add(newPlayer)
                 .then((resp) => {
@@ -134,42 +144,27 @@ class SignUpRoutes extends Routes {
         }
     }
 
-    // _createPlayerFacebook(req, res, next) {
-    //     if (req.statusCode !== undefined && req.statusCode !== null) {
-    //         res.json(req.statusCode, req.statusMessage);
-    //     } else {
-    //         var newPlayer = new Player(req.user.displayName, new Date(req.params.birthDate), req.params.state, req.params.adminState);
-    //         newPlayer.account = {
-    //             type: 'local',
-    //             mail: req.params.email,
-    //             password: req.params.password
-    //         };
-
-    //         repo.add(newPlayer)
-    //             .then((resp) => {
-    //                 newPlayer.id = resp.resp._id
-    //                 req.player = newPlayer;
-    //                 next();
-    //             }, (err) => { res.json(400, err); });
-    //     }
-    // }
-
     _generateToken(req, res, next) {
-        var token = jwt.sign(req.player.id, config.secret);
-        res.json(200, { token: token, player: req.player });
+        req.token = jwt.sign(req.player.id, config.secret);
         next();
     }
 
     _configurePassport(server, passport) {
+        // passport.use('facebook', new FacebookStrategy({
+        //     clientID: config.facebook.appId,
+        //     clientSecret: config.facebook.appSecret,
+        //     callbackURL: config.facebook.callback
+        // }, (token, refreshToken, profile, done) => {
+        //     return done(null, profile);
+        // }));
         passport.use('facebook', new FacebookStrategy({
             clientID: config.facebook.appId,
             clientSecret: config.facebook.appSecret,
             callbackURL: config.facebook.callback,
-        }, (token, refreshToken, profile, done) => {
-            return done(null, profile);
-        }));
+            passReqToCallback: true
+        }, this._signUpFacebook));
 
-        passport.use('local', new LocalStrategy({
+        passport.use('yojuego', new LocalStrategy({
             usernameField: 'email',
             passwordField: 'password',
             passReqToCallback: true
