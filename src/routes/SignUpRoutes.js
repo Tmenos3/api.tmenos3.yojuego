@@ -31,13 +31,15 @@ class SignUpRoutes extends Routes {
     _addAllRoutes(server, passport) {
         this._configurePassport(server, passport);
 
-        server.get('/signUp/facebook/callback', (req, res, next) => { });
-        server.get('/signUp/google/callback', passport.authenticate('facebook'), (req, res, next) => {
+        server.get('/signup/facebook/callback', passport.authenticate('facebook', { session: false }), (req, res, next) => {
             res.json(req.user);
         });
-        server.post('/signUp/local', passport.authenticate('local'), this._createPlayerLocal, this._generateToken);
-        server.post('/signUp/facebook', passport.authenticate('facebook', { display: null, scope: ['email'] }));
-        server.post('/signUp/google', (req, res, next) => { });
+        server.get('/signup/google/callback', passport.authenticate('google'), (req, res, next) => {
+            res.json(req.user);
+        });
+        server.get('/signup/local', passport.authenticate('local'), this._createPlayerLocal, this._generateToken);
+        server.get('/signup/facebook', passport.authenticate('facebook', { session: false, scope: ['public_profile', 'email'] }));
+        server.get('/signup/google', (req, res, next) => { });
     }
 
     _signUpLocal(req, email, password, done) {

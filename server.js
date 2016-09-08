@@ -14,52 +14,10 @@ var cli = new es.Client({
 
 var server = restify.createServer();
 server.use(restify.bodyParser());
+server.use(restify.queryParser());
 server.use(jwt({ secret: config.secret}).unless({path: config.pathsWithoutAuthentication}));
 server.use(passport.initialize());
-
-// server.get('/echo', (req, res, next) => {
-//   cli.search({
-//     index: 'app',
-//     type: 'player',
-//     body: {
-//       query: {
-//         match: {
-//           _id: 'id'
-//         }
-//       }
-//     }
-//   }, function (error, response, status) {
-//     if (error) {
-//       res.json(error);
-//     }
-//     else {
-//       response.hits.hits.forEach(function (hit) {
-//         console.log(JSON.stringify(hit));
-//         res.json(hit);
-//       });
-//     }
-//   });
-// }); //echo
-
-// server.get('/echo1', (req, res, next) => {
-
-//   cli.search({
-//     index: 'app',
-//     type: 'player',
-//   body: {
-//     "query": {
-//         "match_all": {}
-//     }
-//   }
-//   }, (error, response, status) => {
-//     if (error) {
-//       res.json(400, JSON.stringify(error));
-//     }
-//     else {
-//       res.json(JSON.stringify(response.source))
-//     }
-//   });
-// });
+server.use(passport.session());
 
 router.addAll(server, passport);
 
