@@ -8,15 +8,16 @@ module.exports = {
     'database': 'http://localhost:9200',
     'expiresIn': 3600, //Time in seconds
     'port': 8080,
-    'pathsWithoutAuthentication': ['/', 
-                                   '/signup/facebook/callback', 
-                                   '/signup/google/callback',
-                                   '/signup/yojuego',
-                                   '/signup/facebook',
-                                   '/signup/google',
-                                   '/login/facebook/callback',
-                                   '/login/google/callback',
-                                   '/login/yojuego',
-                                   '/login/facebook',
-                                   '/login/google']
+    'pathsWithoutAuthentication': ['/',
+        '/echo',
+        '/signup/facebook/callback',
+        '/signup/google/callback',
+        '/signup/yojuego',
+        '/signup/facebook',
+        '/signup/google',
+        '/login/facebook/callback',
+        '/login/google/callback',
+        '/login/yojuego',
+        '/login/facebook',
+        '/login/google']
 };

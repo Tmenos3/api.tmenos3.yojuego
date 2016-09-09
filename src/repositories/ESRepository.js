@@ -69,7 +69,7 @@ class ESRepository {
                         reject(ESRepository.UNEXPECTED_ERROR);
                     }
                     else {
-                        resolve({message: ESRepository.DOCUMENT_INSERTED, resp: resp});
+                        resolve({ message: ESRepository.DOCUMENT_INSERTED, resp: resp });
                     }
                 });
             }, (err) => { throw err; });
@@ -96,7 +96,9 @@ class ESRepository {
         return {
             index: index,
             type: type,
-            query: criteria
+            body: {
+                query: criteria
+            }
         }
     }
 

@@ -9,7 +9,7 @@ class Router {
 
     addAll(server, passport) {
         new InvitationRoutes().add(server);
-        new LogInRoutes().add(server);
+        new LogInRoutes().add(server, passport);
         new MatchRoutes().add(server);
         new PlayerRoutes().add(server);
         new SignUpRoutes().add(server, passport);
