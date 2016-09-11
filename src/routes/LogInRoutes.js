@@ -33,7 +33,7 @@ class LogInRoutes {
         });
         server.get('/login/google/callback', passport.authenticate('google-login'), (req, res, next) => { });
         server.get('/login/yojuego', passport.authenticate('yojuego-login'), this._generateToken, (req, res, next) => { res.json(200, { token: req.token }); });
-        server.get('/login/facebook', passport.authenticate('facebook-login', { session: false, scope: ['public_profile', 'email'] }));
+        server.get('/login/facebook', passport.authenticate('facebook-login', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
         server.get('/login/google', (req, res, next) => { });
     }
 

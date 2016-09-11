@@ -96,9 +96,7 @@ class ESRepository {
         return {
             index: index,
             type: type,
-            body: {
-                query: criteria
-            }
+            query: criteria
         }
     }
 

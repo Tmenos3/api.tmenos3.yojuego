@@ -33,7 +33,7 @@ class SignUpRoutes {
         });
         server.get('/signup/google/callback', passport.authenticate('google-signup'), (req, res, next) => { });
         server.get('/signup/yojuego', passport.authenticate('yojuego-signup'), this._createPlayer, this._generateToken, (req, res, next) => { res.json(200, { token: req.token }); });
-        server.get('/signup/facebook', passport.authenticate('facebook-signup', { session: false, scope: ['public_profile', 'photos', 'user_birthday', 'email'] }));
+        server.get('/signup/facebook', passport.authenticate('facebook-signup', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
         server.get('/signup/google', (req, res, next) => { });
     }
 
@@ -91,7 +91,23 @@ class SignUpRoutes {
     }
 
     _signUpFacebook(req, token, refreshToken, profile, done) {
-        repo.getBy({ 'account.type': 'facebook', 'account.id': profile.id })
+        repo.getBy({
+            bool: {
+                must: [
+                    {
+                        nested: {
+                            path: "account",
+                            filter: {
+                                term: {
+                                    "account.id": profile.id,
+                                    "account.type": 'facebook'
+                                },
+                            }
+                        }
+                    }
+                ]
+            }
+        })
             .then((result) => {
                 let existe = false;
                 //Esta basura la estoy haciendo porque no me funca el filtro
@@ -114,8 +130,8 @@ class SignUpRoutes {
                             type: 'facebook',
                             id: profile.id
                         },
-                        nickName: profile.displayName,
-                        birthDate: profile.birthday, //profile.birthDate,
+                        nickName: profile.displayName.replace(/\s+/, "") ,
+                        birthDate: profile.birthday ? profile.birthday : '1994-11-05T13:15:30.000Z', 
                         state: 'Looking for matches...',
                         adminState: 'master of masters'
                     };
@@ -156,13 +172,6 @@ class SignUpRoutes {
     }
 
     _configurePassport(server, passport) {
-        // passport.use('facebook', new FacebookStrategy({
-        //     clientID: config.facebook.appId,
-        //     clientSecret: config.facebook.appSecret,
-        //     callbackURL: config.facebook.callback
-        // }, (token, refreshToken, profile, done) => {
-        //     return done(null, profile);
-        // }));
         passport.use('facebook-signup', new FacebookStrategy({
             clientID: config.facebook.appId,
             clientSecret: config.facebook.appSecret,
@@ -175,10 +184,6 @@ class SignUpRoutes {
             passwordField: 'password',
             passReqToCallback: true
         }, this._signUpLocal));
-
-        // passport.serializeUser((player, done) => {
-        //     done(null, player);
-        // });
     }
 
     static get INVALID_PASSPORT() {

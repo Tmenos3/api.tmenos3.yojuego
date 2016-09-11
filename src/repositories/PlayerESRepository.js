@@ -8,7 +8,7 @@ class PlayerESRepository extends ESRepository {
 
     getById(playerId) {
         return new Promise((resolve, reject) => {
-            super.getById(playerId, 'app', 'player')
+            super.getById(playerId, 'yojuego', 'player')
                 .then((objRet) => {
                     var player = new Player(objRet.source.nickName, new Date(objRet.source.birthDate), objRet.source.state, objRet.source.adminState);
                     player.id = objRet._id;
@@ -20,7 +20,7 @@ class PlayerESRepository extends ESRepository {
 
     getBy(criteria) {
         return new Promise((resolve, reject) => {
-            super.getBy(criteria, 'app', 'player')
+            super.getBy(criteria, 'yojuego', 'player')
                 .then((list) => {
                     var ret = [];
 
@@ -38,7 +38,7 @@ class PlayerESRepository extends ESRepository {
 
     add(player) {
         return new Promise((resolve, reject) => {
-            super.add(player, 'app', 'player')
+            super.add(player, 'yojuego', 'player')
                 .then(resolve, reject);
         });
     }
