@@ -4,11 +4,10 @@ let createInvitation = (client) => {
         type: 'invitation',
         body: {
             properties: {
-                userId: { type: 'string' },
-                nickname: { type: 'string' },
-                birthday: { type: 'string' },
-                state: { type: 'string' },
-                adminState: { type: 'string' },
+                sender: { type: 'string' },
+                recipient: { type: 'string' },
+                match: { type: 'string' },
+                createdOn: { type: 'string' }
             }
         }
     });

@@ -4,11 +4,14 @@ let createMatch = (client) => {
         type: 'match',
         body: {
             properties: {
-                userId: { type: 'string' },
-                nickname: { type: 'string' },
-                birthday: { type: 'string' },
-                state: { type: 'string' },
-                adminState: { type: 'string' },
+                title: { type: 'string' },
+                date: { type: 'string' },
+                fromTime: { type: 'string' },
+                toTime: { type: 'string' },
+                location: { type: 'string' },
+                matchType: { type: 'string' },
+                creator: { type: 'string' },
+                createdOn: { type: 'string' }
             }
         }
     });

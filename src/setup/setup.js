@@ -15,3 +15,5 @@ let createSchema = (client) => {
         .then(() => { return createMatch(client); })
         .then(() => { return createInvitation(client); });
 }
+
+module.exports = createSchema;

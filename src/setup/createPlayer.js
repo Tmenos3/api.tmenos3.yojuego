@@ -9,6 +9,7 @@ let createPlayer = (client) => {
                 birthday: { type: 'string' },
                 state: { type: 'string' },
                 adminState: { type: 'string' },
+                createdOn: { type: 'string' }
             }
         }
     });

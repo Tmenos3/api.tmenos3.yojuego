@@ -18,7 +18,7 @@ describe('PlayerESRepository', () => {
         let repo = new PlayerESRepository(client);
         return repo.getById(player.id)
             .then((playerReturned) => {
-                expect(client.get.mock.calls[0][0].index).toEqual('app');
+                expect(client.get.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.get.mock.calls[0][0].type).toEqual('player');
                 expect(client.get.mock.calls[0][0].id).toEqual(player.id);
                 expect(playerReturned).toEqual(player);
@@ -36,9 +36,9 @@ describe('PlayerESRepository', () => {
         let repo = new PlayerESRepository(client);
         return repo.getBy(criteria)
             .then((playersReturned) => {
-                expect(client.search.mock.calls[0][0].index).toEqual('app');
+                expect(client.search.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.search.mock.calls[0][0].type).toEqual('player');
-                expect(client.search.mock.calls[0][0].query).toEqual(criteria);
+                expect(client.search.mock.calls[0][0].body.query.match).toEqual(criteria);
                 expect(playersReturned.length).toEqual(players.length);
             }, (err) => expect(true).toEqual(false));
     });
@@ -50,7 +50,7 @@ describe('PlayerESRepository', () => {
         let repo = new PlayerESRepository(client);
         return repo.add(player)
             .then((resp) => {
-                expect(client.index.mock.calls[0][0].index).toEqual('app');
+                expect(client.index.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.index.mock.calls[0][0].type).toEqual('player');
                 expect(client.index.mock.calls[0][0].body.nickName).toEqual(player.nickName);
                 expect(client.index.mock.calls[0][0].body.birthDate).toEqual(player.birthDate);

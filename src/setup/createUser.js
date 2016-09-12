@@ -6,7 +6,7 @@ let createUser = (client) => {
             properties: {
                 id: { type: 'string' },
                 type: { type: 'string' },
-                created: { type: 'string' },
+                createdOn: { type: 'string' },
             }
         }
     });

@@ -3,7 +3,8 @@
 import { Validator,
     NotNullOrUndefinedCondition,
     InstanceOfCondition,
-    CustomCondition } from 'no-if-validator';
+    CustomCondition,
+    IsNumberCondition } from 'no-if-validator';
 
 class Match {
     constructor(tittle, date, fromTime, toTime, location, creator, matchType) {
@@ -34,10 +35,6 @@ class Match {
             this.creator = creator;
             this.matchType = matchType;
             this.players = [];
-
-            if (!this.creator instanceof Number) {
-                throw new Error('No es number!!!');
-            }
         }, (err) => { throw err; });
     }
 

@@ -11,7 +11,6 @@ class Invitation {
         validator.addCondition(new NotNullOrUndefinedCondition(match, recipient).throw(new Error(Invitation.INVALID_MATCH)));
 
         validator.execute(() => {
-            this.id;
             this.sender = sender;
             this.recipient = recipient;
             this.match = match;
