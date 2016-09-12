@@ -7,7 +7,11 @@ let createInvitation = (client) => {
                 sender: { type: 'string' },
                 recipient: { type: 'string' },
                 match: { type: 'string' },
-                createdOn: { type: 'string' }
+                state: { type: 'string' },
+                limitToBeAccepted: { type: 'date' },
+                createdBy: { type: 'string' },
+                createdOn: { type: 'date' },
+                modifiedOn: { type: 'date' }
             }
         }
     });

@@ -14,6 +14,10 @@ class Invitation {
             this.sender = sender;
             this.recipient = recipient;
             this.match = match;
+            //Aceptada, rechazada, expirada? Que pasa si la quiero aceptar despues de que el partido se jugó?
+            //Necesito saber cuando cambio de estado?
+            //createdOn es necesario?
+            //limitDateToBeAccepted? Creo que es necesario...
             this.guests = [];
         }, (err) => { throw err; });
     }

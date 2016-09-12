@@ -4,6 +4,7 @@ var config = require('./config');
 var Router = require('./src/routes/Router');
 var passport = require('passport-restify');
 var es = require('elasticsearch');
+var setup = require('./src/setup/setup');
 var client = new es.Client({
   host: config.database,
   log: 'info'
@@ -24,10 +25,11 @@ passport.serializeUser((player, done) => {
 router.addAll(server, passport);
 
 server.get('/echo', (req, res, next) => {
+  setup(client);
   // client.indices.create({ index: 'yojuego' }, (err, resp, respcode) => {
   //   if (!err) {
   //     client.indices.putMapping({
-  //       index: 'app',
+  //       index: 'yojuego',
   //       type: "player",
   //       body: {
   //         properties: {
@@ -50,24 +52,24 @@ server.get('/echo', (req, res, next) => {
   //     });
   //   }
   // });
-  client.search({
-    index: 'yojuego',
-    type: 'player',
-    body: {
-      query: {
-        match: {
-          state: 'wooooooow'
-        }
-      }
-    }
-  }, (error, response, status) => {
-    if (error) {
-      res.json(400, err);
-    }
-    else {
-      res.json(200, response.hits.hits);
-    }
-  });
+  // client.search({
+  //   index: 'yojuego',
+  //   type: 'player',
+  //   body: {
+  //     query: {
+  //       match: {
+  //         state: 'wooooooow'
+  //       }
+  //     }
+  //   }
+  // }, (error, response, status) => {
+  //   if (error) {
+  //     res.json(400, err);
+  //   }
+  //   else {
+  //     res.json(200, response.hits.hits);
+  //   }
+  // });
 });
 
 server.listen(config.port, function () {

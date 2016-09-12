@@ -5,13 +5,13 @@ let createMatch = (client) => {
         body: {
             properties: {
                 title: { type: 'string' },
-                date: { type: 'string' },
+                date: { type: 'date' },
                 fromTime: { type: 'string' },
                 toTime: { type: 'string' },
                 location: { type: 'string' },
                 matchType: { type: 'string' },
-                creator: { type: 'string' },
-                createdOn: { type: 'string' }
+                createdBy: { type: 'string' },
+                createdOn: { type: 'date' }
             }
         }
     });
