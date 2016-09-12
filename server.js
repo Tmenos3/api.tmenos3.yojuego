@@ -16,7 +16,6 @@ server.use(restify.bodyParser());
 server.use(restify.queryParser());
 server.use(jwt({ secret: config.secret }).unless({ path: config.pathsWithoutAuthentication }));
 server.use(passport.initialize());
-//server.use(passport.session());
 passport.serializeUser((player, done) => {
   done(null, player);
 });

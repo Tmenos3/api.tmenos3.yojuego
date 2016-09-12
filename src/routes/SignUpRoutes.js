@@ -1,6 +1,7 @@
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var config = require('../../config');
+//var UserESRepository = require('../repositories/UserESRepository');
 var PlayerESRepository = require('../repositories/PlayerESRepository');
 var Player = require('../models/Player');
 var jwt = require('jsonwebtoken');
@@ -12,6 +13,7 @@ var client = new es.Client({
     log: 'info'
 });
 
+//Este repo debiera ser UserESRepository
 var repo = new PlayerESRepository(client);
 
 class SignUpRoutes {
@@ -38,6 +40,7 @@ class SignUpRoutes {
     }
 
     _signUpLocal(req, email, password, done) {
+        //repo.getbyUserId(profile.id, 'yojuego')
         repo.getBy({
             query: {
                 bool: {
@@ -91,6 +94,7 @@ class SignUpRoutes {
     }
 
     _signUpFacebook(req, token, refreshToken, profile, done) {
+        //repo.getbyUserId(profile.id, 'facebook')
         repo.getBy({
             bool: {
                 must: [
@@ -118,20 +122,28 @@ class SignUpRoutes {
                     }
                 }
 
-                // //if (result.length > 0) {
+                // //if (result) {
                 if (existe) {
                     req.statusCode = 400;
                     req.statusMessage = 'La cuenta está en uso';
                     return done({ code: 400, message: 'La cuenta está en uso' }, null);
                 } else {
+                    // let newUser = {
+                    //     id: profile.id,
+                    //     type: 'facebook',
+                    //     created: now
+                    // }
+                    // req.newUser = newUser;
+                    // return done(null, profile);
+
                     var image = profile.photos ? profile.photos[0].value : '/img/faces/unknown-user-pic.jpg';
                     var newPlayer = {
                         account: {
                             type: 'facebook',
                             id: profile.id
                         },
-                        nickName: profile.displayName.replace(/\s+/, "") ,
-                        birthDate: profile.birthday ? profile.birthday : '1994-11-05T13:15:30.000Z', 
+                        nickName: profile.displayName.replace(/\s+/, ""),
+                        birthDate: profile.birthday ? profile.birthday : '1994-11-05T13:15:30.000Z',
                         state: 'Looking for matches...',
                         adminState: 'master of masters'
                     };
@@ -154,6 +166,13 @@ class SignUpRoutes {
         if (req.statusCode !== undefined && req.statusCode !== null) {
             res.json(req.statusCode, req.statusMessage);
         } else {
+            // let newUser = new User(req.newUser.id, req.newUser.type, req.newUser.created);
+            // repo.add(newUser)
+            //     .then((resp) => {
+            //         req.user = newUser;
+            //         next();
+            //     }, (err) => { res.json(400, err); });
+
             var newPlayer = new Player(req.newPlayer.nickName, new Date(req.newPlayer.birthDate), req.newPlayer.state, req.newPlayer.adminState);
             newPlayer.account = req.newPlayer.account;
 
@@ -167,6 +186,7 @@ class SignUpRoutes {
     }
 
     _generateToken(req, res, next) {
+        //req.token = jwt.sign(req.user.id, config.secret);
         req.token = jwt.sign(req.player.id, config.secret);
         next();
     }
@@ -176,6 +196,7 @@ class SignUpRoutes {
             clientID: config.facebook.appId,
             clientSecret: config.facebook.appSecret,
             callbackURL: config.facebook.callback,
+            profileFields: ['id', 'birthday', 'displayName', 'picture.type(large)', 'email'],
             passReqToCallback: true
         }, this._signUpFacebook));
 

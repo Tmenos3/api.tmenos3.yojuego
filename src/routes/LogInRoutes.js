@@ -1,6 +1,7 @@
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var config = require('../../config');
+//var UserESRepository = require('../repositories/UserESRepository');
 var PlayerESRepository = require('../repositories/PlayerESRepository');
 var Player = require('../models/Player');
 var jwt = require('jsonwebtoken');
@@ -12,6 +13,7 @@ var client = new es.Client({
     log: 'info'
 });
 
+//Este repo debiera ser UserESRepository
 var repo = new PlayerESRepository(client);
 
 class LogInRoutes {
@@ -38,6 +40,7 @@ class LogInRoutes {
     }
 
     _loginLocal(req, email, password, done) {
+        //repo.getbyUserId(profile.id, 'yojuego')
         repo.getBy({ 'account.type': 'yojuego', 'account.id': email })
             .then((result) => {
                 let player;
@@ -71,6 +74,7 @@ class LogInRoutes {
     }
 
     _loginFacebook(req, token, refreshToken, profile, done) {
+        //repo.getbyUserId(profile.id, 'facebook')
         repo.getBy({ 'account.type': 'facebook', 'account.id': profile.id })
             .then((result) => {
                 let player;
