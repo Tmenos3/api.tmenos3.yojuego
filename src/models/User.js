@@ -3,14 +3,14 @@ var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 
 class User {
-    constructor(type, id) {
+    constructor(userType) {
         var validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(User.INVALID_USER)));
-        validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(User.INVALID_ID)));
+        validator.addCondition(new NotNullOrUndefinedCondition(userType).throw(new Error(User.INVALID_USER)));
+        // validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(User.INVALID_ID)));
 
         validator.execute(() => {
-            this.type = type;
-            this.id = id;
+            this.type = userType;
+            this.id = '';
         }, (err) => { throw err; });
     }
 

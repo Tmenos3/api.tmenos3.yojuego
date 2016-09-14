@@ -7,3 +7,7 @@ class UserType {
 }
 
 module.exports = UserType;
+
+//user 
+//player
+//match
