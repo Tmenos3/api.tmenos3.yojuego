@@ -14,24 +14,23 @@ describe('User', () => {
         expect(() => new User(aNullType).toThrowError(User.INVALID_USER()));
     });
 
-    //  it('Cannot create with an undefined id', () => {
-    //      var anUndefinedId;
-    //
-    //      expect(() => new User('type', anUndefinedId).toThrowError(User.INVALID_ID()));
-    //  });
-    //
-    //  it('Cannot create with a null id', () => {
-    //      var aNullId = null;
-    //
-    //      expect(() => new User('type', aNullId).toThrowError(User.INVALID_ID()));
-    //  });
+     it('Cannot create with an undefined id', () => {
+         var anUndefinedId;
+    
+         expect(() => new User('type', anUndefinedId).toThrowError(User.INVALID_ID()));
+     });
+    
+     it('Cannot create with a null id', () => {
+         var aNullId = null;
+    
+         expect(() => new User('type', aNullId).toThrowError(User.INVALID_ID()));
+     });
 
     it('Can create a valid User', () => {
         var atype = UserType.yoJuego;
-        // var anId = 1;
-        // var aUser = new User(atype, anId);
-        var aUser = new User(atype);
+        var anId = '1';
+        var aUser = new User(atype, anId);
         expect(aUser.type).toBe(atype);
-        //expect(aUser.id).toBe(anId);
+        expect(aUser.id).toBe(anId);
     });
 });

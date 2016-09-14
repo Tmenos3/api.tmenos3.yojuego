@@ -11,8 +11,7 @@ describe('UserESRepository', () => {
     };
 
     pit('Can get a user by id ', () => {
-        var user = new User('userType');
-        user.id = 'id';
+        var user = new User('userType', '1');
         let client = getMockedClient(false, { _id: user.id, source: user });
 
         let repo = new UserESRepository(client);
@@ -27,8 +26,8 @@ describe('UserESRepository', () => {
 
     pit('Can get list a users by criteria ', () => {
         var users = [
-            { _id: 'anyValidId', _source: { userType: 'userType' } },
-            { _id: 'otherValidId', _source: { userType: 'other_userType' } },
+            { _id: 'anyValidId', _source: { type: 'userType', id: '1' } },
+            { _id: 'otherValidId', _source: { type: 'other_userType', id: '2' } },
         ];
         var criteria = { criteria: 'anyCriteria' };
         let client = getMockedClient(false, { hits: { hits: users } });
@@ -44,7 +43,7 @@ describe('UserESRepository', () => {
     });
 
     pit('Can add a user', () => {
-        var user = new User('type');
+        var user = new User('type', '1');
         let client = getMockedClient(false, {});
 
         let repo = new UserESRepository(client);
@@ -52,7 +51,7 @@ describe('UserESRepository', () => {
             .then((resp) => {
                 expect(client.index.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.index.mock.calls[0][0].type).toEqual('user');
-                expect(client.index.mock.calls[0][0].body.userType).toEqual(user.userType);
+                expect(client.index.mock.calls[0][0].body.type).toEqual(user.type);
                 expect(resp.message).toEqual(UserESRepository.DOCUMENT_INSERTED);
             }, (err) => expect(true).toEqual(false));
     });

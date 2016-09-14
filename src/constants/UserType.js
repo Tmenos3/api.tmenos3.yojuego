@@ -1,13 +1,7 @@
-class UserType {
-
-    static get facebook() { return { code: 0, value: 'Facebook' } };
-    static get google() { return { code: 1, value: 'Google' } };
-    static get yoJuego() { return { code: 2, value: 'YoJuego' } };
-
+var UserType = {
+    facebook: 'facebook',
+    google: 'google',
+    yoJuego: 'yojuego'
 }
 
 module.exports = UserType;
-
-//user 
-//player
-//match

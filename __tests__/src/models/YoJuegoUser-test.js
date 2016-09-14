@@ -29,11 +29,12 @@ describe('YoJuegoUser', () => {
     });
 
     it('Can create a valid YoJuegoUser', () => {
-        var anId = 1;
+        var anId = '1';
         var aPassword = 'password';
         var aYoJuegoUser = new YoJuegoUser(anId, aPassword);
 
         expect(aYoJuegoUser.id).toBe(anId);
+        expect(aYoJuegoUser.type).toBe('yojuego');
         expect(aYoJuegoUser.password).toBe(aPassword);
     });
 });
