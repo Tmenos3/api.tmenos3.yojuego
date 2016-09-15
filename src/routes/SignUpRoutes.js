@@ -107,20 +107,6 @@ class SignUpRoutes {
                     }
                     req.newUser = newUser;
                     return done(null, profile);
-
-                    // var image = profile.photos ? profile.photos[0].value : '/img/faces/unknown-user-pic.jpg';
-                    // var newPlayer = {
-                    //     account: {
-                    //         type: 'facebook',
-                    //         id: profile.id
-                    //     },
-                    //     nickName: profile.displayName.replace(/\s+/, ""),
-                    //     birthDate: profile.birthday ? profile.birthday : '1994-11-05T13:15:30.000Z',
-                    //     state: 'Looking for matches...',
-                    //     adminState: 'master of masters'
-                    // };
-                    // req.newPlayer = newPlayer;
-                    // return done(null, profile);
                 }
             }, (err) => {
                 req.statusCode = 400;
