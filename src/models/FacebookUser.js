@@ -1,6 +1,6 @@
 'use strict'
-import UserType from '../constants/UserType';
-import User from '../models/User';
+var UserType = require('../constants/UserType');
+var User = require('./User');
 
 class FacebookUser extends User {
     constructor(id) {

@@ -18,6 +18,6 @@ describe('GoogleUser', () => {
         var anId = 1;
         var aGoogleUser = new GoogleUser(anId);
 
-        expect(aGoogleUser.id).toBe(anId);
+        expect(aGoogleUser.userid).toBe(anId);
     });
 });

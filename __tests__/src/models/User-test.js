@@ -31,6 +31,6 @@ describe('User', () => {
         var anId = '1';
         var aUser = new User(atype, anId);
         expect(aUser.type).toBe(atype);
-        expect(aUser.id).toBe(anId);
+        expect(aUser.userid).toBe(anId);
     });
 });

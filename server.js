@@ -25,7 +25,7 @@ passport.serializeUser((player, done) => {
 router.addAll(server, passport);
 
 server.get('/echo', (req, res, next) => {
-  setup(client);
+  //setup(client);
   // client.indices.create({ index: 'yojuego' }, (err, resp, respcode) => {
   //   if (!err) {
   //     client.indices.putMapping({
@@ -52,24 +52,27 @@ server.get('/echo', (req, res, next) => {
   //     });
   //   }
   // });
-  // client.search({
-  //   index: 'yojuego',
-  //   type: 'player',
-  //   body: {
-  //     query: {
-  //       match: {
-  //         state: 'wooooooow'
-  //       }
-  //     }
-  //   }
-  // }, (error, response, status) => {
-  //   if (error) {
-  //     res.json(400, err);
-  //   }
-  //   else {
-  //     res.json(200, response.hits.hits);
-  //   }
-  // });
+  client.search({
+    index: "yojuego",
+    type: "user",
+    body: {
+      query: {
+        "bool": {
+          "must": [
+            { "term": { "userid": "123456789" } },
+            { "term": { "type": "yojuego" } }
+          ]
+        }
+      }
+    }
+  }, (error, response, status) => {
+    if (error) {
+      res.json(400, err);
+    }
+    else {
+      res.json(200, response.hits.hits);
+    }
+  });
 });
 
 server.listen(config.port, function () {

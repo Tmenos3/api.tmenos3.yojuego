@@ -38,7 +38,7 @@ describe('PlayerESRepository', () => {
             .then((playersReturned) => {
                 expect(client.search.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.search.mock.calls[0][0].type).toEqual('player');
-                expect(client.search.mock.calls[0][0].body.query.match).toEqual(criteria);
+                expect(client.search.mock.calls[0][0].query).toEqual(criteria);
                 expect(playersReturned.length).toEqual(players.length);
             }, (err) => expect(true).toEqual(false));
     });

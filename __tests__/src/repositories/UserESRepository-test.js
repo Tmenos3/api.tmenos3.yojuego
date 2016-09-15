@@ -12,22 +12,22 @@ describe('UserESRepository', () => {
 
     pit('Can get a user by id ', () => {
         var user = new User('userType', '1');
-        let client = getMockedClient(false, { _id: user.id, source: user });
+        let client = getMockedClient(false, { _id: user.userid, source: user });
 
         let repo = new UserESRepository(client);
-        return repo.getById(user.id)
+        return repo.getById(user.userid)
             .then((userReturned) => {
                 expect(client.get.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.get.mock.calls[0][0].type).toEqual('user');
-                expect(client.get.mock.calls[0][0].id).toEqual(user.id);
+                expect(client.get.mock.calls[0][0].id).toEqual(user.userid);
                 expect(userReturned).toEqual(user);
             }, (err) => expect(true).toEqual(false));
     });
 
     pit('Can get list a users by criteria ', () => {
         var users = [
-            { _id: 'anyValidId', _source: { type: 'userType', id: '1' } },
-            { _id: 'otherValidId', _source: { type: 'other_userType', id: '2' } },
+            { _id: 'anyValidId', _source: { type: 'userType', userid: '1' } },
+            { _id: 'otherValidId', _source: { type: 'other_userType', userid: '2' } },
         ];
         var criteria = { criteria: 'anyCriteria' };
         let client = getMockedClient(false, { hits: { hits: users } });
@@ -37,7 +37,7 @@ describe('UserESRepository', () => {
             .then((usersReturned) => {
                 expect(client.search.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.search.mock.calls[0][0].type).toEqual('user');
-                expect(client.search.mock.calls[0][0].body.query.match).toEqual(criteria);
+                expect(client.search.mock.calls[0][0].query).toEqual(criteria);
                 expect(usersReturned.length).toEqual(users.length);
             }, (err) => expect(true).toEqual(false));
     });

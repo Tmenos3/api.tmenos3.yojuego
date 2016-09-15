@@ -18,6 +18,6 @@ describe('FacebookUser', () => {
         var anId = 1;
         var aFacebookUser = new FacebookUser(anId);
 
-        expect(aFacebookUser.id).toBe(anId);
+        expect(aFacebookUser.userid).toBe(anId);
     });
 });

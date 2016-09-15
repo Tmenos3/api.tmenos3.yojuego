@@ -4,7 +4,7 @@ let createUser = (client) => {
         type: 'user',
         body: {
             properties: {
-                id: { type: 'string' },
+                userid: { type: 'string' },
                 type: { type: 'string' },
                 createdOn: { type: 'date' },
             }

@@ -39,7 +39,7 @@ describe('MatchESRepository', () => {
             .then((matchesReturned) => {
                 expect(client.search.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.search.mock.calls[0][0].type).toEqual('match');
-                expect(client.search.mock.calls[0][0].body.query.match).toEqual(criteria);
+                expect(client.search.mock.calls[0][0].query).toEqual(criteria);
                 expect(matches.length).toEqual(matches.length);
             }, (err) => expect(true).toEqual(false));
     });
