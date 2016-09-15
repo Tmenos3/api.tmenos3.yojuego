@@ -7,28 +7,28 @@ describe('PlayerESRepository', () => {
             get: jest.fn((criteria, callback) => { callback(err, ret); }),
             search: jest.fn((criteria, callback) => { callback(err, ret); }),
             index: jest.fn((criteria, callback) => { callback(err, ret); })
-        }
+        }   
     };
 
-    pit('Can get a player by id ', () => {
-        var player = new Player('aValidNickname', new Date(2010, 10, 10), 'aValidState', 'adminState');
-        player.id = 'id';
-        let client = getMockedClient(false, { _id: player.id, source: player });
+    pit('Can get a player by id', () => {
+        var player = new Player('aValidNickname', new Date(2010, 10, 10), 'aValidState', 'adminState', '1');
 
-        let repo = new PlayerESRepository(client);
-        return repo.getById(player.id)
+        let client = getMockedClient(false, { _id: player.userID, source: player });
+
+        let repo = new PlayerESRepository(client);  
+        return repo.getById(player.userID)
             .then((playerReturned) => {
                 expect(client.get.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.get.mock.calls[0][0].type).toEqual('player');
-                expect(client.get.mock.calls[0][0].id).toEqual(player.id);
+                expect(client.get.mock.calls[0][0].id).toEqual(player.userID);
                 expect(playerReturned).toEqual(player);
             }, (err) => expect(true).toEqual(false));
     });
 
     pit('Can get list a players by criteria ', () => {
         var players = [
-            { _id: 'anyValidId', _source: { nickName: 'nickName', birthDate: '2016-09-03T19:00:00Z', state: 'developing...', adminState: 'adminState' } },
-            { _id: 'otherValidId', _source: { nickName: 'other_nickName', birthDate: '2016-09-03T19:00:00Z', state: 'developing...', adminState: 'adminState_2' } },
+            { _id: 'anyValidId', _source: { nickName: 'nickName', birthDate: '2016-09-03T19:00:00Z', state: 'developing...', adminState: 'adminState', userID: '1' } },
+            { _id: 'otherValidId', _source: { nickName: 'other_nickName', birthDate: '2016-09-03T19:00:00Z', state: 'developing...', adminState: 'adminState_2', userID: '2' } },
         ];
         var criteria = { criteria: 'anyCriteria' };
         let client = getMockedClient(false, { hits: { hits: players } });
@@ -44,7 +44,7 @@ describe('PlayerESRepository', () => {
     });
 
     pit('Can add a player', () => {
-        var player = new Player('aValidNickname', new Date(2010, 10, 10), 'aValidState', 'adminState');
+        var player = new Player('aValidNickname', new Date(2010, 10, 10), 'aValidState', 'adminState', '1');
         let client = getMockedClient(false, {});
 
         let repo = new PlayerESRepository(client);
@@ -56,6 +56,7 @@ describe('PlayerESRepository', () => {
                 expect(client.index.mock.calls[0][0].body.birthDate).toEqual(player.birthDate);
                 expect(client.index.mock.calls[0][0].body.state).toEqual(player.state);
                 expect(client.index.mock.calls[0][0].body.adminState).toEqual(player.adminState);
+                expect(client.index.mock.calls[0][0].body.userID).toEqual(player.userID);
                 expect(resp.message).toEqual(PlayerESRepository.DOCUMENT_INSERTED);
             }, (err) => expect(true).toEqual(false));
     });

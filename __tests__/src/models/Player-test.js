@@ -64,21 +64,28 @@ describe('Player', () => {
     expect(() => new Player('aPlayer', new Date(2010, 10, 10), 'Hi, I am using Yo Juego', anNullAdminState)).toThrowError(Player.INVALID_ADMIN_STATE);
   });
 
-  // it('Cannot create with an adminState if it not is PlayerAdminState', () => {
-  //   var anAdminState = 'I am not a PlayerAdminState';
-  //   expect(() => new Player('aPlayer', new Date(2010, 10, 10), 'Hi, I am using Yo Juego', anAdminState)).toThrowError(Player.INVALID_ADMIN_STATE_TYPE());
-  // });
+  it('Cannot create with a null userID', () => {
+    var aNullUserID = null;
+    expect(() => new Player('aPlayer', new Date(2010, 10, 10), 'Hi, I am using Yo Juego', 'adminState', aNullUserID)).toThrowError(Player.INVALID_USERID);
+  });
+
+  it('Cannot create with an undefined UserID', () => {
+    var anUndefinedUser;
+    expect(() => new Player('aPlayer', new Date(2010, 10, 10), 'Hi, I am using Yo Juego', 'adminState', anUndefinedUser)).toThrowError(Player.INVALID_USERID);
+  });
 
   it('Can create a valid Player', () => {
     var aNickName = 'nickName';
     var aBirthDate = new Date(2010, 10, 10);
     var aState = 'Hi, I am using Yo Juego';
     var anAdminState = PlayerAdminState.enabled;
-    var player = new Player(aNickName, aBirthDate, aState, anAdminState);
+    var anUserID = '1';
+    var player = new Player(aNickName, aBirthDate, aState, anAdminState, anUserID);
 
     expect(player.nickName).toBe(aNickName);
     expect(player.birthDate).toBe(aBirthDate);
     expect(player.state).toBe(aState);
     expect(player.adminState).toBe(anAdminState);
+    expect(player.userID).toBe(anUserID);
   });
 });

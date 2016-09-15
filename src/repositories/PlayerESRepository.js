@@ -10,9 +10,7 @@ class PlayerESRepository extends ESRepository {
         return new Promise((resolve, reject) => {
             super.getById(playerId, 'yojuego', 'player')
                 .then((objRet) => {
-                    var player = new Player(objRet.source.nickName, new Date(objRet.source.birthDate), objRet.source.state, objRet.source.adminState);
-                    player.id = objRet._id;
-                    player.account = objRet.source.account;
+                    var player = new Player(objRet.source.nickName, new Date(objRet.source.birthDate), objRet.source.state, objRet.source.adminState, objRet.source.userID);
                     resolve(player);
                 }, reject);
         });
@@ -25,8 +23,8 @@ class PlayerESRepository extends ESRepository {
                     var ret = [];
 
                     for (let i = 0; i < list.length; i++) {
-                        var player = new Player(list[i]._source.nickName, new Date(list[i]._source.birthDate), list[i]._source.state, list[i]._source.adminState);
-                        player.id = list[i]._id;
+                        var player = new Player(list[i]._source.nickName, new Date(list[i]._source.birthDate), list[i]._source.state, list[i]._source.adminState, list[i]._source.userID);
+                        player.userID = list[i]._id;
                         player.account = list[i]._source.account;
                         ret.push(player);
                     }

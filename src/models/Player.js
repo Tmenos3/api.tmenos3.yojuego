@@ -6,7 +6,7 @@ var CustomCondition = require('no-if-validator').CustomCondition;
 var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
 
 class Player {
-    constructor(nickName, birthDate, state, adminState) {
+    constructor(nickName, birthDate, state, adminState, userID) {
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(nickName).throw(new Error(Player.INVALID_NICKNAME)));
         validator.addCondition(new HasNotBlankSpacesCondition(nickName).throw(new Error(Player.INVALID_NICKNAME_HAS_BLANKSPACES)));
@@ -15,13 +15,14 @@ class Player {
         validator.addCondition(new InstanceOfCondition(birthDate, Date).throw(new Error(Player.INVALID_DATE_TYPE)));
         validator.addCondition(new NotNullOrUndefinedCondition(state).throw(new Error(Player.INVALID_STATE)));
         validator.addCondition(new NotNullOrUndefinedCondition(adminState).throw(new Error(Player.INVALID_ADMIN_STATE)));
+        validator.addCondition(new NotNullOrUndefinedCondition(userID).throw(new Error(Player.INVALID_USERID)));
 
         validator.execute(() => {
             this.nickName = nickName;
             this.birthDate = birthDate;
             this.state = state;
             this.adminState = adminState;
-            this.id = '';
+            this.userID = userID;
         }, (err) => { throw err; });
     }
 
@@ -50,7 +51,7 @@ class Player {
     static get INVALID_BIRTHDATE() {
         return 'La fecha de nacimiento es inválida. No puede ser nula ni indefinida.';
     }
-    
+
     static get INVALID_DATE_TYPE() {
         return 'El la fecha de nacimiento no es del tipo DATE.';
     }
@@ -65,6 +66,10 @@ class Player {
 
     static get INVALID_ADMIN_STATE_TYPE() {
         return 'El estado administrativo no es del tipo PlayerAdminState.';
+    }
+
+    static get INVALID_USERID() {
+        return 'El userID no puede nulo o indefinido.';
     }
 }
 
