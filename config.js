@@ -5,7 +5,7 @@ module.exports = {
         callback: 'http://ec2-54-174-177-82.compute-1.amazonaws.com:8081/signup/facebook/callback'
     },
     'secret': 'tmenos3-revolutioningtheinovation',
-    'database': 'http://localhost:9200',
+    'database': 'https://search-yojuegoes-cb2mgiednpd4tf5epwebnbszfe.us-east-1.es.amazonaws.com/',
     'expiresIn': 3600, //Time in seconds
     'port': 8081,
     'pathsWithoutAuthentication': ['/',
