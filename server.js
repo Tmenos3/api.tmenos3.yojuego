@@ -52,27 +52,29 @@ server.get('/echo', (req, res, next) => {
   //     });
   //   }
   // });
-  client.search({
-    index: "yojuego",
-    type: "user",
-    body: {
-      query: {
-        "bool": {
-          "must": [
-            { "term": { "userid": "123456789" } },
-            { "term": { "type": "yojuego" } }
-          ]
-        }
-      }
-    }
-  }, (error, response, status) => {
-    if (error) {
-      res.json(400, err);
-    }
-    else {
-      res.json(200, response.hits.hits);
-    }
-  });
+  // client.search({
+  //   index: "yojuego",
+  //   type: "user",
+  //   body: {
+  //     query: {
+  //       "bool": {
+  //         "must": [
+  //           { "term": { "userid": "123456789" } },
+  //           { "term": { "type": "yojuego" } }
+  //         ]
+  //       }
+  //     }
+  //   }
+  // }, (error, response, status) => {
+  //   if (error) {
+  //     res.json(400, err);
+  //   }
+  //   else {
+  //     res.json(200, response.hits.hits);
+  //   }
+  // });
+
+  res.json(200, { status: 'ok' });
 });
 
 server.listen(config.port, function () {
