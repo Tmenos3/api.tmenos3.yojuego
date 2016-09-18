@@ -1,16 +1,26 @@
 var Routes = require('./Routes');
 
-class PlayerRoutes extends Routes{
-    constructor() { 
-        super(); 
+class PlayerRoutes extends Routes {
+    constructor() {
+        super();
     }
 
-    _addAllRoutes(server){
+    _addAllRoutes(server) {
         server.get('/player/:id/profile', (req, res, next) => { });
         server.get('/player/:id/upcomingMatches', (req, res, next) => { });
         server.post('/player/create', (req, res, next) => { });
         server.post('/player/:id/update', (req, res, next) => { });
         server.del('/player/:id', (req, res, next) => { });
+        server.post('/:userid/player/profile', this._updateProfile);
+    }
+
+    _updateProfile(req, res, next) {
+        //1- Chequeo obligatoriedad de parametros
+        //2- Busco el player con el userId correspondientes
+        //    A- El player existe: updeteo los datos
+        //    B- El player no existe: creo el player
+        console.log('me llamaron');
+        res.json(200, 'ok');
     }
 
     /*
