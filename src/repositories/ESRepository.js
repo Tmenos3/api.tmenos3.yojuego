@@ -80,8 +80,25 @@ class ESRepository {
         throw new Error('must be implemented');
     }
 
-    update(id, index, type) {
-        throw new Error('must be implemented');
+    update(document, index, type) {
+        return new Promise((resolve, reject) => {
+            this.esclient.update({
+                index: index,
+                type: type,
+                id: document._id,
+                body: {
+                    // put the partial document under the `doc` key
+                    //https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-update
+                    doc: document.source
+                }
+            }, function (error, resp) {
+                if (error) {
+                    reject(ESRepository.UNEXPECTED_ERROR);
+                } else {
+                    resolve({ message: ESRepository.DOCUMENT_UPDATED, resp: resp });
+                }
+            })
+        });
     }
 
     _getQueryForGetById(id, index, type) {
@@ -136,6 +153,10 @@ class ESRepository {
 
     static get DOCUMENT_INSERTED() {
         return "Document inserted.";
+    }
+
+    static get DOCUMENT_UPDATED() {
+        return "Document updated.";
     }
 
     static get UNEXPECTED_ERROR() {
