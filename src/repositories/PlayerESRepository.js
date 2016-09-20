@@ -35,56 +35,72 @@ class PlayerESRepository extends ESRepository {
     }
 
     getByUserId(userid) {
+        // return new Promise((resolve, reject) => {
+        //     super.getBy({
+        //         "query": {
+        //             "bool": {
+        //                 "filter": [
+        //                     { "term": { "userID": userid } }
+        //                 ]
+        //             }
+        //         }
+        //     }, 'yojuego', 'player')
+        //         .then((ret) => {
+        //             let player = null;
+
+        //             for (let i = 0; i < ret.resp.length; i++) {
+        //                 player = new Player(ret.resp[i]._source.nickName, new Date(ret.resp[i]._source.birthDate), ret.resp[i]._source.state, ret.resp[i]._source.adminState, ret.resp[i]._source.userID);
+        //                 player._id = ret.resp[i]._id;
+        //                 break;
+        //             }
+
+        //             resolve(player);
+        //         }, reject);
+        // });
         return new Promise((resolve, reject) => {
-            super.getBy(this._getCriteriaByUserId(userid), 'yojuego', 'player')
-                .then((list) => {
+            this.esclient.search({
+                "index": "yojuego",
+                "type": "player",
+                "body": {
+                    "query": {
+                        "bool": {
+                            "filter": [
+                                { "term": { "userID": userid } }
+                            ]
+                        }
+                    }
+                }
+            }, (error, response) => {
+                if (error) {
+                    reject({ code: error.statusCode, message: error.message, resp: error });
+                }
+                else {
                     let player = null;
 
-                    for (let i = 0; i < list.length; i++) {
-                        player = new Player(list[i]._source.nickName, new Date(list[i]._source.birthDate), list[i]._source.state, list[i]._source.adminState, list[i]._source.userID);
-                        player.id = list[i]._id;
+                    for (let i = 0; i < response.hits.hits.length; i++) {
+                        player = new Player(response.hits.hits[i]._source.nickName, new Date(response.hits.hits[i]._source.birthDate), response.hits.hits[i]._source.state, response.hits.hits[i]._source.adminState, response.hits.hits[i]._source.userID);
+                        player._id = response.hits.hits[i]._id;
                         break;
                     }
 
                     resolve(player);
-                }, reject);
+                }
+            });
         });
     }
 
     add(player) {
-        // return new Promise((resolve, reject) => {
-        //     super.add(player, 'yojuego', 'player')
-        //         .then(resolve, reject);
-        // });
         return super.add(player, 'yojuego', 'player');
     }
 
-    update(player){
+    update(player) {
         let document = {
-            _id: player.id,
-            source: {
-                nickName: player.nickName,
-                birthDate: player.birthDate,
-                state: player.state,
-                adminState: player.adminState
-            }
-        }
-
-        return super.update(document, 'yojuego', 'player');
-    }
-
-    _getCriteriaByUserId(userid) {
-        return {
-            "bool": {
-                "must": [
-                    { "term": { "userid": userid } }
-                ]
-            }
-        }
-    }
-
-    static get INVALID_PLAYER() {
-        return "Invalid Player";
+            nickName: player.nickName,
+            birthDate: player.birthDate,
+            state: player.state,
+            adminState: player.adminState
+        };
+        return super.update(player._id, document, 'yojuego', 'player');
     }
 }
 

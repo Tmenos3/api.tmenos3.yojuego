@@ -25,7 +25,8 @@ class ESRepository {
                         if (error.status == 404) {
                             resolve(null);
                         } else {
-                            reject(ESRepository.UNEXPECTED_ERROR);
+                            //reject(ESRepository.UNEXPECTED_ERROR);
+                            reject({ code: error.statusCode, message: error.message, resp: error });
                         }
                     }
                     else {
@@ -46,10 +47,10 @@ class ESRepository {
             validator.execute(() => {
                 this.esclient.search(this._getQueryForSearchBy(criteria, index, type), (error, response, status) => {
                     if (error) {
-                        reject(ESRepository.UNEXPECTED_ERROR);
+                        reject({ code: error.statusCode, message: error.message, resp: error });
                     }
                     else {
-                        resolve(response.hits.hits);
+                        resolve({ code: 0, message: ESRepository.DOCUMENT_INSERTED, resp: response.hits.hits });
                     }
                 });
             }, (err) => { throw err; });
@@ -58,21 +59,19 @@ class ESRepository {
 
     add(document, index, type) {
         return new Promise((resolve, reject) => {
-            let validator = new Validator();
-            validator.addCondition(new NotNullOrUndefinedCondition(document).throw(new Error(ESRepository.INVALID_DOCUMENT)));
-            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
-            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
-
-            validator.execute(() => {
-                this.esclient.index(this._getQueryForAdd(document, index, type), (error, resp) => {
-                    if (error) {
-                        reject(ESRepository.UNEXPECTED_ERROR);
-                    }
-                    else {
-                        resolve({ message: ESRepository.DOCUMENT_INSERTED, resp: resp });
-                    }
-                });
-            }, (err) => { throw err; });
+            this.esclient.index({
+                index: index,
+                type: type,
+                body: {
+                    query: document
+                }
+            }, (error, resp) => {
+                if (error) {
+                    reject({ code: error.statusCode, message: error.message, resp: error });
+                } else {
+                    resolve({ code: 0, message: ESRepository.DOCUMENT_INSERTED, resp: resp });
+                }
+            });
         });
     }
 
@@ -80,24 +79,22 @@ class ESRepository {
         throw new Error('must be implemented');
     }
 
-    update(document, index, type) {
+    update(id, document, index, type) {
         return new Promise((resolve, reject) => {
             this.esclient.update({
                 index: index,
                 type: type,
-                id: document._id,
+                id: id,
                 body: {
-                    // put the partial document under the `doc` key
-                    //https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-update
-                    doc: document.source
+                    doc: document
                 }
-            }, function (error, resp) {
+            }, (error, resp) => {
                 if (error) {
-                    reject(ESRepository.UNEXPECTED_ERROR);
+                    reject({ code: error.statusCode, message: error.message, resp: error });
                 } else {
-                    resolve({ message: ESRepository.DOCUMENT_UPDATED, resp: resp });
+                    resolve({ code: 0, message: ESRepository.DOCUMENT_UPDATED, resp: resp });
                 }
-            })
+            });
         });
     }
 
@@ -113,9 +110,7 @@ class ESRepository {
         return {
             index: index,
             type: type,
-            body: {
-                query: criteria
-            }
+            body: criteria
         }
     }
 

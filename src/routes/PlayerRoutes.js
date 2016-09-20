@@ -3,6 +3,7 @@ var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 var Routes = require('./Routes');
 var config = require('../../config');
 var PlayerESRepository = require('../repositories/PlayerESRepository');
+var Player = require('../models/Player');
 var es = require('elasticsearch');
 var client = new es.Client({
     host: config.database,
@@ -32,13 +33,32 @@ class PlayerRoutes extends Routes {
     }
 
     _updateProfile(req, res, next) {
-        let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(req.body.nickname).throw(PlayerRoutes.INVALID_NICKNAME));
-        validator.addCondition(new NotNullOrUndefinedCondition(req.body.birthday).throw(PlayerRoutes.INVALID_BIRTHDAY));
-        validator.addCondition(new NotNullOrUndefinedCondition(req.body.state).throw(PlayerRoutes.INVALID_STATE));
-        validator.addCondition(new NotNullOrUndefinedCondition(req.body.adminState).throw(PlayerRoutes.INVALID_ADMINSTATE));
+        repo.getByUserId(req.params.userid)
+            .then((playerReturned) => {
+                if (playerReturned) {
+                    playerReturned.nickName = req.body.nickname;
+                    playerReturned.birthday = new Date(req.body.birthday);
+                    playerReturned.state = req.body.state;
+                    playerReturned.adminState = req.body.adminState;
+                    return repo.update(playerReturned);
+                } else {
+                    let player = new Player(req.body.nickname, new Date(req.body.birthday), req.body.state, req.body.adminState, req.params.userid);
+                    return repo.add(player);
+                }
+            }, (err) => { res.json(400, { code: 400, message: err }); })
+            .then((ret) => {
+                if(ret.code === 0){
+                    res.json(200, 'saved');
+                    next();
+                }else{
+                    res.json(400, { code: 400, message: ret.message });
+                }
+            }, (err) => { res.json(400, { code: 400, message: err }); })
+            .catch((err) => { res.json(500, { code: 500, message: err }); });
+    }
 
-        validator.execute(() => { this._doAfterValidateProfileInfo(req.parems.userid, req.body, res) }, (err) => { res.json(400, { code: 1, message: err.message }); });
+    static get INVALID_BODY() {
+        return 'Invalid request body';
     }
 
     /*
@@ -58,30 +78,6 @@ class PlayerRoutes extends Routes {
 
             ref: https://www.elastic.co/guide/en/elasticsearch/guide/current/application-joins.html
     */
-
-    _doAfterValidateProfileInfo(userid, profile, res) {
-        repo.getbyUserId(userid)
-            .then((playerReturned) => {
-                if (playerReturned) {
-                    playerReturned.nickName = profile.nickName;
-                    playerReturned.birthday = new Date(profile.birthday);
-                    playerReturned.state = profile.state;
-                    playerReturned.adminState = profile.adminState;
-                    return repo.update(playerReturned);
-                } else {
-                    player = new Player(profile.nickName, new Date(profile.birthday), profile.state, profile.adminState, userid);
-                    return repo.add(player);
-                }
-            }, (err) => { res.json(400, { code: 400, message: err }); })
-            .then(() => {
-                
-            }, (err) => { res.json(400, { code: 400, message: err }); })
-            .catch((err) => { res.json(500, { code: 500, message: err }); });
-    }
-
-    get INVALID_BODY() {
-        return 'Invalid request body';
-    }
 }
 
 module.exports = PlayerRoutes;
