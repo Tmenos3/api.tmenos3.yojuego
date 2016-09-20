@@ -6,7 +6,7 @@ module.exports = {
     },
     'secret': 'tmenos3-revolutioningtheinovation',
     'database': 'https://search-yojuegoes-cb2mgiednpd4tf5epwebnbszfe.us-east-1.es.amazonaws.com/',
-    'expiresIn': 3600, //Time in seconds
+    'expiresIn': 86400, //Time in seconds
     'port': 8081,
     'pathsWithoutAuthentication': ['/',
         '/echo',

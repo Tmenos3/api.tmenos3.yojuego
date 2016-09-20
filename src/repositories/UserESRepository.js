@@ -32,6 +32,39 @@ class UserESRepository extends ESRepository {
         });
     }
 
+    getByUserId(id, type) {
+        return new Promise((resolve, reject) => {
+            this.esclient.search({
+                "index": "yojuego",
+                "type": "user",
+                "body": {
+                    "query": {
+                        "bool": {
+                            "filter": [
+                                { "term": { "type": type } },
+                                { "term": { "id": id } }
+                            ]
+                        }
+                    }
+                }
+            }, (error, response) => {
+                if (error) {
+                    reject({ code: error.statusCode, message: error.message, resp: error });
+                }
+                else {
+                    let user = null;
+
+                    for (let i = 0; i < response.hits.hits.length; i++) {
+                        user = new User(response.hits.hits[i]._source.type, response.hits.hits[i]._source.id);
+                        user._id = response.hits.hits[i]._id;
+                    }
+
+                    resolve(user);
+                }
+            });
+        });
+    }
+
     add(user) {
         return new Promise((resolve, reject) => {
             super.add(user, 'yojuego', 'user')

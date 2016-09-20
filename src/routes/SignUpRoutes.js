@@ -50,17 +50,9 @@ class SignUpRoutes {
     }
 
     _signUpYoJuego(req, email, password, done) {
-        //repo.getbyUserId(profile.id, 'yojuego')
-        repo.getBy({
-            "bool": {
-                "must": [
-                    { "term": { "userid": email } },
-                    { "term": { "type": "yojuego" } }
-                ]
-            }
-        })
-            .then((result) => {
-                if (result.length > 0) {
+        repo.getByUserId(email, 'yojuego')
+            .then((user) => {
+                if (user) {
                     req.statusCode = 400;
                     req.statusMessage = 'La cuenta está en uso';
                     return done({ code: 400, message: 'La cuenta está en uso' }, null);
@@ -86,17 +78,9 @@ class SignUpRoutes {
     }
 
     _signUpFacebook(req, token, refreshToken, profile, done) {
-        //repo.getbyUserId(profile.id, 'facebook')
-        repo.getBy({
-            "bool": {
-                "must": [
-                    { "term": { "userid": profile.id } },
-                    { "term": { "type": "facebook" } }
-                ]
-            }
-        })
-            .then((result) => {
-                if (result.length > 0) {
+        repo.getByUserId(profile.id, 'facebook')
+            .then((user) => {
+                if (user) {
                     req.statusCode = 400;
                     req.statusMessage = 'La cuenta está en uso';
                     return done({ code: 400, message: 'La cuenta está en uso' }, null);
@@ -134,7 +118,7 @@ class SignUpRoutes {
     }
 
     _generateToken(req, res, next) {
-        req.token = jwt.sign(req.user.userid, config.secret);
+        req.token = jwt.sign(req.user.id, config.secret);
         next();
     }
 
