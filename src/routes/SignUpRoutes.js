@@ -7,8 +7,9 @@ var FacebookUser = require('../models/FacebookUser');
 var GoogleUser = require('../models/GoogleUser');
 var jwt = require('jsonwebtoken');
 var es = require('elasticsearch');
-var FacebookStrategy = require('passport-facebook').Strategy
-var LocalStrategy = require('passport-local').Strategy
+var FacebookStrategy = require('passport-facebook').Strategy;
+var GoogleStrategy = require('passport-google-oauth').OAuthStrategy;
+var LocalStrategy = require('passport-local').Strategy;
 var client = new es.Client({
     host: config.database,
     log: 'info'
@@ -40,13 +41,39 @@ class SignUpRoutes {
     _addAllRoutes(server, passport) {
         this._configurePassport(server, passport);
 
-        server.get('/signup/facebook/callback', passport.authenticate('facebook-signup', { session: false }), this._createUser, this._generateToken, (req, res, next) => {
-            res.redirect('/signup/facebook/success/token=' + req.token, next);
-        });
-        server.get('/signup/google/callback', passport.authenticate('google-signup'), (req, res, next) => { });
-        server.get('/signup/yojuego', passport.authenticate('yojuego-signup'), this._createUser, this._generateToken, (req, res, next) => { res.json(200, { token: req.token }); });
-        server.get('/signup/facebook', passport.authenticate('facebook-signup', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
-        server.get('/signup/google', (req, res, next) => { });
+        server.get('/signup/facebook',
+            passport.authenticate('facebook-signup', { session: false, scope: ['public_profile', 'user_birthday', 'email'] })
+        );
+
+        server.get('/signup/facebook/callback',
+            passport.authenticate('facebook-signup', { session: false }),
+            this._createUser,
+            this._generateToken,
+            (req, res, next) => {
+                res.redirect('/signup/facebook/success/token=' + req.token, next);
+            }
+        );
+
+        server.get('/signup/yojuego',
+            passport.authenticate('yojuego-signup'),
+            this._createUser,
+            this._generateToken,
+            (req, res, next) => { res.json(200, { token: req.token }); }
+        );
+
+        server.get('/signup/google',
+            passport.authenticate('google-signup', { scope: 'https://www.google.com/m8/feeds' })
+        );
+
+        // No sé si cuando falla estaría bien el redirect (failureRedirect: '/login')
+        server.get('/signup/google/callback',
+            passport.authenticate('google-signup', { failureRedirect: '/login' }),
+            this._createUser,
+            this._generateToken,
+            (req, res, next) => {
+                res.redirect('/signup/google/success/token=' + req.token, next);
+            }
+        );
     }
 
     _signUpYoJuego(req, email, password, done) {
@@ -120,6 +147,40 @@ class SignUpRoutes {
             });
     }
 
+    _signUpGoogle(req, token, refreshToken, profile, done) {
+        repo.getBy({
+            "bool": {
+                "must": [
+                    { "term": { "userid": profile.id } },
+                    { "term": { "type": 'google' } }
+                ]
+            }
+        })
+            .then((result) => {
+                if (result.length > 0) {
+                    req.statusCode = 400;
+                    req.statusMessage = 'La cuenta está en uso';
+                    return done({ code: 400, message: 'La cuenta está en uso' }, null);
+                } else {
+                    let newUser = {
+                        userid: profile.id,
+                        type: 'google'
+                    }
+                    req.newUser = newUser;
+                    return done(null, profile);
+                }
+            }, (err) => {
+                req.statusCode = 400;
+                req.statusMessage = err;
+                return done({ code: 400, message: err }, null);
+            })
+            .catch((err) => {
+                req.statusCode = 400;
+                req.statusMessage = err;
+                return done({ code: 500, message: err }, null);
+            });
+    }
+
     _createUser(req, res, next) {
         if (req.statusCode !== undefined && req.statusCode !== null) {
             res.json(req.statusCode, req.statusMessage);
@@ -146,6 +207,14 @@ class SignUpRoutes {
             profileFields: ['id', 'birthday', 'displayName', 'picture.type(large)', 'email'],
             passReqToCallback: true
         }, this._signUpFacebook));
+
+        passport.use('google-signup', new GoogleStrategy({
+            clientID: config.google.appId,
+            clientSecret: config.google.appSecret,
+            callbackURL: config.google.callback,
+            profileFields: ['id', 'birthday', 'displayName', 'picture.type(large)', 'email'],
+            passReqToCallback: true
+        }, this._signUpGoogle));
 
         passport.use('yojuego-signup', new LocalStrategy({
             usernameField: 'email',
