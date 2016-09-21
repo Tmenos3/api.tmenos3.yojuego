@@ -63,7 +63,7 @@ describe('UserESRepository', () => {
             .then((resp) => {
                 expect(client.index.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.index.mock.calls[0][0].type).toEqual('user');
-                expect(client.index.mock.calls[0][0].body.query).toEqual(user);
+                expect(client.index.mock.calls[0][0].body).toEqual(user);
 
                 expect(resp.code).toEqual(0);
                 expect(resp.resp._id).toEqual(user.id);

@@ -51,9 +51,7 @@ class ESRepository {
                 this.esclient.index({
                     index: index,
                     type: type,
-                    body: {
-                        query: document
-                    }
+                    body: document
                 }, (error, resp) => {
                     if (error) {
                         reject({ code: error.statusCode, message: error.message, resp: error });

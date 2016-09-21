@@ -36,7 +36,7 @@ describe('PlayerESRepository', () => {
             .then((resp) => {
                 expect(client.index.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.index.mock.calls[0][0].type).toEqual('player');
-                expect(client.index.mock.calls[0][0].body.query).toEqual(player);
+                expect(client.index.mock.calls[0][0].body).toEqual(player);
 
                 expect(resp.code).toEqual(0);
                 expect(resp.resp._id).toEqual(player.userid);
