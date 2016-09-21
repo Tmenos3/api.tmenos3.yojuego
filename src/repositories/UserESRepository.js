@@ -6,33 +6,20 @@ class UserESRepository extends ESRepository {
         super(client);
     }
 
-    getById(userId) {
+    get(userId) {
         return new Promise((resolve, reject) => {
-            super.getById(userId, 'yojuego', 'user')
+            super.get(userId, 'yojuego', 'user')
                 .then((objRet) => {
-                    var user = new User(objRet.source.type, objRet.source.userid);
-                    resolve(user);
+                    var user = new User(objRet.resp.source.type, objRet.resp.source.id);
+                    user._id = objRet.resp._id;
+                    resolve({ code: 0, message: null, resp: user });
                 }, reject);
         });
     }
 
-    getBy(criteria) {
-        return new Promise((resolve, reject) => {
-            super.getBy(criteria, 'yojuego', 'user')
-                .then((list) => {
-                    var ret = [];
-
-                    for (let i = 0; i < list.length; i++) {
-                        var user = new User(list[i]._source.type, list[i]._source.userid);
-                        ret.push(user);
-                    }
-
-                    resolve(ret);
-                }, reject);
-        });
-    }
-
-    getByUserId(id, type) {
+    getByIdAndType(id, type) {
+        //TEST: not null, not undefined
+        //TEST: instance of string both
         return new Promise((resolve, reject) => {
             this.esclient.search({
                 "index": "yojuego",
@@ -57,19 +44,31 @@ class UserESRepository extends ESRepository {
                     for (let i = 0; i < response.hits.hits.length; i++) {
                         user = new User(response.hits.hits[i]._source.type, response.hits.hits[i]._source.id);
                         user._id = response.hits.hits[i]._id;
+                        break;
                     }
 
-                    resolve(user);
+                    resolve({ code: 0, message: null, resp: user });
                 }
             });
         });
     }
 
     add(user) {
-        return new Promise((resolve, reject) => {
-            super.add(user, 'yojuego', 'user')
-                .then(resolve, reject);
-        });
+        //TEST: not null, not undefined
+        //TEST: instance of User
+        return super.add(user, 'yojuego', 'user');
+    }
+
+    update(user) {
+        //TEST: not null, not undefined
+        //TEST: instance of User
+        throw new Error();
+    }
+
+    delete(user) {
+        //TEST: not null, not undefined
+        //TEST: instance of User
+        throw new Error();
     }
 
     static get INVALID_USER() {

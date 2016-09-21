@@ -18,6 +18,7 @@ describe('GoogleUser', () => {
         var anId = 1;
         var aGoogleUser = new GoogleUser(anId);
 
-        expect(aGoogleUser.userid).toBe(anId);
+        expect(aGoogleUser.id).toEqual(anId);
+        expect(aGoogleUser.type).toEqual('google');
     });
 });

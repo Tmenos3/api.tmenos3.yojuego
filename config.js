@@ -10,14 +10,10 @@ module.exports = {
     'port': 8080,
     'pathsWithoutAuthentication': ['/',
         '/echo',
-        '/signup/facebook/callback',
-        '/signup/google/callback',
         '/signup/yojuego',
-        '/signup/facebook',
-        '/signup/google',
-        '/login/facebook/callback',
-        '/login/google/callback',
         '/login/yojuego',
-        '/login/facebook',
-        '/login/google']
+        '/auth/facebook/callback',
+        '/auth/google/callback',
+        '/auth/facebook',
+        '/auth/google']
 };

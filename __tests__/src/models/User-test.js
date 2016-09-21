@@ -30,7 +30,7 @@ describe('User', () => {
         var atype = UserType.yoJuego;
         var anId = '1';
         var aUser = new User(atype, anId);
-        expect(aUser.type).toBe(atype);
-        expect(aUser.userid).toBe(anId);
+        expect(aUser.type).toEqual(atype);
+        expect(aUser.id).toEqual(anId);
     });
 });

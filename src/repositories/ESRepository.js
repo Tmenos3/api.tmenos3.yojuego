@@ -12,7 +12,7 @@ class ESRepository {
         }, (err) => { throw err; });
     }
 
-    getById(id, index, type) {
+    get(id, index, type) {
         return new Promise((resolve, reject) => {
             let validator = new Validator();
             validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.INVALID_ID)));
@@ -20,37 +20,20 @@ class ESRepository {
             validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
 
             validator.execute(() => {
-                this.esclient.get(this._getQueryForGetById(id, index, type), (error, response, status) => {
+                this.esclient.get({
+                    index: index,
+                    type: type,
+                    id: id
+                }, (error, response, status) => {
                     if (error) {
                         if (error.status == 404) {
-                            resolve(null);
+                            resolve({ code: 0, message: null, resp: null });
                         } else {
-                            //reject(ESRepository.UNEXPECTED_ERROR);
                             reject({ code: error.statusCode, message: error.message, resp: error });
                         }
                     }
                     else {
-                        resolve(response);
-                    }
-                });
-            }, (err) => { throw err; });
-        });
-    }
-
-    getBy(criteria, index, type) {
-        return new Promise((resolve, reject) => {
-            let validator = new Validator();
-            validator.addCondition(new NotNullOrUndefinedCondition(criteria).throw(new Error(ESRepository.INVALID_CRITERIA)));
-            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
-            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
-
-            validator.execute(() => {
-                this.esclient.search(this._getQueryForSearchBy(criteria, index, type), (error, response, status) => {
-                    if (error) {
-                        reject({ code: error.statusCode, message: error.message, resp: error });
-                    }
-                    else {
-                        resolve({ code: 0, message: ESRepository.DOCUMENT_INSERTED, resp: response.hits.hits });
+                        resolve({ code: 0, message: null, resp: response });
                     }
                 });
             }, (err) => { throw err; });
@@ -59,67 +42,59 @@ class ESRepository {
 
     add(document, index, type) {
         return new Promise((resolve, reject) => {
-            this.esclient.index({
-                index: index,
-                type: type,
-                body: {
-                    query: document
-                }
-            }, (error, resp) => {
-                if (error) {
-                    reject({ code: error.statusCode, message: error.message, resp: error });
-                } else {
-                    resolve({ code: 0, message: ESRepository.DOCUMENT_INSERTED, resp: resp });
-                }
-            });
+            let validator = new Validator();
+            validator.addCondition(new NotNullOrUndefinedCondition(document).throw(new Error(ESRepository.INVALID_DOCUMENT)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+
+            validator.execute(() => {
+                this.esclient.index({
+                    index: index,
+                    type: type,
+                    body: {
+                        query: document
+                    }
+                }, (error, resp) => {
+                    if (error) {
+                        reject({ code: error.statusCode, message: error.message, resp: error });
+                    } else {
+                        resolve({ code: 0, message: ESRepository.DOCUMENT_INSERTED, resp: resp });
+                    }
+                });
+            }, (err) => { throw err; });
         });
     }
 
     delete(id, index, type) {
+        //TEST: not null, not undefined
         throw new Error('must be implemented');
     }
 
     update(id, document, index, type) {
         return new Promise((resolve, reject) => {
-            this.esclient.update({
-                index: index,
-                type: type,
-                id: id,
-                body: {
-                    doc: document
-                }
-            }, (error, resp) => {
-                if (error) {
-                    reject({ code: error.statusCode, message: error.message, resp: error });
-                } else {
-                    resolve({ code: 0, message: ESRepository.DOCUMENT_UPDATED, resp: resp });
-                }
-            });
+            let validator = new Validator();
+            validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.INVALID_ID)));
+            validator.addCondition(new NotNullOrUndefinedCondition(document).throw(new Error(ESRepository.INVALID_DOCUMENT)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+
+            validator.execute(() => {
+                this.esclient.update({
+                    index: index,
+                    type: type,
+                    id: id,
+                    body: {
+                        doc: document
+                    }
+                }, (error, resp) => {
+                    if (error) {
+                        reject({ code: error.statusCode, message: error.message, resp: error });
+                    } else {
+                        resolve({ code: 0, message: ESRepository.DOCUMENT_UPDATED, resp: resp });
+                    }
+                });
+            }, (err) => { throw err; });
         });
-    }
-
-    _getQueryForGetById(id, index, type) {
-        return {
-            index: index,
-            type: type,
-            id: id
-        }
-    }
-
-    _getQueryForSearchBy(criteria, index, type) {
-        return {
-            index: index,
-            type: type,
-            body: criteria
-        }
-    }
-
-    _getQueryForAdd(document, index, type) {
-        return {
-            index: index,
-            type: type,
-            body: document
-        }
     }
 
     static get INVALID_CLIENT() {

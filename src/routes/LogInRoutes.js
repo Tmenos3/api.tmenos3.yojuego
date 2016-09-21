@@ -1,25 +1,17 @@
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var config = require('../../config');
-//var UserESRepository = require('../repositories/UserESRepository');
-var PlayerESRepository = require('../repositories/PlayerESRepository');
-var Player = require('../models/Player');
+var UserESRepository = require('../repositories/UserESRepository');
+var User = require('../models/User');
 var jwt = require('jsonwebtoken');
 var es = require('elasticsearch');
-var FacebookStrategy = require('passport-facebook').Strategy
 var LocalStrategy = require('passport-local').Strategy
 var client = new es.Client({
     host: config.database,
     log: 'info'
 });
 
-//Este repo debiera ser UserESRepository
-var repo = new PlayerESRepository(client);
-let getResponse = (obj) => {
-    return {
-        response: obj
-    }
-}
+var repo = new UserESRepository(client);
 
 class LogInRoutes {
     constructor() { }
@@ -35,71 +27,23 @@ class LogInRoutes {
     _addAllRoutes(server, passport) {
         this._configurePassport(server, passport);
 
-        server.get('/login/facebook/callback', passport.authenticate('facebook-login', { session: false }), this._generateToken, (req, res, next) => {
-            res.redirect('/login/facebook/success/token=' + req.token, next);
-        });
-        server.get('/login/google/callback', passport.authenticate('google-login'), (req, res, next) => { });
-        server.get('/login/yojuego', passport.authenticate('yojuego-login'), this._generateToken, (req, res, next) => { res.json(200, getResponse({ token: req.token })); });
-        server.get('/login/facebook', passport.authenticate('facebook-login', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
-        server.get('/login/google', (req, res, next) => { });
+        server.get('/login/yojuego', passport.authenticate('yojuego-login'), this._generateToken, (req, res, next) => { res.json(200, { token: req.token, userid: req.user.id}); });
     }
 
     _loginLocal(req, email, password, done) {
-        //repo.getbyUserId(profile.id, 'yojuego')
-        repo.getBy({ 'account.type': 'yojuego', 'account.id': email })
-            .then((result) => {
-                let player;
-                //Esta basura la estoy haciendo porque no me funca el filtro
-                //lo tengo que solucionar
-                for (let i = 0; i < result.length; i++) {
-                    if (result[i].account.id == email) {
-                        player = result[i];
-                    }
-                }
-
-                // //if (result.length > 0) {
-                if (player === undefined || player === null) {
+        repo.getByIdAndType(profile.id, 'yojuego')
+            .then((response) => {
+                if (!response.resp) {
                     req.statusCode = 400;
                     req.statusMessage = 'Nombre de usuario o contraseña incorrecto';
-                    return done({ code: 400, message: 'Nombre de usuario o contraseña incorrecto' }, null);
                 } else {
-                    req.player = player;
-                    return done(null, player);
-                }
-            }, (err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 400, message: err }, null);
-            })
-            .catch((err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 500, message: err }, null);
-            });
-    }
-
-    _loginFacebook(req, token, refreshToken, profile, done) {
-        //repo.getbyUserId(profile.id, 'facebook')
-        repo.getBy({ 'account.type': 'facebook', 'account.id': profile.id })
-            .then((result) => {
-                let player;
-                //Esta basura la estoy haciendo porque no me funca el filtro
-                //lo tengo que solucionar
-                for (let i = 0; i < result.length; i++) {
-                    if (result[i].account.type == 'facebook' && result[i].account.id == profile.id) {
-                        player = result[i];
+                    if (response.resp.password != password) {
+                        req.statusCode = 400;
+                        req.statusMessage = 'Nombre de usuario o contraseña incorrecto';
+                    } else {
+                        req.user = response.resp;
                     }
-                }
-
-                // //if (result.length > 0) {
-                if (player === undefined || player === null) {
-                    req.statusCode = 400;
-                    req.statusMessage = 'Nombre de usuario o contraseña incorrecto';
-                    return done({ code: 400, message: 'Nombre de usuario o contraseña incorrecto' }, null);
-                } else {
-                    //aca hay que ver como me devuelve facebook esta info y sale con fritas
-                    req.player = player;
-                    return done(null, player);
+                    return done(null, response.resp);
                 }
             }, (err) => {
                 req.statusCode = 400;
@@ -117,19 +61,12 @@ class LogInRoutes {
         if (req.statusCode !== undefined && req.statusCode !== null) {
             res.json(req.statusCode, req.statusMessage);
         } else {
-            req.token = jwt.sign(req.player.id, config.secret);
+            req.token = jwt.sign(req.user.id, config.secret);
             next();
         }
     }
 
     _configurePassport(server, passport) {
-        passport.use('facebook-login', new FacebookStrategy({
-            clientID: config.facebook.appId,
-            clientSecret: config.facebook.appSecret,
-            callbackURL: config.facebook.callback,
-            passReqToCallback: true
-        }, this._loginFacebook));
-
         passport.use('yojuego-login', new LocalStrategy({
             usernameField: 'email',
             passwordField: 'password',
