@@ -27,23 +27,25 @@ class LogInRoutes {
     _addAllRoutes(server, passport) {
         this._configurePassport(server, passport);
 
-        server.get('/login/yojuego', passport.authenticate('yojuego-login'), this._generateToken, (req, res, next) => { res.json(200, { token: req.token, userid: req.user.id}); });
+        server.get('/login/yojuego', passport.authenticate('yojuego-login'), this._generateToken, (req, res, next) => { res.json(200, { token: req.token, userid: req.user.id }); });
     }
 
     _loginLocal(req, email, password, done) {
-        repo.getByIdAndType(profile.id, 'yojuego')
+        repo.getByIdAndType(email, 'yojuego')
             .then((response) => {
                 if (!response.resp) {
                     req.statusCode = 400;
                     req.statusMessage = 'Nombre de usuario o contraseña incorrecto';
+                    return done({ code: 400, message: 'Nombre de usuario o contraseña incorrecto' }, null);
                 } else {
                     if (response.resp.password != password) {
                         req.statusCode = 400;
                         req.statusMessage = 'Nombre de usuario o contraseña incorrecto';
+                        return done({ code: 400, message: 'Nombre de usuario o contraseña incorrecto' }, null);
                     } else {
                         req.user = response.resp;
+                        return done(null, response.resp);
                     }
-                    return done(null, response.resp);
                 }
             }, (err) => {
                 req.statusCode = 400;

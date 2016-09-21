@@ -59,7 +59,7 @@ class SignUpRoutes {
                 } else {
                     var newUser = {
                         type: 'yojuego',
-                        userid: email,
+                        id: email,
                         password: password
                     };
                     req.newUser = newUser;
