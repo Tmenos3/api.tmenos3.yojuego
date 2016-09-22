@@ -7,7 +7,7 @@ var GoogleUser = require('../models/GoogleUser');
 var jwt = require('jsonwebtoken');
 var es = require('elasticsearch');
 var FacebookStrategy = require('passport-facebook').Strategy
-var LocalStrategy = require('passport-local').Strategy
+var GoogleStrategy = require('passport-google-oauth20').Strategy;
 var client = new es.Client({
     host: config.database,
     log: 'info'
@@ -42,7 +42,15 @@ class AuthRoutes {
         });
         server.get('/auth/google/callback', passport.authenticate('google'), (req, res, next) => { });
         server.get('/auth/facebook', passport.authenticate('facebook', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
-        server.get('/auth/google', (req, res, next) => { });
+        server.get('/auth/google',passport.authenticate('google', { scope: ['profile'] }));
+        server.get('/auth/google/callback',
+            passport.authenticate('google'),
+            this._createUser,
+            this._generateToken,
+            (req, res, next) => {
+                res.redirect('/auth/success?token=' + req.token, next);
+            }
+        );
     }
 
     _authFacebook(req, token, refreshToken, profile, done) {
@@ -55,6 +63,31 @@ class AuthRoutes {
                     req.newUser = {
                         id: profile.id,
                         type: 'facebook'
+                    };
+                }
+                return done(null, profile);
+            }, (err) => {
+                req.statusCode = 400;
+                req.statusMessage = err;
+                return done({ code: 400, message: err }, null);
+            })
+            .catch((err) => {
+                req.statusCode = 400;
+                req.statusMessage = err;
+                return done({ code: 500, message: err }, null);
+            });
+    }
+
+    _authGoogle(req, token, refreshToken, profile, done) {
+        repo.getByIdAndType(profile.id, 'google')
+            .then((result) => {
+                if (response.resp) {
+                    req.exists = true;
+                    req.user = response.resp;
+                } else {
+                    req.newUser = {
+                        id: profile.id,
+                        type: 'google'
                     };
                 }
                 return done(null, profile);
@@ -96,6 +129,12 @@ class AuthRoutes {
             profileFields: ['id', 'birthday', 'displayName', 'picture.type(large)', 'email'],
             passReqToCallback: true
         }, this._authFacebook));
+
+        passport.use('google', new GoogleStrategy({
+            clientID: config.google.appId,
+            clientSecret: config.google.appSecret,
+            callbackURL: config.google.callback
+        }, this._authGoogle));
     }
 
     static get INVALID_PASSPORT() {
