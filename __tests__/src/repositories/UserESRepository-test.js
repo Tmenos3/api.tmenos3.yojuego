@@ -32,7 +32,7 @@ describe('UserESRepository', () => {
     });
 
     pit('Can get a user by Id and Type ', () => {
-        let user = new User('type', '1');
+        let user = new User('facebook', '1');
         let ret = { _id: user.id, _source: user }
 
         var criteria = { criteria: 'anyCriteria' };

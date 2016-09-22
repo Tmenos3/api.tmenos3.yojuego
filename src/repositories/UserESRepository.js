@@ -1,5 +1,9 @@
 var ESRepository = require('./ESRepository');
 var User = require('../models/User');
+var FacebookUser = require('../models/FacebookUser');
+var GoogleUser = require('../models/GoogleUser');
+var YoJuegoUser = require('../models/YoJuegoUser');
+var UserType = require('../constants/UserType');
 
 class UserESRepository extends ESRepository {
     constructor(client) {
@@ -42,7 +46,18 @@ class UserESRepository extends ESRepository {
                     let user = null;
 
                     for (let i = 0; i < response.hits.hits.length; i++) {
-                        user = new User(response.hits.hits[i]._source.type, response.hits.hits[i]._source.id);
+                        switch (response.hits.hits[i]._source.type) {
+                            case UserType.facebook:
+                                user = new FacebookUser(response.hits.hits[i]._source.id);
+                                break;
+                            case UserType.google:
+                                user = new GoogleUser(response.hits.hits[i]._source.id);
+                                break;
+                            case UserType.yoJuego:
+                                user = new YoJuegoUser(response.hits.hits[i]._source.id, response.hits.hits[i]._source.password);
+                                break;
+                        }
+                        
                         user._id = response.hits.hits[i]._id;
                         break;
                     }

@@ -1,8 +1,8 @@
 module.exports = {
     facebook: {
-        appId: '1278813425492876',
-        appSecret: '9c4337094d1d9b3f732396f3540b15d5',
-        callback: 'http://localhost:8080/auth/facebook/callback'
+        appId: '289976541370822',
+        appSecret: 'c619851f38a6d9bfb1d6d2a208ee6bc0',
+        callback: 'http://ec2-54-174-177-82.compute-1.amazonaws.com:8081/auth/facebook/callback'
     },
     google: {
         appId: '854114285051-7pi1os5u7bifv8i8ed5vbfjlpkg9ulea.apps.googleusercontent.com',
@@ -11,8 +11,8 @@ module.exports = {
     },
     'secret': 'tmenos3-revolutioningtheinovation',
     'database': 'https://search-yojuegoes-cb2mgiednpd4tf5epwebnbszfe.us-east-1.es.amazonaws.com/',
-    'expiresIn': 86400, //Time in seconds
-    'port': 8080,
+    'expiresIn': null, //Time in seconds
+    'port': 8081,
     'pathsWithoutAuthentication': ['/',
         '/echo',
         '/signup/yojuego',
