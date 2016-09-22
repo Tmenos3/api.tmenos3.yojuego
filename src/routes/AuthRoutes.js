@@ -37,27 +37,19 @@ class AuthRoutes {
     _addAllRoutes(server, passport) {
         this._configurePassport(server, passport);
 
-        server.get('/auth/facebook/callback',
-            passport.authenticate('facebook', { session: false }),
-            this._createUser,
-            this._generateToken,
-            (req, res, next) => {
-                res.redirect('/auth/facebook/success/token=' + req.token, next + '?userid=' + req.user.id);
-            });
-
+        server.get('/auth/facebook/callback', passport.authenticate('facebook', { session: false }), this._createUser, this._generateToken, (req, res, next) => {
+            res.redirect('/auth/success?token=' + req.token, next);
+        });
+        server.get('/auth/google/callback', passport.authenticate('google'), (req, res, next) => { });
+        server.get('/auth/facebook', passport.authenticate('facebook', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
+        server.get('/auth/google',passport.authenticate('google', { scope: ['profile'] }));
         server.get('/auth/google/callback',
-            passport.authenticate('google-signup'),
+            passport.authenticate('google'),
             this._createUser,
             this._generateToken,
             (req, res, next) => {
-                res.redirect('/auth/google/success/token=' + req.token, next);
+                res.redirect('/auth/success?token=' + req.token, next);
             }
-        );
-        server.get('/auth/facebook',
-            passport.authenticate('facebook', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
-
-        server.get('/auth/google',
-            passport.authenticate('google-signup', { scope: ['profile'] })
         );
     }
 
@@ -140,7 +132,7 @@ class AuthRoutes {
             passReqToCallback: true
         }, this._authFacebook));
 
-        passport.use('google-signup', new GoogleStrategy({
+        passport.use('google', new GoogleStrategy({
             clientID: config.google.appId,
             clientSecret: config.google.appSecret,
             callbackURL: config.google.callback
