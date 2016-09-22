@@ -7,22 +7,18 @@ module.exports = {
     google: {
         appId: '854114285051-7pi1os5u7bifv8i8ed5vbfjlpkg9ulea.apps.googleusercontent.com',
         appSecret: 'YNWKX6gPs8UTUpjXMe7c2reX',
-        callback: 'http://localhost:8080/signup/google/callback'
+        callback: 'http://localhost:8080/auth/google/callback'
     },
     'secret': 'tmenos3-revolutioningtheinovation',
-    'database': 'http://localhost:9200',
+    'database': 'https://search-yojuegoes-cb2mgiednpd4tf5epwebnbszfe.us-east-1.es.amazonaws.com/',
     'expiresIn': 86400, //Time in seconds
     'port': 8080,
     'pathsWithoutAuthentication': ['/',
         '/echo',
-        '/signup/facebook/callback',
-        '/signup/google/callback',
         '/signup/yojuego',
-        '/signup/facebook',
-        '/signup/google',
-        '/login/facebook/callback',
-        '/login/google/callback',
         '/login/yojuego',
-        '/login/facebook',
-        '/login/google']
+        '/auth/facebook/callback',
+        '/auth/google/callback',
+        '/auth/facebook',
+        '/auth/google']
 };

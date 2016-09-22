@@ -6,37 +6,69 @@ class UserESRepository extends ESRepository {
         super(client);
     }
 
-    getById(userId) {
+    get(userId) {
         return new Promise((resolve, reject) => {
-            super.getById(userId, 'yojuego', 'user')
+            super.get(userId, 'yojuego', 'user')
                 .then((objRet) => {
-                    var user = new User(objRet.source.type, objRet.source.userid);
-                    resolve(user);
+                    var user = new User(objRet.resp.source.type, objRet.resp.source.id);
+                    user._id = objRet.resp._id;
+                    resolve({ code: 0, message: null, resp: user });
                 }, reject);
         });
     }
 
-    getBy(criteria) {
+    getByIdAndType(id, type) {
+        //TEST: not null, not undefined
+        //TEST: instance of string both
         return new Promise((resolve, reject) => {
-            super.getBy(criteria, 'yojuego', 'user')
-                .then((list) => {
-                    var ret = [];
+            this.esclient.search({
+                "index": "yojuego",
+                "type": "user",
+                "body": {
+                    "query": {
+                        "bool": {
+                            "filter": [
+                                { "term": { "type": type } },
+                                { "term": { "id": id } }
+                            ]
+                        }
+                    }
+                }
+            }, (error, response) => {
+                if (error) {
+                    reject({ code: error.statusCode, message: error.message, resp: error });
+                }
+                else {
+                    let user = null;
 
-                    for (let i = 0; i < list.length; i++) {
-                        var user = new User(list[i]._source.type, list[i]._source.userid);
-                        ret.push(user);
+                    for (let i = 0; i < response.hits.hits.length; i++) {
+                        user = new User(response.hits.hits[i]._source.type, response.hits.hits[i]._source.id);
+                        user._id = response.hits.hits[i]._id;
+                        break;
                     }
 
-                    resolve(ret);
-                }, reject);
+                    resolve({ code: 0, message: null, resp: user });
+                }
+            });
         });
     }
 
     add(user) {
-        return new Promise((resolve, reject) => {
-            super.add(user, 'yojuego', 'user')
-                .then(resolve, reject);
-        });
+        //TEST: not null, not undefined
+        //TEST: instance of User
+        return super.add(user, 'yojuego', 'user');
+    }
+
+    update(user) {
+        //TEST: not null, not undefined
+        //TEST: instance of User
+        throw new Error();
+    }
+
+    delete(user) {
+        //TEST: not null, not undefined
+        //TEST: instance of User
+        throw new Error();
     }
 
     static get INVALID_USER() {

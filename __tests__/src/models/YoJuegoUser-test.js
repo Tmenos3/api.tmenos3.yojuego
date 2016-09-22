@@ -33,7 +33,7 @@ describe('YoJuegoUser', () => {
         var aPassword = 'password';
         var aYoJuegoUser = new YoJuegoUser(anId, aPassword);
 
-        expect(aYoJuegoUser.userid).toBe(anId);
+        expect(aYoJuegoUser.id).toBe(anId);
         expect(aYoJuegoUser.type).toBe('yojuego');
         expect(aYoJuegoUser.password).toBe(aPassword);
     });

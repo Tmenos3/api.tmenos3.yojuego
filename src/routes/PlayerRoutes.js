@@ -3,6 +3,7 @@ var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 var Routes = require('./Routes');
 var config = require('../../config');
 var PlayerESRepository = require('../repositories/PlayerESRepository');
+var Player = require('../models/Player');
 var es = require('elasticsearch');
 var client = new es.Client({
     host: config.database,
@@ -21,7 +22,7 @@ class PlayerRoutes extends Routes {
         server.post('/player/create', (req, res, next) => { });
         server.post('/player/:id/update', (req, res, next) => { });
         server.del('/player/:id', (req, res, next) => { });
-        server.post('/:userid/player/profile', this._bodyIsNotNull, this._updateProfile);
+        server.post('/player/profile', this._bodyIsNotNull, this._updateProfile);
     }
 
     _bodyIsNotNull(req, res, next) {

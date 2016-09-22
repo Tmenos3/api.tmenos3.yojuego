@@ -10,53 +10,36 @@ describe('PlayerESRepository', () => {
         }   
     };
 
-    pit('Can get a player by id', () => {
+    pit('Can get a player', () => {
         var player = new Player('aValidNickname', new Date(2010, 10, 10), 'aValidState', 'adminState', '1');
 
-        let client = getMockedClient(false, { _id: player.userID, source: player });
+        let client = getMockedClient(false, { _id: player.userid, source: player });
 
         let repo = new PlayerESRepository(client);  
-        return repo.getById(player.userID)
-            .then((playerReturned) => {
+        return repo.get(player.userid)
+            .then((resp) => {
                 expect(client.get.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.get.mock.calls[0][0].type).toEqual('player');
-                expect(client.get.mock.calls[0][0].id).toEqual(player.userID);
-                expect(playerReturned).toEqual(player);
-            }, (err) => expect(true).toEqual(false));
-    });
-
-    pit('Can get list a players by criteria ', () => {
-        var players = [
-            { _id: 'anyValidId', _source: { nickName: 'nickName', birthDate: '2016-09-03T19:00:00Z', state: 'developing...', adminState: 'adminState', userID: '1' } },
-            { _id: 'otherValidId', _source: { nickName: 'other_nickName', birthDate: '2016-09-03T19:00:00Z', state: 'developing...', adminState: 'adminState_2', userID: '2' } },
-        ];
-        var criteria = { criteria: 'anyCriteria' };
-        let client = getMockedClient(false, { hits: { hits: players } });
-
-        let repo = new PlayerESRepository(client);
-        return repo.getBy(criteria)
-            .then((playersReturned) => {
-                expect(client.search.mock.calls[0][0].index).toEqual('yojuego');
-                expect(client.search.mock.calls[0][0].type).toEqual('player');
-                expect(client.search.mock.calls[0][0].query).toEqual(criteria);
-                expect(playersReturned.length).toEqual(players.length);
+                expect(client.get.mock.calls[0][0].id).toEqual(player.userid);
+                expect(resp.code).toEqual(0);
+                expect(resp.message).toBeNull();
+                expect(resp.resp._id).toEqual(player.userid);
             }, (err) => expect(true).toEqual(false));
     });
 
     pit('Can add a player', () => {
         var player = new Player('aValidNickname', new Date(2010, 10, 10), 'aValidState', 'adminState', '1');
-        let client = getMockedClient(false, {});
+        let client = getMockedClient(false, {_id: player.userid, _source: player});
 
         let repo = new PlayerESRepository(client);
         return repo.add(player)
             .then((resp) => {
                 expect(client.index.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.index.mock.calls[0][0].type).toEqual('player');
-                expect(client.index.mock.calls[0][0].body.nickName).toEqual(player.nickName);
-                expect(client.index.mock.calls[0][0].body.birthDate).toEqual(player.birthDate);
-                expect(client.index.mock.calls[0][0].body.state).toEqual(player.state);
-                expect(client.index.mock.calls[0][0].body.adminState).toEqual(player.adminState);
-                expect(client.index.mock.calls[0][0].body.userID).toEqual(player.userID);
+                expect(client.index.mock.calls[0][0].body.query).toEqual(player);
+
+                expect(resp.code).toEqual(0);
+                expect(resp.resp._id).toEqual(player.userid);
                 expect(resp.message).toEqual(PlayerESRepository.DOCUMENT_INSERTED);
             }, (err) => expect(true).toEqual(false));
     });

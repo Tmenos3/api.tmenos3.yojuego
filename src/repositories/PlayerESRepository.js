@@ -6,85 +6,65 @@ class PlayerESRepository extends ESRepository {
         super(client);
     }
 
-    getById(playerId) {
+    get(playerId) {
         return new Promise((resolve, reject) => {
-            super.getById(playerId, 'yojuego', 'player')
+            super.get(playerId, 'yojuego', 'player')
                 .then((objRet) => {
-                    var player = new Player(objRet.source.nickName, new Date(objRet.source.birthDate), objRet.source.state, objRet.source.adminState, objRet.source.userID);
-                    player.id = objRet._id
-                    resolve(player);
-                }, reject);
-        });
-    }
-
-    getBy(criteria) {
-        return new Promise((resolve, reject) => {
-            super.getBy(criteria, 'yojuego', 'player')
-                .then((list) => {
-                    var ret = [];
-
-                    for (let i = 0; i < list.length; i++) {
-                        var player = new Player(list[i]._source.nickName, new Date(list[i]._source.birthDate), list[i]._source.state, list[i]._source.adminState, list[i]._source.userID);
-                        player.id = list[i]._id;
-                        ret.push(player);
-                    }
-
-                    resolve(ret);
+                    var player = new Player(objRet.resp.source.nickName, new Date(objRet.resp.source.birthDate), objRet.resp.source.state, objRet.resp.source.adminState, objRet.resp.source.userid);
+                    player._id = objRet.resp._id
+                    resolve({ code: 0, message: null, resp: player });
                 }, reject);
         });
     }
 
     getByUserId(userid) {
+        //TEST: full test require
         return new Promise((resolve, reject) => {
-            super.getBy(this._getCriteriaByUserId(userid), 'yojuego', 'player')
-                .then((list) => {
+            this.esclient.search({
+                "index": "yojuego",
+                "type": "player",
+                "body": {
+                    "query": {
+                        "bool": {
+                            "filter": [
+                                { "term": { "userid": userid } }
+                            ]
+                        }
+                    }
+                }
+            }, (error, response) => {
+                if (error) {
+                    reject({ code: error.statusCode, message: error.message, resp: error });
+                }
+                else {
                     let player = null;
 
-                    for (let i = 0; i < list.length; i++) {
-                        player = new Player(list[i]._source.nickName, new Date(list[i]._source.birthDate), list[i]._source.state, list[i]._source.adminState, list[i]._source.userID);
-                        player.id = list[i]._id;
+                    for (let i = 0; i < response.hits.hits.length; i++) {
+                        player = new Player(response.hits.hits[i]._source.nickName, new Date(response.hits.hits[i]._source.birthDate), response.hits.hits[i]._source.state, response.hits.hits[i]._source.adminState, response.hits.hits[i]._source.userid);
+                        player._id = response.hits.hits[i]._id;
                         break;
                     }
 
-                    resolve(player);
-                }, reject);
+                    resolve({ code: 0, message: null, resp: player });
+                }
+            });
         });
     }
 
     add(player) {
-        // return new Promise((resolve, reject) => {
-        //     super.add(player, 'yojuego', 'player')
-        //         .then(resolve, reject);
-        // });
+        //TEST: instanceOf
         return super.add(player, 'yojuego', 'player');
     }
 
-    update(player){
+    update(player) {
+        //TEST: instanceOf
         let document = {
-            _id: player.id,
-            source: {
-                nickName: player.nickName,
-                birthDate: player.birthDate,
-                state: player.state,
-                adminState: player.adminState
-            }
-        }
-
-        return super.update(document, 'yojuego', 'player');
-    }
-
-    _getCriteriaByUserId(userid) {
-        return {
-            "bool": {
-                "must": [
-                    { "term": { "userid": userid } }
-                ]
-            }
-        }
-    }
-
-    static get INVALID_PLAYER() {
-        return "Invalid Player";
+            nickName: player.nickName,
+            birthDate: player.birthDate,
+            state: player.state,
+            adminState: player.adminState
+        };
+        return super.update(player._id, document, 'yojuego', 'player');
     }
 }
 
