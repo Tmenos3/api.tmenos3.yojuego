@@ -13,7 +13,7 @@ describe('PlayerRoutes', () => {
         expect(serverMocked.get.mock.calls.length).toEqual(2);
         expect(serverMocked.post.mock.calls.length).toEqual(3);
         expect(serverMocked.del.mock.calls.length).toEqual(1);
-        expect(serverMocked.get.mock.calls[0][0]).toEqual('/player/:id/profile');
+        expect(serverMocked.get.mock.calls[0][0]).toEqual('/player/:userid/profile');
         expect(serverMocked.get.mock.calls[1][0]).toEqual('/player/:id/upcomingMatches');
         expect(serverMocked.post.mock.calls[0][0]).toEqual('/player/create');
         expect(serverMocked.post.mock.calls[1][0]).toEqual('/player/:id/update');

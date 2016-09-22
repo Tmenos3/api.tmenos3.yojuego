@@ -17,7 +17,7 @@ class PlayerRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/player/:id/profile', (req, res, next) => { });
+        server.get('/player', this._getPlayer);
         server.get('/player/:id/upcomingMatches', (req, res, next) => { });
         server.post('/player/create', (req, res, next) => { });
         server.post('/player/:id/update', (req, res, next) => { });
@@ -30,6 +30,18 @@ class PlayerRoutes extends Routes {
         validator.addCondition(new NotNullOrUndefinedCondition(req.body).throw(PlayerRoutes.INVALID_BODY));
 
         validator.execute(() => { next(); }, (err) => { res.json(400, { code: 1, message: err.message }); });
+    }
+
+    _getPlayer(req, res, next) {
+        repo.getByUserId(req.user)
+            .then((resp) => {
+                if (!resp.resp) {
+                    res.json(404, {code: 404, message: 'Player inexistente'});
+                } else {
+                    res.json(200, {code: 404, message: 'Player inexistente', resp: resp.resp});
+                }
+            }, (err) => { res.json(400, { code: 400, message: err }); })
+            .catch((err) => { res.json(500, { code: 500, message: err }); });
     }
 
     _updateProfile(req, res, next) {
