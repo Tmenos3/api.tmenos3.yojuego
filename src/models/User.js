@@ -10,7 +10,7 @@ class User {
 
         validator.execute(() => {
             this.type = userType;
-            this.userid = id;
+            this.id = id;
         }, (err) => { throw err; });
     }
 

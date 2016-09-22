@@ -86,6 +86,6 @@ describe('Player', () => {
     expect(player.birthDate).toBe(aBirthDate);
     expect(player.state).toBe(aState);
     expect(player.adminState).toBe(anAdminState);
-    expect(player.userID).toBe(anUserID);
+    expect(player.userid).toBe(anUserID);
   });
 });
