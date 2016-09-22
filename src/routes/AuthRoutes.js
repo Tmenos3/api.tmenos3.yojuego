@@ -78,21 +78,19 @@ class AuthRoutes {
             });
     }
 
-    _signUpGoogle(req, token, refreshToken, profile, done) {
+    _authGoogle(req, token, refreshToken, profile, done) {
         repo.getByIdAndType(profile.id, 'google')
             .then((result) => {
-                if (result.length > 0) {
-                    req.statusCode = 400;
-                    req.statusMessage = 'La cuenta está en uso';
-                    return done({ code: 400, message: 'La cuenta está en uso' }, null);
+                if (response.resp) {
+                    req.exists = true;
+                    req.user = response.resp;
                 } else {
-                    let newUser = {
+                    req.newUser = {
                         id: profile.id,
                         type: 'google'
-                    }
-                    req.newUser = newUser;
-                    return done(null, profile);
+                    };
                 }
+                return done(null, profile);
             }, (err) => {
                 req.statusCode = 400;
                 req.statusMessage = err;
@@ -136,7 +134,7 @@ class AuthRoutes {
             clientID: config.google.appId,
             clientSecret: config.google.appSecret,
             callbackURL: config.google.callback
-        }, this._signUpGoogle));
+        }, this._authGoogle));
     }
 
     static get INVALID_PASSPORT() {
