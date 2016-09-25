@@ -36,12 +36,12 @@ class PlayerRoutes extends Routes {
         repo.getByUserId(req.user)
             .then((resp) => {
                 if (!resp.resp) {
-                    res.json(404, {code: 404, message: 'Player inexistente'});
+                    res.json(404, {code: 404, message: 'Player inexistente', resp: null});
                 } else {
-                    res.json(200, {code: 404, message: 'Player inexistente', resp: resp.resp});
+                    res.json(200, {code: 200, message: null, resp: resp.resp});
                 }
-            }, (err) => { res.json(400, { code: 400, message: err }); })
-            .catch((err) => { res.json(500, { code: 500, message: err }); });
+            }, (err) => { res.json(400, { code: 400, message: err, resp: null }); })
+            .catch((err) => { res.json(500, { code: 500, message: err, resp: null }); });
     }
 
     _updateProfile(req, res, next) {
@@ -51,7 +51,7 @@ class PlayerRoutes extends Routes {
         validator.addCondition(new NotNullOrUndefinedCondition(req.body.state).throw(PlayerRoutes.INVALID_STATE));
         validator.addCondition(new NotNullOrUndefinedCondition(req.body.adminState).throw(PlayerRoutes.INVALID_ADMINSTATE));
 
-        validator.execute(() => { this._doAfterValidateProfileInfo(req.parems.userid, req.body, res) }, (err) => { res.json(400, { code: 1, message: err.message }); });
+        validator.execute(() => { this._doAfterValidateProfileInfo(req.user.id, req.body, res) }, (err) => { res.json(400, { code: 1, message: err.message }); });
     }
 
     /*
@@ -85,11 +85,12 @@ class PlayerRoutes extends Routes {
                     player = new Player(profile.nickName, new Date(profile.birthday), profile.state, profile.adminState, userid);
                     return repo.add(player);
                 }
-            }, (err) => { res.json(400, { code: 400, message: err }); })
-            .then(() => {
-                
-            }, (err) => { res.json(400, { code: 400, message: err }); })
-            .catch((err) => { res.json(500, { code: 500, message: err }); });
+            }, (err) => { res.json(400, { code: 400, message: err, resp: null }); })
+            .then((resp) => {
+                res.json(200, resp);
+                next();
+            }, (err) => { res.json(400, { code: 400, message: err, resp: null }); })
+            .catch((err) => { res.json(500, { code: 500, message: err, resp: null }); });
     }
 
     get INVALID_BODY() {
