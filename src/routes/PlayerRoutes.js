@@ -1,3 +1,7 @@
+let ret200 = require('./returns/return200');
+let ret400 = require('./returns/return400');
+let ret404 = require('./returns/return404');
+let ret500 = require('./returns/return500');
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var Routes = require('./Routes');
@@ -36,12 +40,12 @@ class PlayerRoutes extends Routes {
         repo.getByUserId(req.user)
             .then((resp) => {
                 if (!resp.resp) {
-                    res.json(404, { code: 404, message: 'Player inexistente', resp: null });
+                    ret404(res, 'Player inexistente', null);
                 } else {
-                    res.json(200, { code: 200, message: null, resp: resp.resp });
+                    ret200(res, null, resp.resp);
                 }
-            }, (err) => { res.json(400, { code: 400, message: err, resp: null }); })
-            .catch((err) => { res.json(500, { code: 500, message: err, resp: null }); });
+            }, (err) => { ret400(res, err, null); })
+            .catch((err) => { ret500(res, err, null); });
     }
 
     _updateProfile(req, res, next) {
