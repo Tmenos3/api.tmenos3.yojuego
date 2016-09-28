@@ -38,11 +38,11 @@ class AuthRoutes {
         this._configurePassport(server, passport);
 
         server.get('/auth/facebook', passport.authenticate('facebook', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
-        server.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+        server.get('/auth/google', passport.authenticate('google', { session: false, scope: ['profile'] }));
         server.get('/auth/facebook/callback', passport.authenticate('facebook', { session: false }), this._createUser, this._generateToken, (req, res, next) => {
             res.redirect('/auth/success?token=' + req.token, next);
         });
-        server.get('/auth/google/callback', passport.authenticate('google'), this._createUser, this._generateToken, (req, res, next) => {
+        server.get('/auth/google/callback', passport.authenticate('google', { session: false }), this._createUser, this._generateToken, (req, res, next) => {
             res.redirect('/auth/success?token=' + req.token, next);
         });
     }
