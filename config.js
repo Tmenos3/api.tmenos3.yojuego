@@ -12,7 +12,7 @@ module.exports = {
     'secret': 'tmenos3-revolutioningtheinovation',
     'database': 'https://search-yojuegoes-cb2mgiednpd4tf5epwebnbszfe.us-east-1.es.amazonaws.com/',
     'expiresIn': null, //Time in seconds
-    'port': 8080,
+    'port': 8081,
     'pathsWithoutAuthentication': ['/',
         '/echo',
         '/signup/yojuego',
