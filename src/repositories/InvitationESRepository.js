@@ -6,12 +6,13 @@ class InvitationESRepository extends ESRepository {
         super(client);
     }
 
-    getById(invitationId) {
+    get(invitationId) {
         return new Promise((resolve, reject) => {
-            super.getById(invitationId, 'yojuego', 'invitation')
+            super.get(invitationId, 'yojuego', 'invitation')
                 .then((objRet) => {
-                    var invitation = new Invitation(objRet.source.sender, objRet.source.recipient, objRet.source.match);
-                    resolve(invitation);
+                    let invitation = new Invitation(objRet.resp.source.sender, objRet.resp.source.recipient, objRet.resp.source.match);
+                    invitation._id = objRet.resp._id;
+                    resolve({ code: 200, message: null, resp: invitation });
                 }, reject);
         });
     }

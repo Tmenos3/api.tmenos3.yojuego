@@ -12,16 +12,20 @@ describe('InvitationESRepository', () => {
 
     pit('Can get Invitation by id', () => {
         let invitation = new Invitation('aSender', 'aRecipient', 'aMatch');
+        invitation._id = 'id';
 
-        let client = getMockedClient(false, { _id: '1', source: invitation });
+        let client = getMockedClient(false, { _id: invitation._id, source: invitation });
 
         let repo = new InvitationESRepository(client);
-        return repo.getById(invitation._id)
-            .them((invitationReturned) => {
+        return repo.get(invitation._id)
+            .then((ret) => {
                 expect(client.get.mock.calls[0][0].index).toEqual('yojuego');
                 expect(client.get.mock.calls[0][0].type).toEqual('invitation');
-                expect(client.get.mock.calls[0][0].id).toEqual('1');
-                expect(invitationReturned).toEqual(invitation);
+                expect(client.get.mock.calls[0][0].id).toEqual(invitation._id);
+
+                expect(ret.code).toEqual(200);
+                expect(ret.message).toBeNull();
+                expect(ret.resp).toEqual(invitation);
             }, (err) => expect(true).toEqual(false));
     });
 });

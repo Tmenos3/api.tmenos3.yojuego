@@ -23,7 +23,7 @@ describe('UserESRepository', () => {
                 expect(client.get.mock.calls[0][0].type).toEqual('user');
                 expect(client.get.mock.calls[0][0].id).toEqual(user.id);
 
-                expect(resp.code).toEqual(0);
+                expect(resp.code).toEqual(200);
                 expect(resp.message).toBeNull();
                 expect(resp.resp.id).toEqual(user.id);
                 expect(resp.resp.type).toEqual(user.type);
@@ -46,7 +46,7 @@ describe('UserESRepository', () => {
                 expect(client.search.mock.calls[0][0].body.query.bool.filter[0].term.type).toEqual(user.type);
                 expect(client.search.mock.calls[0][0].body.query.bool.filter[1].term.id).toEqual(user.id);
 
-                expect(resp.code).toEqual(0);
+                expect(resp.code).toEqual(200);
                 expect(resp.message).toBeNull();
                 expect(resp.resp.id).toEqual(user.id);
                 expect(resp.resp.type).toEqual(user.type);
@@ -65,7 +65,7 @@ describe('UserESRepository', () => {
                 expect(client.index.mock.calls[0][0].type).toEqual('user');
                 expect(client.index.mock.calls[0][0].body).toEqual(user);
 
-                expect(resp.code).toEqual(0);
+                expect(resp.code).toEqual(200);
                 expect(resp.resp._id).toEqual(user.id);
                 expect(resp.resp._source.id).toEqual(user.id);
                 expect(resp.resp._source.type).toEqual(user.type);

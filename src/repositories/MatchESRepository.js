@@ -6,42 +6,41 @@ class MatchESRepository extends ESRepository {
         super(client);
     }
 
-    getById(matchId) {
+    get(matchId) {
         return new Promise((resolve, reject) => {
-            super.getById(matchId, 'yojuego', 'match')
+            super.get(matchId, 'yojuego', 'match')
                 .then((objRet) => {
-                    var match = new Match(objRet.source.tittle, objRet.source.date, objRet.source.fromTime, objRet.source.toTime, objRet.source.location, objRet.source.creator, objRet.source.matchType);
-                    match.id = objRet._id;
-                    match.createdOn = objRet.source.createdOn;
-                    
-                    resolve(match);
-                }, reject);
-        });
-    }
+                    let match = new Match(objRet.resp.source.tittle, new Date(objRet.resp.source.date), objRet.resp.source.fromTime, objRet.resp.source.toTime, objRet.resp.source.location, objRet.resp.source.creator, objRet.resp.source.matchType);
+                    match._id = objRet.resp._id;
 
-    getBy(criteria) {
-        return new Promise((resolve, reject) => {
-            super.getBy(criteria, 'yojuego', 'match')
-                .then((list) => {
-                    let ret = [];
-
-                    for (let i = 0; i < list.length; i++) {
-                        let match = new Match(list[i]._source.tittle, list[i]._source.date, list[i]._source.fromTime, list[i]._source.toTime, list[i]._source.location, list[i]._source.creator, list[i]._source.matchType);
-                        match.id = list[i]._id;
-                        match.createdOn = list[i]._source.createdOn;
-                        ret.push(match);
-                    }
-
-                    resolve(ret);
+                    resolve({ code: 200, message: null, resp: match });
                 }, reject);
         });
     }
 
     add(match) {
-        return new Promise((resolve, reject) => {
-            super.add(match, 'yojuego', 'match')
-                .then(resolve, reject);
-        });
+        if (match instanceof Match) {
+            return super.add(match, 'yojuego', 'match');
+        } else {
+            return Promise.reject({ code: 410, message: MatchESRepository.INVALID_INSTANCE_PLAYER });
+        }
+    }
+
+    update(match) {
+        if (match instanceof Match) {
+            let document = {
+                tittle: match.tittle,
+                date: match.date,
+                fromTime: match.fromTime,
+                toTime: match.toTime,
+                location: match.location,
+                creator: match.creator,
+                matchType: match.matchType
+            };
+            return super.update(match._id, document, 'yojuego', 'match');
+        } else {
+            return Promise.reject({ code: 410, message: MatchESRepository.INVALID_INSTANCE_PLAYER });
+        }
     }
 
     static get INVALID_MATCH() {

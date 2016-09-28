@@ -95,7 +95,7 @@ describe('ESRepository', () => {
         expect(client.get.mock.calls[0][0].type).toEqual('type');
         expect(client.get.mock.calls[0][0].id).toEqual('id');
 
-        expect(objectReturned.code).toEqual(0);
+        expect(objectReturned.code).toEqual(200);
         expect(objectReturned.message).toBeNull();
         expect(objectReturned.resp).toEqual(toReturn);
       }, (err) => expect(true).toEqual(false));
@@ -107,7 +107,7 @@ describe('ESRepository', () => {
     let repo = new ESRepository(client);
     return repo.get('id', 'index', 'type')
       .then((objectReturned) => {
-        expect(objectReturned.code).toBe(0);
+        expect(objectReturned.code).toBe(200);
         expect(objectReturned.resp).toBeNull();
       }, (err) => expect(true).toEqual(false));
   });
@@ -189,7 +189,8 @@ describe('ESRepository', () => {
       .then((resp) => {
         expect(client.index.mock.calls[0][0].index).toEqual('index');
         expect(client.index.mock.calls[0][0].type).toEqual('type');
-        expect(client.index.mock.calls[0][0].body.query).toEqual(document);
+        expect(client.index.mock.calls[0][0].body).toEqual(document);
+        expect(resp.code).toEqual(200);
         expect(resp.message).toEqual(ESRepository.DOCUMENT_INSERTED);
         expect(resp.resp).toEqual({});
       }, (err) => expect(true).toEqual(false));
@@ -293,7 +294,7 @@ describe('ESRepository', () => {
         expect(client.update.mock.calls[0][0].id).toEqual(document.id);
         expect(client.update.mock.calls[0][0].body.doc).toEqual(document.document);
 
-        expect(resp.code).toEqual(0);
+        expect(resp.code).toEqual(200);
         expect(resp.message).toEqual(ESRepository.DOCUMENT_UPDATED);
         expect(resp.resp).toEqual(document);
       }, (err) => expect(true).toEqual(false));

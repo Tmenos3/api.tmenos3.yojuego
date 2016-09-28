@@ -10,6 +10,17 @@ jest.mock('passport-facebook', () => {
         })
     }
 });
+jest.mock('passport-google-oauth20', () => {
+    return {
+        Strategy: jest.fn((params, callback) => {
+            return {
+                clientID: params.clientID,
+                clientSecret: params.clientSecret,
+                callbackURL: params.callbackURL,
+            };
+        })
+    }
+});
 jest.mock('elasticsearch', () => {
     return {
         Client: jest.fn((params) => {
@@ -88,11 +99,15 @@ describe('AuthRoutes', () => {
         let authRoutes = new AuthRoutes();
         authRoutes.add(serverMocked, passportMocked);
 
-        expect(passportMocked.use.mock.calls.length).toEqual(1);
+        expect(passportMocked.use.mock.calls.length).toEqual(2);
         expect(passportMocked.use.mock.calls[0][0]).toEqual('facebook');
         expect(passportMocked.use.mock.calls[0][1].clientID).toEqual(config.facebook.appId);
         expect(passportMocked.use.mock.calls[0][1].clientSecret).toEqual(config.facebook.appSecret);
         expect(passportMocked.use.mock.calls[0][1].callbackURL).toEqual(config.facebook.callback);
+        expect(passportMocked.use.mock.calls[1][0]).toEqual('google');
+        expect(passportMocked.use.mock.calls[1][1].clientID).toEqual(config.google.appId);
+        expect(passportMocked.use.mock.calls[1][1].clientSecret).toEqual(config.google.appSecret);
+        expect(passportMocked.use.mock.calls[1][1].callbackURL).toEqual(config.google.callback);
     });
 
     it('Can add all routes', () => {
@@ -100,9 +115,9 @@ describe('AuthRoutes', () => {
         authRoutes.add(serverMocked, passportMocked);
 
         expect(serverMocked.get.mock.calls.length).toEqual(4);
-        expect(serverMocked.get.mock.calls[0][0]).toEqual('/auth/facebook/callback');
-        expect(serverMocked.get.mock.calls[1][0]).toEqual('/auth/google/callback');
-        expect(serverMocked.get.mock.calls[2][0]).toEqual('/auth/facebook');
-        expect(serverMocked.get.mock.calls[3][0]).toEqual('/auth/google');
+        expect(serverMocked.get.mock.calls[0][0]).toEqual('/auth/facebook');
+        expect(serverMocked.get.mock.calls[1][0]).toEqual('/auth/google');
+        expect(serverMocked.get.mock.calls[2][0]).toEqual('/auth/facebook/callback');
+        expect(serverMocked.get.mock.calls[3][0]).toEqual('/auth/google/callback');
     });
 });

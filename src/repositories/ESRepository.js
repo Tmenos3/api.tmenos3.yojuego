@@ -27,13 +27,13 @@ class ESRepository {
                 }, (error, response, status) => {
                     if (error) {
                         if (error.status == 404) {
-                            resolve({ code: 0, message: null, resp: null });
+                            resolve({ code: 200, message: null, resp: null });
                         } else {
                             reject({ code: error.statusCode, message: error.message, resp: error });
                         }
                     }
                     else {
-                        resolve({ code: 0, message: null, resp: response });
+                        resolve({ code: 200, message: null, resp: response });
                     }
                 });
             }, (err) => { throw err; });
@@ -56,7 +56,7 @@ class ESRepository {
                     if (error) {
                         reject({ code: error.statusCode, message: error.message, resp: error });
                     } else {
-                        resolve({ code: 0, message: ESRepository.DOCUMENT_INSERTED, resp: resp });
+                        resolve({ code: 200, message: ESRepository.DOCUMENT_INSERTED, resp: resp });
                     }
                 });
             }, (err) => { throw err; });
@@ -88,7 +88,7 @@ class ESRepository {
                     if (error) {
                         reject({ code: error.statusCode, message: error.message, resp: error });
                     } else {
-                        resolve({ code: 0, message: ESRepository.DOCUMENT_UPDATED, resp: resp });
+                        resolve({ code: 200, message: ESRepository.DOCUMENT_UPDATED, resp: resp });
                     }
                 });
             }, (err) => { throw err; });

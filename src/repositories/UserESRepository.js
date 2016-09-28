@@ -16,7 +16,7 @@ class UserESRepository extends ESRepository {
                 .then((objRet) => {
                     var user = new User(objRet.resp.source.type, objRet.resp.source.id);
                     user._id = objRet.resp._id;
-                    resolve({ code: 0, message: null, resp: user });
+                    resolve({ code: 200, message: null, resp: user });
                 }, reject);
         });
     }
@@ -62,7 +62,7 @@ class UserESRepository extends ESRepository {
                         break;
                     }
 
-                    resolve({ code: 0, message: null, resp: user });
+                    resolve({ code: 200, message: null, resp: user });
                 }
             });
         });

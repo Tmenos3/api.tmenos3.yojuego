@@ -1,5 +1,7 @@
 var ESRepository = require('./ESRepository');
 var Player = require('../models/Player');
+var Validator = require('no-if-validator').Validator;
+var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
 
 class PlayerESRepository extends ESRepository {
     constructor(client) {
@@ -12,7 +14,7 @@ class PlayerESRepository extends ESRepository {
                 .then((objRet) => {
                     var player = new Player(objRet.resp.source.nickName, new Date(objRet.resp.source.birthDate), objRet.resp.source.state, objRet.resp.source.adminState, objRet.resp.source.userid);
                     player._id = objRet.resp._id
-                    resolve({ code: 0, message: null, resp: player });
+                    resolve({ code: 200, message: null, resp: player });
                 }, reject);
         });
     }
@@ -52,19 +54,29 @@ class PlayerESRepository extends ESRepository {
     }
 
     add(player) {
-        //TEST: instanceOf
-        return super.add(player, 'yojuego', 'player');
+        if (player instanceof Player) {
+            return super.add(player, 'yojuego', 'player');
+        } else {
+            return Promise.reject({ code: 410, message: PlayerESRepository.INVALID_INSTANCE_PLAYER });
+        }
     }
 
     update(player) {
-        //TEST: instanceOf
-        let document = {
-            nickName: player.nickName,
-            birthDate: player.birthDate,
-            state: player.state,
-            adminState: player.adminState
-        };
-        return super.update(player._id, document, 'yojuego', 'player');
+        if (player instanceof Player) {
+            let document = {
+                nickName: player.nickName,
+                birthDate: player.birthDate,
+                state: player.state,
+                adminState: player.adminState
+            };
+            return super.update(player._id, document, 'yojuego', 'player');
+        } else {
+            return Promise.reject({ code: 410, message: PlayerESRepository.INVALID_INSTANCE_PLAYER });
+        }
+    }
+
+    static get INVALID_INSTANCE_PLAYER() {
+        return 'This instance is not a player';
     }
 }
 
