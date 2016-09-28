@@ -75,9 +75,9 @@ class AuthRoutes {
     _authGoogle(req, token, refreshToken, profile, done) {
         repo.getByIdAndType(profile.id, 'google')
             .then((result) => {
-                if (response.resp) {
+                if (result.resp) {
                     req.exists = true;
-                    req.user = response.resp;
+                    req.user = result.resp;
                 } else {
                     req.newUser = {
                         id: profile.id,
@@ -127,7 +127,8 @@ class AuthRoutes {
         passport.use('google', new GoogleStrategy({
             clientID: config.google.appId,
             clientSecret: config.google.appSecret,
-            callbackURL: config.google.callback
+            callbackURL: config.google.callback,
+            passReqToCallback: true
         }, this._authGoogle));
     }
 
