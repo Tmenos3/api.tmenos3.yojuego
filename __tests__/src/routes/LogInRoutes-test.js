@@ -1,7 +1,6 @@
 import LogInRoutes from '../../../src/routes/LogInRoutes';
 
 describe('LogInRoutes', () => {
-    let config = require('../../../config');
     let serverMocked;
     let passportMocked;
 
@@ -57,10 +56,6 @@ describe('LogInRoutes', () => {
         signUpRoutes.add(serverMocked, passportMocked);
 
         expect(passportMocked.use.mock.calls.length).toEqual(1);
-        // expect(passportMocked.use.mock.calls[0][0]).toEqual('facebook-signup');
-        // expect(passportMocked.use.mock.calls[0][1].clientID).toEqual(config.facebook.appId);
-        // expect(passportMocked.use.mock.calls[0][1].clientSecret).toEqual(config.facebook.appSecret);
-        // expect(passportMocked.use.mock.calls[0][1].callbackURL).toEqual(config.facebook.callback);
         console.log('parameter: ' + JSON.stringify(passportMocked.use.mock.calls[0][1]));
         expect(passportMocked.use.mock.calls[0][0]).toEqual('yojuego-login');
         expect(passportMocked.use.mock.calls[0][1]._usernameField).toEqual('email');

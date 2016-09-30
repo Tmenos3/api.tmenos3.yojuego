@@ -44,7 +44,7 @@ jest.mock('../../../src/repositories/PlayerESRepository', () => {
 });
 
 describe('AuthRoutes', () => {
-    let config = require('../../../config');
+    let config = require('config');
     let serverMocked;
     let passportMocked;
 
@@ -101,13 +101,13 @@ describe('AuthRoutes', () => {
 
         expect(passportMocked.use.mock.calls.length).toEqual(2);
         expect(passportMocked.use.mock.calls[0][0]).toEqual('facebook');
-        expect(passportMocked.use.mock.calls[0][1].clientID).toEqual(config.facebook.appId);
-        expect(passportMocked.use.mock.calls[0][1].clientSecret).toEqual(config.facebook.appSecret);
-        expect(passportMocked.use.mock.calls[0][1].callbackURL).toEqual(config.facebook.callback);
+        expect(passportMocked.use.mock.calls[0][1].clientID).toEqual(config.get('auth').facebook.appId);
+        expect(passportMocked.use.mock.calls[0][1].clientSecret).toEqual(config.get('auth').facebook.appSecret);
+        expect(passportMocked.use.mock.calls[0][1].callbackURL).toEqual(config.get('auth').facebook.callback);
         expect(passportMocked.use.mock.calls[1][0]).toEqual('google');
-        expect(passportMocked.use.mock.calls[1][1].clientID).toEqual(config.google.appId);
-        expect(passportMocked.use.mock.calls[1][1].clientSecret).toEqual(config.google.appSecret);
-        expect(passportMocked.use.mock.calls[1][1].callbackURL).toEqual(config.google.callback);
+        expect(passportMocked.use.mock.calls[1][1].clientID).toEqual(config.get('auth').google.appId);
+        expect(passportMocked.use.mock.calls[1][1].clientSecret).toEqual(config.get('auth').google.appSecret);
+        expect(passportMocked.use.mock.calls[1][1].callbackURL).toEqual(config.get('auth').google.callback);
     });
 
     it('Can add all routes', () => {

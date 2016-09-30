@@ -1,13 +1,13 @@
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var config = require('../../config');
+var config = require('config');
 var UserESRepository = require('../repositories/UserESRepository');
 var YoJuegoUser = require('../models/YoJuegoUser');
 var jwt = require('jsonwebtoken');
 var es = require('elasticsearch');
 var LocalStrategy = require('passport-local').Strategy
 var client = new es.Client({
-    host: config.database,
+    host: config.get('dbConfig').database,
     log: 'info'
 });
 
@@ -71,7 +71,7 @@ class SignUpRoutes {
     }
 
     _generateToken(req, res, next) {
-        req.token = jwt.sign(req.user.id, config.secret);
+        req.token = jwt.sign(req.user.id, config.get('serverConfig').secret);
         next();
     }
 

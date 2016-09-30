@@ -5,12 +5,12 @@ let ret500 = require('./returns/return500');
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var Routes = require('./Routes');
-var config = require('../../config');
+var config = require('config');
 var PlayerESRepository = require('../repositories/PlayerESRepository');
 var Player = require('../models/Player');
 var es = require('elasticsearch');
 var client = new es.Client({
-    host: config.database,
+    host: config.get('dbConfig').database,
     log: 'info'
 });
 var repo = new PlayerESRepository(client);

@@ -1,6 +1,6 @@
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var config = require('../../config');
+var config = require('config');
 var UserESRepository = require('../repositories/UserESRepository');
 var FacebookUser = require('../models/FacebookUser');
 var GoogleUser = require('../models/GoogleUser');
@@ -9,7 +9,7 @@ var es = require('elasticsearch');
 var FacebookStrategy = require('passport-facebook').Strategy
 var GoogleStrategy = require('passport-google-oauth20').Strategy;
 var client = new es.Client({
-    host: config.database,
+    host: config.get('dbConfig').database,
     log: 'info'
 });
 
@@ -111,23 +111,23 @@ class AuthRoutes {
     }
 
     _generateToken(req, res, next) {
-        req.token = jwt.sign(req.user.id, config.secret);
+        req.token = jwt.sign(req.user.id, config.get('serverConfig').secret);
         next();
     }
 
     _configurePassport(server, passport) {
         passport.use('facebook', new FacebookStrategy({
-            clientID: config.facebook.appId,
-            clientSecret: config.facebook.appSecret,
-            callbackURL: config.facebook.callback,
+            clientID: config.get('auth').facebook.appId,
+            clientSecret: config.get('auth').facebook.appSecret,
+            callbackURL: config.get('auth').facebook.callback,
             profileFields: ['id', 'birthday', 'displayName', 'picture.type(large)', 'email'],
             passReqToCallback: true
         }, this._authFacebook));
 
         passport.use('google', new GoogleStrategy({
-            clientID: config.google.appId,
-            clientSecret: config.google.appSecret,
-            callbackURL: config.google.callback,
+            clientID: config.get('auth').google.appId,
+            clientSecret: config.get('auth').google.appSecret,
+            callbackURL: config.get('auth').google.callback,
             passReqToCallback: true
         }, this._authGoogle));
     }

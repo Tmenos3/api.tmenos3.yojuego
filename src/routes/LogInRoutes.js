@@ -1,6 +1,6 @@
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var config = require('../../config');
+var config = require('config');
 var UserESRepository = require('../repositories/UserESRepository');
 var User = require('../models/User');
 var jwt = require('jsonwebtoken');
@@ -63,7 +63,7 @@ class LogInRoutes {
         if (req.statusCode !== undefined && req.statusCode !== null) {
             res.json(req.statusCode, req.statusMessage);
         } else {
-            req.token = jwt.sign(req.user.id, config.secret);
+            req.token = jwt.sign(req.user.id, config.get('serverConfig').secret);
             next();
         }
     }

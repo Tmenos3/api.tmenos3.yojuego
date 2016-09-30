@@ -12,6 +12,7 @@
     "node": "0.8.x"
   },
   "dependencies": {
+    "config": "^1.21.0",
     "crypto-js": "^3.1.6",
     "elasticsearch": "^11.0.1",
     "jsonwebtoken": "^7.1.7",
