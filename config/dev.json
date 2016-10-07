@@ -26,7 +26,9 @@
             "/auth/facebook/callback",
             "/auth/google/callback",
             "/auth/facebook",
-            "/auth/google"
+            "/auth/google",
+            "/resetPassword",
+            "/setNewPassword/:token"
         ]
     }
 }

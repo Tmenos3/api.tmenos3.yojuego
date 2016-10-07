@@ -18,6 +18,8 @@
     "jsonwebtoken": "^7.1.7",
     "no-if-validator": "^1.0.0-4",
     "node-fetch": "^1.6.0",
+    "nodemailer": "^2.6.4",
+    "nodemailer-smtp-transport": "^2.7.2",
     "passport-facebook": "^2.1.1",
     "passport-google-oauth20": "^1.0.0",
     "passport-local": "^1.0.0",
