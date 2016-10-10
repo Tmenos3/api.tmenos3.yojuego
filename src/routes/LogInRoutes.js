@@ -7,7 +7,7 @@ var jwt = require('jsonwebtoken');
 var es = require('elasticsearch');
 var LocalStrategy = require('passport-local').Strategy
 var client = new es.Client({
-    host: config.database,
+    host: config.get('dbConfig').database,
     log: 'info'
 });
 

@@ -14,7 +14,7 @@ class UserESRepository extends ESRepository {
         return new Promise((resolve, reject) => {
             super.get(userId, 'yojuego', 'user')
                 .then((objRet) => {
-                    var user = new User(objRet.resp.source.type, objRet.resp.source.id);
+                    let user = new User(objRet.resp.source.type, objRet.resp.source.id);
                     user._id = objRet.resp._id;
                     resolve({ code: 200, message: null, resp: user });
                 }, reject);
@@ -57,7 +57,7 @@ class UserESRepository extends ESRepository {
                                 user = new YoJuegoUser(response.hits.hits[i]._source.id, response.hits.hits[i]._source.password);
                                 break;
                         }
-                        
+
                         user._id = response.hits.hits[i]._id;
                         break;
                     }
@@ -77,7 +77,19 @@ class UserESRepository extends ESRepository {
     update(user) {
         //TEST: not null, not undefined
         //TEST: instance of User
-        throw new Error();
+        if (user instanceof User) {
+            let document = {
+                type: user.type,
+                id: user.id
+            };
+
+            if (user.type == UserType.yoJuego) {
+                document.password = user.password;
+            }
+            return super.update(user._id, document, 'yojuego', 'user');
+        } else {
+            return Promise.reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER });
+        }
     }
 
     delete(user) {
@@ -88,6 +100,10 @@ class UserESRepository extends ESRepository {
 
     static get INVALID_USER() {
         return "Invalid User";
+    }
+
+    static get INVALID_INSTANCE_USER() {
+        return 'This instance is not a user';
     }
 }
 
