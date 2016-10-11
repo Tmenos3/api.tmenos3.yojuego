@@ -73,7 +73,7 @@ class ResetPasswordRoutes {
         validator.addCondition(new NotNullOrUndefinedCondition(req.body.email).throw(ResetPasswordRoutes.INVALID_MAIL));
         validator.addCondition(new ValidMailCondition(req.body.email).throw(ResetPasswordRoutes.INVALID_MAIL));
 
-        validator.execute(() => { next(); }, (err) => { res.json(req.statusCode, { code: req.statusCode, message: req.statusMessage, resp: err }); });
+        validator.execute(() => { next(); }, (err) => { res.json(400, { code: 400, message: err, resp: null }); });
     }
 
     _validateToken(req, res, next) {
@@ -138,7 +138,7 @@ class ResetPasswordRoutes {
                 }
             }, (err) => res.json(400, { code: 400, message: "El cambio de contraseña no pudo ser realizado", resp: err }))
             .then((response) => res.json(200, { code: 200, message: "Password has been changed", resp: null }),
-                  (err) => res.json(400, { code: 400, message: "El cambio de contraseña no pudo ser realizado", resp: err }))
+            (err) => res.json(400, { code: 400, message: "El cambio de contraseña no pudo ser realizado", resp: err }))
             .catch((err) => {
                 res.json(500, { code: 500, message: "Euexpected error", resp: err });
             });
