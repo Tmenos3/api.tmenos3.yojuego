@@ -19,7 +19,7 @@ let generateToken = (email) => {
 }
 
 let getNewMail = (email) => {
-    let url = "http://localhost:8080/setNewPassword/" + generateToken(email);
+    let url = "http://localhost:8080/enterNewPassword/" + generateToken(email);
     let mailText = "<p>Para recuperar su contraseña por favor ingrese <a href=" + url + ">aqui</a>.</p>";
 
     return {
