@@ -68,8 +68,13 @@ class SignUpRoutes {
             let newUser = new YoJuegoUser(req.newUser.id, req.newUser.password);
             repo.add(newUser)
                 .then((response) => {
-                    req.user = newUser;
+                    req.user = response.resp;
                     //aca es donde tengo que crear el player luego de creado el user
+                    //Acordate que en re.params tengo todos los parametros para crear el Player
+                    // Ejemplo: 
+                    // let userId = response.resp._id; //Este es el id de ES
+                    // let newPlayer = new Player(re.params.nickname, ..., userId)
+                    //repoPlayer.add(newPlayer).then...
                     next();
                 }, (err) => { res.json(400, err); });
         }
