@@ -1,15 +1,15 @@
 'use strict'
 
-import { Validator,
-    NotNullOrUndefinedCondition,
-    InstanceOfCondition,
-    CustomCondition,
-    IsNumberCondition } from 'no-if-validator';
+var Validator = require('no-if-validator').Validator;
+var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
+var CustomCondition = require('no-if-validator').CustomCondition;
+var IsNumberCondition = require('no-if-validator').IsNumberCondition;
 
 class Match {
-    constructor(tittle, date, fromTime, toTime, location, creator, matchType) {
+    constructor(title, date, fromTime, toTime, location, creator, matchType) {
         var validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(tittle).throw(new Error(Match.INVALID_TITTLE)));
+        validator.addCondition(new NotNullOrUndefinedCondition(title).throw(new Error(Match.INVALID_TITLE)));
         validator.addCondition(new NotNullOrUndefinedCondition(date).throw(new Error(Match.INVALID_DATE)));
         validator.addCondition(new NotNullOrUndefinedCondition(fromTime).throw(new Error(Match.INVALID_TIME)));
         validator.addCondition(new CustomCondition(() => {
@@ -27,7 +27,7 @@ class Match {
         validator.addCondition(new NotNullOrUndefinedCondition(matchType).throw(new Error(Match.INVALID_MATCH_TYPE)));
 
         validator.execute(() => {
-            this.tittle = tittle;
+            this.title = title;
             this.date = date;
             this.fromTime = fromTime;
             this.toTime = toTime;
@@ -59,7 +59,7 @@ class Match {
     static INVALID_PLAYER() {
         return 'El jugardor es inválido.'
     }
-    static INVALID_TITTLE() {
+    static INVALID_TITLE() {
         return 'El título no puede ser nulo o indefinido.';
     }
     static INVALID_DATE_TYPE() {

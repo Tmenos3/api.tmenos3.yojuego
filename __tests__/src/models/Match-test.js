@@ -2,16 +2,16 @@ import Match from '../../../src/models/Match';
 import Player from '../../../src/models/Player';
 
 describe('Match', () => {
-  it('Cannot create with an undefined tittle', () => {
-    var undefinedTittle;
+  it('Cannot create with an undefined title', () => {
+    var undefinedTitle;
 
-    expect(() => new Match(undefinedTittle, new Date(2010, 10, 10), '00:00', '01:00', 'Lanus', 1)).toThrowError(Match.INVALID_TITTLE());
+    expect(() => new Match(undefinedTitle, new Date(2010, 10, 10), '00:00', '01:00', 'Lanus', 1)).toThrowError(Match.INVALID_TITLE());
   });
 
-  it('Cannot create with a null tittle', () => {
-    var nullTittle = null;
+  it('Cannot create with a null title', () => {
+    var nullTitle = null;
 
-    expect(() => new Match(nullTittle, new Date(2010, 10, 10), '00:00', '01:00', 'Lanus', 1)).toThrowError(Match.INVALID_TITTLE());
+    expect(() => new Match(nullTitle, new Date(2010, 10, 10), '00:00', '01:00', 'Lanus', 1)).toThrowError(Match.INVALID_TITLE());
   });
 
   it('Cannot create with a undefined Date', () => {
@@ -92,7 +92,7 @@ describe('Match', () => {
   });
 
   it('Can create a valid Match', () => {
-    var aTittle = 'Título';
+    var aTitle = 'Título';
     var aDate = new Date(2010, 10, 10);
     var aFromTime = '18:00';
     var aToTime = '19:00';
@@ -100,9 +100,9 @@ describe('Match', () => {
     var aCreator = 1;
     var aMatchType = 1;
 
-    var match = new Match(aTittle, aDate, aFromTime, aToTime, aLocation, aCreator, aMatchType);
+    var match = new Match(aTitle, aDate, aFromTime, aToTime, aLocation, aCreator, aMatchType);
 
-    expect(match.tittle).toBe(aTittle);
+    expect(match.title).toBe(aTitle);
     expect(match.date).toBe(aDate);
     expect(match.fromTime).toBe(aFromTime);
     expect(match.toTime).toBe(aToTime);

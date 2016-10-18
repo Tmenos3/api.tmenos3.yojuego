@@ -3,6 +3,7 @@ var createUser = require('./createUser');
 var createPlayer = require('./createPlayer');
 var createMatch = require('./createMatch');
 var createInvitation = require('./createInvitation');
+var createFriendship = require('./createFriendship');
 var config = require('config');
 var client = new es.Client({
     host: config.dbConfig.database,
@@ -22,6 +23,9 @@ let createSchema = (client) => {
         })
         .then(() => {
             return createInvitation(client);
+        })
+        .then(() => {
+            return createFriendship(client);
         })
         .catch((err) => {
             console.log('err: ' + JSON.stringify(err));

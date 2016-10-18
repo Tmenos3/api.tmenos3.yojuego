@@ -26,7 +26,11 @@ class SignUpRoutes {
 
     _addAllRoutes(server, passport) {
         this._configurePassport(server, passport);
-        server.get('/signup/yojuego', passport.authenticate('yojuego-signup'), this._createUser, this._generateToken, (req, res, next) => { res.json(200, { token: req.token, userid: req.user.id }); });
+        server.get('/signup/yojuego', passport.authenticate('yojuego-signup'), 
+                    this._createUser, 
+                    this._generateToken, 
+                    (req, res, next) => { res.json(200, { token: req.token, userid: req.user.id }); 
+                });
     }
 
     _signUpYoJuego(req, email, password, done) {
@@ -65,6 +69,7 @@ class SignUpRoutes {
             repo.add(newUser)
                 .then((response) => {
                     req.user = newUser;
+                    //aca es donde tengo que crear el player luego de creado el user
                     next();
                 }, (err) => { res.json(400, err); });
         }

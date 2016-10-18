@@ -1,9 +1,11 @@
 'use strict'
 
-import { Validator,
-         NotNullOrUndefinedCondition,
-         CustomCondition,
-         EqualCondition } from 'no-if-validator';
+import {
+    Validator,
+    NotNullOrUndefinedCondition,
+    CustomCondition,
+    EqualCondition
+} from 'no-if-validator';
 
 class Friendship {
     constructor(sender, recipient) {
