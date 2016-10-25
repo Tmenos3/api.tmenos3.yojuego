@@ -100,8 +100,8 @@ class SignUpRoutes {
                             req.statusMessage = err;
                             return done({ code: 400, message: err }, null)
                         });
-                    next();
-                }, (err) => { res.json(400, err); });
+
+                });
         }
     }
 
@@ -123,7 +123,7 @@ class SignUpRoutes {
     }
 
     _deleteUser(req) {
-        
+
     }
 
     static get INVALID_PASSPORT() {
