@@ -2,7 +2,9 @@ var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var config = require('config');
 var UserESRepository = require('../repositories/UserESRepository');
+var PlayerESRepository = require('../repositories/PlayerESRepository');
 var YoJuegoUser = require('../models/YoJuegoUser');
+var Player = require('../models/Player');
 var jwt = require('jsonwebtoken');
 var es = require('elasticsearch');
 var LocalStrategy = require('passport-local').Strategy
@@ -11,10 +13,14 @@ var client = new es.Client({
     log: 'info'
 });
 
-var repo = new UserESRepository(client);
+var userRepo = new UserESRepository(client);
+var playerRepo = new PlayerESRepository(client);
 
 class SignUpRoutes {
-    constructor() { }
+    constructor() {
+        this._createUser = this._createUser.bind(this);
+        //this._deleteUser = this._deleteUser.bind(this);
+    }
 
     add(server, passport) {
         let validator = new Validator();
@@ -26,15 +32,17 @@ class SignUpRoutes {
 
     _addAllRoutes(server, passport) {
         this._configurePassport(server, passport);
-        server.get('/signup/yojuego', passport.authenticate('yojuego-signup'), 
-                    this._createUser, 
-                    this._generateToken, 
-                    (req, res, next) => { res.json(200, { token: req.token, userid: req.user.id }); 
-                });
+        server.post('/signup/yojuego',
+            //  passport.authenticate('yojuego-signup'),
+            this._createUser,
+            this._generateToken,
+            (req, res, next) => {
+                res.json(200, { token: req.token, userid: req.user.id });
+            });
     }
 
     _signUpYoJuego(req, email, password, done) {
-        repo.getByIdAndType(email, 'yojuego')
+        userRepo.getByIdAndType(email, 'yojuego')
             .then((response) => {
                 if (response.resp) {
                     req.statusCode = 400;
@@ -60,16 +68,38 @@ class SignUpRoutes {
                 return done({ code: 500, message: err }, null);
             });
     }
-
+    //TODO: VALIDAR PORQUE AL PASARLE UN PAARAMETRO NO VALIDO AL PLAYER SE CUELGA EL SERVICIO.
+    //LO PROBE DESDE EL REST CLIENT, EN EL JSON NO LE PASE EL ESTADO.
+    //RESULTADO: SE QUEDA COLGADO EL SERVICIO.
     _createUser(req, res, next) {
         if (req.statusCode !== undefined && req.statusCode !== null) {
             res.json(req.statusCode, req.statusMessage);
         } else {
-            let newUser = new YoJuegoUser(req.newUser.id, req.newUser.password);
-            repo.add(newUser)
+            let newUser = new YoJuegoUser(req.body.email, req.body.password);
+            userRepo.add(newUser)
                 .then((response) => {
                     req.user = newUser;
-                    //aca es donde tengo que crear el player luego de creado el user
+
+                    var newPlayer = new Player(req.body.nickName,
+                        new Date(req.body.birthDate),
+                        req.body.state,
+                        req.body.adminState,
+                        req.user.id);
+                    playerRepo.add(newPlayer)
+                        .then((response) => {
+                            req.player = newPlayer;
+                        }, (err) => {
+                            userRepo.delete(req.user);
+                            req.statusCode = 400;
+                            req.statusMessage = err;
+                            return done({ code: 400, message: err }, null);
+                        })
+                        .catch(() => {
+                            userRepo.delete(req.user);
+                            req.statusCode = 400;
+                            req.statusMessage = err;
+                            return done({ code: 400, message: err }, null)
+                        });
                     next();
                 }, (err) => { res.json(400, err); });
         }
@@ -86,6 +116,14 @@ class SignUpRoutes {
             passwordField: 'password',
             passReqToCallback: true
         }, this._signUpYoJuego));
+    }
+
+    _createPlayer(req) {
+
+    }
+
+    _deleteUser(req) {
+        
     }
 
     static get INVALID_PASSPORT() {

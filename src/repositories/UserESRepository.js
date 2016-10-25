@@ -95,7 +95,12 @@ class UserESRepository extends ESRepository {
     delete(user) {
         //TEST: not null, not undefined
         //TEST: instance of User
-        throw new Error();
+        if (user instanceof User) {
+            return super.delete(user._id, 'yojuego', 'user');
+        } else {
+            return Promise.reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER });
+        }
+        //   throw new Error();
     }
 
     static get INVALID_USER() {

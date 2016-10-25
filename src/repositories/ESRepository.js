@@ -65,7 +65,28 @@ class ESRepository {
 
     delete(id, index, type) {
         //TEST: not null, not undefined
-        throw new Error('must be implemented');
+        //warning: revisar sintaxis.
+        return new Promise((resolve, reject) => {
+            let validator = new Validator();
+            validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.INVALID_ID)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+            
+            this.esclient.delete({
+                index: index,
+                type: type,
+                id: id
+            }, (error, resp) => {
+                if (error) {
+                    reject({ code: error.statusCode, message: error.message, resp: error });
+                } else {
+                    resolve({ code: 200, message: ESRepository.DOCUMENT_INSERTED, resp: resp });
+                }
+            });
+        }, (err) => { throw err; });
+
+
+        // throw new Error('must be implemented');
     }
 
     update(id, document, index, type) {
