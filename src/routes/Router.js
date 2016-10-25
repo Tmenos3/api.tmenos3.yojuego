@@ -14,7 +14,7 @@ class Router {
         new LogInRoutes().add(server, passport);
         new MatchRoutes().add(server);
         new PlayerRoutes().add(server);
-        new SignUpRoutes().add(server, passport);
+        new SignUpRoutes().add(server);
         new AuthRoutes().add(server, passport);
         new ResetPasswordRoutes().add(server);
     }

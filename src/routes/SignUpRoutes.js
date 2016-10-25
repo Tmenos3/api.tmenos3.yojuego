@@ -12,6 +12,7 @@ var client = new es.Client({
     host: config.get('dbConfig').database,
     log: 'info'
 });
+var moment = require('moment');
 
 var userRepo = new UserESRepository(client);
 var playerRepo = new PlayerESRepository(client);
@@ -19,90 +20,122 @@ var playerRepo = new PlayerESRepository(client);
 class SignUpRoutes {
     constructor() {
         this._createUser = this._createUser.bind(this);
-        //this._deleteUser = this._deleteUser.bind(this);
+        this._deleteUser = this._deleteUser.bind(this);
+        this._createPlayer = this._createPlayer.bind(this);
+        this._insertPlayer = this._insertPlayer.bind(this);
+        this._validateRequest = this._validateRequest.bind(this);
+        this._validateIfUserExists = this._validateIfUserExists.bind(this);
+        this._generateToken = this._generateToken.bind(this);
     }
 
-    add(server, passport) {
+    add(server) {
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(server).throw(SignUpRoutes.INVALID_SERVER));
-        validator.addCondition(new NotNullOrUndefinedCondition(passport).throw(SignUpRoutes.INVALID_PASSPORT));
 
-        validator.execute(() => this._addAllRoutes(server, passport), (err) => { throw err; });
+        validator.execute(() => this._addAllRoutes(server), (err) => { throw err; });
     }
 
-    _addAllRoutes(server, passport) {
-        this._configurePassport(server, passport);
+    _addAllRoutes(server) {
         server.post('/signup/yojuego',
-            //  passport.authenticate('yojuego-signup'),
+            this._validateRequest,
+            this._validateIfUserExists,
             this._createUser,
+            this._createPlayer,
+            this._insertPlayer,
             this._generateToken,
             (req, res, next) => {
                 res.json(200, { token: req.token, userid: req.user.id });
             });
     }
 
-    _signUpYoJuego(req, email, password, done) {
-        userRepo.getByIdAndType(email, 'yojuego')
+    _validateRequest(req, res, next) {
+        if (req.body == null || req.body == undefined) {
+            res.json(400, { code: 400, message: 'Body must be defined.', resp: null });
+        } else {
+            if (req.body.email == null || req.body.email == undefined) {
+                res.json(400, { code: 400, message: 'EMail must be defined.', resp: null });
+            } else {
+                if (req.body.password == null || req.body.password == undefined) {
+                    res.json(400, { code: 400, message: 'Password must be defined.', resp: null });
+                } else {
+                    next();
+                }
+            }
+        }
+    }
+
+    _validateIfUserExists(req, res, next) {
+        userRepo.getByIdAndType(req.body.email, 'yojuego')
             .then((response) => {
                 if (response.resp) {
-                    req.statusCode = 400;
-                    req.statusMessage = 'La cuenta está en uso';
-                    return done({ code: 400, message: 'La cuenta está en uso' }, null);
+                    res.json(400, { code: 400, message: 'La cuenta está en uso.', resp: null });
                 } else {
-                    var newUser = {
-                        type: 'yojuego',
-                        id: email,
-                        password: password
-                    };
-                    req.newUser = newUser;
-                    return done(null, newUser);
+                    next();
                 }
             }, (err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 400, message: err }, null);
+                res.json(400, { code: 400, message: err, resp: null });
             })
             .catch((err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 500, message: err }, null);
+                res.json(500, { code: 500, message: err, resp: null });
             });
     }
-    //TODO: VALIDAR PORQUE AL PASARLE UN PAARAMETRO NO VALIDO AL PLAYER SE CUELGA EL SERVICIO.
-    //LO PROBE DESDE EL REST CLIENT, EN EL JSON NO LE PASE EL ESTADO.
-    //RESULTADO: SE QUEDA COLGADO EL SERVICIO.
+
     _createUser(req, res, next) {
-        if (req.statusCode !== undefined && req.statusCode !== null) {
-            res.json(req.statusCode, req.statusMessage);
-        } else {
-            let newUser = new YoJuegoUser(req.body.email, req.body.password);
-            userRepo.add(newUser)
-                .then((response) => {
-                    req.user = newUser;
+        let newUser = new YoJuegoUser(req.body.email, req.body.password);
+        userRepo.add(newUser)
+            .then((userResp) => {
+                req.user = userResp.resp;
+                next();
+            }, (err) => {
+                res.json(400, { code: 400, message: err, resp: null });
+            })
+    }
 
-                    var newPlayer = new Player(req.body.nickName,
-                        new Date(req.body.birthDate),
-                        req.body.state,
-                        req.body.adminState,
-                        req.user.id);
-                    playerRepo.add(newPlayer)
-                        .then((response) => {
-                            req.player = newPlayer;
-                        }, (err) => {
-                            userRepo.delete(req.user);
-                            req.statusCode = 400;
-                            req.statusMessage = err;
-                            return done({ code: 400, message: err }, null);
-                        })
-                        .catch(() => {
-                            userRepo.delete(req.user);
-                            req.statusCode = 400;
-                            req.statusMessage = err;
-                            return done({ code: 400, message: err }, null)
-                        });
+    _createPlayer(req, res, next) {
+        try {
+            if (!(moment(req.body.birthDate, "YYYY-MM-DDTHH:mm:ssZ", true).isValid()))
+                throw new Error("Invalid birthDate.");
 
-                });
+            req.player = new Player(req.body.nickName,
+                new Date(req.body.birthDate),
+                req.body.state,
+                req.body.adminState,
+                req.user._id);
+
+            next();
+        } catch (error) {
+            this._deleteUser(req.user, (err) => {
+                if (err) {
+                    res.json(500, { code: 500, message: err, resp: null });
+                } else {
+                    res.json(400, { code: 400, message: error.message, resp: error });
+                }
+            });
         }
+    }
+
+    _insertPlayer(req, res, next) {
+        playerRepo.add(req.player)
+            .then((playerResp) => {
+                next();
+            }, (err) => {
+                this._deleteUser(req.user, (error) => {
+                    if (error) {
+                        res.json(500, { code: 500, message: error, resp: null });
+                    } else {
+                        res.json(400, { code: 400, message: err, resp: null });
+                    }
+                });
+            })
+            .catch((err) => {
+                this._deleteUser(req.user, (error) => {
+                    if (error) {
+                        res.json(500, { code: 500, message: error, resp: null });
+                    } else {
+                        res.json(400, { code: 400, message: err, resp: null });
+                    }
+                });
+            });
     }
 
     _generateToken(req, res, next) {
@@ -110,24 +143,13 @@ class SignUpRoutes {
         next();
     }
 
-    _configurePassport(server, passport) {
-        passport.use('yojuego-signup', new LocalStrategy({
-            usernameField: 'email',
-            passwordField: 'password',
-            passReqToCallback: true
-        }, this._signUpYoJuego));
-    }
-
-    _createPlayer(req) {
-
-    }
-
-    _deleteUser(req) {
-
-    }
-
-    static get INVALID_PASSPORT() {
-        return 'Invalid passport';
+    _deleteUser(user, doAfterDelete) {
+        userRepo.delete(user)
+            .then((resp) => {
+                doAfterDelete();
+            }, (err) => {
+                doAfterDelete(err);
+            });
     }
 
     static get INVALID_SERVER() {

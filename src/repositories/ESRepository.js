@@ -29,7 +29,7 @@ class ESRepository {
                         if (error.status == 404) {
                             resolve({ code: 200, message: null, resp: null });
                         } else {
-                            reject({ code: error.statusCode, message: error.message, resp: error });
+                            reject({ code: error.status, message: error.message, resp: error });
                         }
                     }
                     else {

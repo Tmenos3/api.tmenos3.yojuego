@@ -14,7 +14,18 @@ class UserESRepository extends ESRepository {
         return new Promise((resolve, reject) => {
             super.get(userId, 'yojuego', 'user')
                 .then((objRet) => {
-                    let user = new User(objRet.resp.source.type, objRet.resp.source.id);
+                    let user = null;
+                    switch (objRet.resp.source.type) {
+                        case UserType.facebook:
+                            user = new FacebookUser(objRet.resp.source.id);
+                            break;
+                        case UserType.google:
+                            user = new GoogleUser(objRet.resp.source.id);
+                            break;
+                        case UserType.yoJuego:
+                            user = new YoJuegoUser(objRet.resp.source.id, objRet.resp.source.password);
+                            break;
+                    }
                     user._id = objRet.resp._id;
                     resolve({ code: 200, message: null, resp: user });
                 }, reject);
@@ -43,26 +54,30 @@ class UserESRepository extends ESRepository {
                     reject({ code: error.statusCode, message: error.message, resp: error });
                 }
                 else {
-                    let user = null;
+                    if (response.hits.hits.length < 1) {
+                        resolve({ code: 404, message: 'No users were found.', resp: null });
+                    } else {
+                        let user = null;
 
-                    for (let i = 0; i < response.hits.hits.length; i++) {
-                        switch (response.hits.hits[i]._source.type) {
-                            case UserType.facebook:
-                                user = new FacebookUser(response.hits.hits[i]._source.id);
-                                break;
-                            case UserType.google:
-                                user = new GoogleUser(response.hits.hits[i]._source.id);
-                                break;
-                            case UserType.yoJuego:
-                                user = new YoJuegoUser(response.hits.hits[i]._source.id, response.hits.hits[i]._source.password);
-                                break;
+                        for (let i = 0; i < response.hits.hits.length; i++) {
+                            switch (response.hits.hits[i]._source.type) {
+                                case UserType.facebook:
+                                    user = new FacebookUser(response.hits.hits[i]._source.id);
+                                    break;
+                                case UserType.google:
+                                    user = new GoogleUser(response.hits.hits[i]._source.id);
+                                    break;
+                                case UserType.yoJuego:
+                                    user = new YoJuegoUser(response.hits.hits[i]._source.id, response.hits.hits[i]._source.password);
+                                    break;
+                            }
+
+                            user._id = response.hits.hits[i]._id;
+                            break;
                         }
 
-                        user._id = response.hits.hits[i]._id;
-                        break;
+                        resolve({ code: 200, message: null, resp: user });
                     }
-
-                    resolve({ code: 200, message: null, resp: user });
                 }
             });
         });
@@ -71,36 +86,74 @@ class UserESRepository extends ESRepository {
     add(user) {
         //TEST: not null, not undefined
         //TEST: instance of User
-        return super.add(user, 'yojuego', 'user');
+        //TEST: return a user
+        return new Promise((resolve, reject) => {
+            super.add(user, 'yojuego', 'user')
+                .then((resp) => {
+                    let newUser = null;
+                    switch (user.type) {
+                        case UserType.facebook:
+                            newUser = new FacebookUser(user.id);
+                            break;
+                        case UserType.google:
+                            newUser = new GoogleUser(user.id);
+                            break;
+                        case UserType.yoJuego:
+                            newUser = new YoJuegoUser(user.id, user.password);
+                            break;
+                    }
+                    newUser._id = resp.resp._id;
+                    resolve({ code: 200, message: UserESRepository.DOCUMENT_INSERTED, resp: newUser });
+                }, reject)
+        });
     }
 
     update(user) {
         //TEST: not null, not undefined
         //TEST: instance of User
-        if (user instanceof User) {
-            let document = {
-                type: user.type,
-                id: user.id
-            };
+        return new Promise((resolve, reject) => {
+            if (user instanceof User) {
+                let document = {
+                    type: user.type,
+                    id: user.id
+                };
 
-            if (user.type == UserType.yoJuego) {
-                document.password = user.password;
+                if (user.type == UserType.yoJuego) {
+                    document.password = user.password;
+                }
+                super.update(user._id, document, 'yojuego', 'user')
+                    .then((resp) => {
+                        let user = null;
+                        switch (resp._source.type) {
+                            case UserType.facebook:
+                                user = new FacebookUser(resp._source.id);
+                                break;
+                            case UserType.google:
+                                user = new GoogleUser(resp._source.id);
+                                break;
+                            case UserType.yoJuego:
+                                user = new YoJuegoUser(resp._source.id, resp._source.password);
+                                break;
+                        }
+                        user._id = resp._id;
+                        resolve({ code: 200, message: UserESRepository.DOCUMENT_UPDATED, resp: user });
+                    }, reject);
+            } else {
+                reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER, resp: null });
             }
-            return super.update(user._id, document, 'yojuego', 'user');
-        } else {
-            return Promise.reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER });
-        }
+        });
     }
 
     delete(user) {
         //TEST: not null, not undefined
         //TEST: instance of User
-        if (user instanceof User) {
-            return super.delete(user._id, 'yojuego', 'user');
-        } else {
-            return Promise.reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER });
-        }
-        //   throw new Error();
+        return new Promise((resolve, reject) => {
+            if (user instanceof User) {
+                super.delete(user._id, 'yojuego', 'user').then(resolve, reject);
+            } else {
+                reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER, resp: null });
+            }
+        });
     }
 
     static get INVALID_USER() {
