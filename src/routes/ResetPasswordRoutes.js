@@ -3,51 +3,34 @@ let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 let ValidMailCondition = require('no-if-validator').ValidMailCondition;
 let CustomCondition = require('no-if-validator').CustomCondition;
 let EqualCondition = require('no-if-validator').EqualCondition;
+var Routes = require('./Routes');
 let config = require('config');
 let UserESRepository = require('../repositories/UserESRepository');
-let jwt = require('jsonwebtoken');
-let es = require('elasticsearch');
-let client = new es.Client({
-    host: config.get('dbConfig').database,
-    log: 'info'
-});
 
-let repo = new UserESRepository(client);
+var repo = null;
+var jwt = null;
 
-let generateToken = (email) => {
-    return jwt.sign({ email: email }, config.get('serverConfig').secret);
-}
+class ResetPasswordRoutes extends Routes {
+    constructor(esClient, jwtParam) {
+        super();
+        this._validateBody = this._validateBody.bind(this);
+        this._validateEmail = this._validateEmail.bind(this);
+        this._validateToken = this._validateToken.bind(this);
+        this._validateToken = this._validateToken.bind(this);
+        this._sendEmail = this._sendEmail.bind(this);
+        this._saveNewPassword = this._saveNewPassword.bind(this);
+        this._generateToken = this._generateToken.bind(this);
+        this._getNewMail = this._getNewMail.bind(this);
+        this._getMailer = this._getMailer.bind(this);
 
-let getNewMail = (email) => {
-    let url = "http://localhost:8080/enterNewPassword/" + generateToken(email);
-    let mailText = "<p>Para recuperar su contraseña por favor ingrese <a href=" + url + ">aqui</a>.</p>";
-
-    return {
-        from: "facu.larocca@gmail.com",
-        to: email,
-        subject: "YoJuego! - Reestablecimiento de contraseña.",
-        html: mailText
-    };
-}
-
-let getMailer = () => {
-    let mailer = require("nodemailer");
-    let smtpTransport = require('nodemailer-smtp-transport');
-
-    let options = {
-        service: 'gmail',
-        secure: true,
-        auth: {
-            user: 'facu.larocca@gmail.com',
-            pass: 'Starsp80'
-        }
-    };
-
-    return mailer.createTransport(smtpTransport(options));
-};
-
-class ResetPasswordRoutes {
-    constructor() { }
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(ResetPasswordRoutes.INVALID_ES_CLIENT));
+        validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(ResetPasswordRoutes.INVALID_JWT));
+        validator.execute(() => {
+            repo = new UserESRepository(esClient);
+            jwt = jwtParam;
+        }, (err) => { throw err; });
+    }
 
     add(server) {
         let validator = new Validator();
@@ -105,8 +88,8 @@ class ResetPasswordRoutes {
                 if (!response.resp) {
                     res.json(400, { code: 400, message: 'EMail incorrecto.', resp: null });
                 } else {
-                    let mailer = getMailer();
-                    let mail = getNewMail(req.body.email);
+                    let mailer = this._getMailer();
+                    let mail = this._getNewMail(req.body.email);
 
                     mailer.sendMail(mail, (error, response) => {
                         if (error) {
@@ -144,6 +127,38 @@ class ResetPasswordRoutes {
             });
     }
 
+    _generateToken(email) {
+        return jwt.sign({ email: email }, config.get('serverConfig').secret);
+    }
+
+    _getNewMail(email) {
+        let url = "http://localhost:8080/enterNewPassword/" + this._generateToken(email);
+        let mailText = "<p>Para recuperar su contraseña por favor ingrese <a href=" + url + ">aqui</a>.</p>";
+
+        return {
+            from: "facu.larocca@gmail.com",
+            to: email,
+            subject: "YoJuego! - Reestablecimiento de contraseña.",
+            html: mailText
+        };
+    }
+
+    _getMailer() {
+        let mailer = require("nodemailer");
+        let smtpTransport = require('nodemailer-smtp-transport');
+
+        let options = {
+            service: 'gmail',
+            secure: true,
+            auth: {
+                user: 'facu.larocca@gmail.com',
+                pass: 'Starsp80'
+            }
+        };
+
+        return mailer.createTransport(smtpTransport(options));
+    }
+
     static get INVALID_SERVER() {
         return 'El server no puede ser null ni undefined.';
     }
@@ -166,6 +181,14 @@ class ResetPasswordRoutes {
 
     static get PASSWORDS_DONOT_MATCH() {
         return "Las password no son iguales";
+    }
+
+    static get INVALID_ES_CLIENT() {
+        return 'El cliente de ElasticSearch no puede ser null ni undefined';
+    }
+
+    static get INVALID_JWT() {
+        return 'El jwt no puede ser null ni undefined';
     }
 }
 

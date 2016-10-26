@@ -3,18 +3,27 @@ var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 var config = require('config');
 var UserESRepository = require('../repositories/UserESRepository');
 var User = require('../models/User');
-var jwt = require('jsonwebtoken');
-var es = require('elasticsearch');
 var LocalStrategy = require('passport-local').Strategy
-var client = new es.Client({
-    host: config.get('dbConfig').database,
-    log: 'info'
-});
 
-var repo = new UserESRepository(client);
+var userRepo = null;
+var jwt = null;
 
 class LogInRoutes {
-    constructor() { }
+    constructor(esClient, jwtParam) { 
+        this._addAllRoutes = this._addAllRoutes.bind(this);
+        this._loginLocal = this._loginLocal.bind(this);
+        this._generateToken = this._generateToken.bind(this);
+        this._configurePassport = this._configurePassport.bind(this);
+
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(LogInRoutes.INVALID_ES_CLIENT));
+        validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(LogInRoutes.INVALID_JWT));
+
+        validator.execute(() => {
+            userRepo = new UserESRepository(esClient);
+            jwt = jwtParam;
+        }, (err) => { throw err; });
+    }
 
     add(server, passport) {
         let validator = new Validator();
@@ -31,7 +40,7 @@ class LogInRoutes {
     }
 
     _loginLocal(req, email, password, done) {
-        repo.getByIdAndType(email, 'yojuego')
+        userRepo.getByIdAndType(email, 'yojuego')
             .then((response) => {
                 if (!response.resp) {
                     req.statusCode = 400;
@@ -82,6 +91,14 @@ class LogInRoutes {
 
     static get INVALID_SERVER() {
         return 'El server no puede ser null ni undefined';
+    }
+
+    static get INVALID_JWT() {
+        return 'El jwt no puede ser null ni undefined';
+    }
+
+    static get INVALID_ES_CLIENT() {
+        return 'El cliente de ElasticSearch no puede ser null ni undefined';
     }
 }
 

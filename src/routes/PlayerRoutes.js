@@ -5,19 +5,22 @@ let ret500 = require('./returns/return500');
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var Routes = require('./Routes');
-var config = require('config');
 var PlayerESRepository = require('../repositories/PlayerESRepository');
 var Player = require('../models/Player');
-var es = require('elasticsearch');
-var client = new es.Client({
-    host: config.get('dbConfig').database,
-    log: 'info'
-});
-var repo = new PlayerESRepository(client);
+var repo = null;
 
 class PlayerRoutes extends Routes {
-    constructor() {
+    constructor(esClient) {
         super();
+        this._bodyIsNotNull = this._bodyIsNotNull.bind(this);
+        this._getPlayer = this._getPlayer.bind(this);
+        this._updateProfile = this._updateProfile.bind(this);
+
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(PlayerRoutes.INVALID_ES_CLIENT));
+        validator.execute(() => {
+            repo = new PlayerESRepository(esClient);
+        }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
@@ -115,6 +118,10 @@ class PlayerRoutes extends Routes {
 
     static get INVALID_ADMINSTATE() {
         return 'Invalid admin state';
+    }
+
+    static get INVALID_ES_CLIENT() {
+        return 'El cliente de ElasticSearch no puede ser null ni undefined';
     }
 }
 

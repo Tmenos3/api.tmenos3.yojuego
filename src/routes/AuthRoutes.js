@@ -2,29 +2,35 @@ var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var config = require('config');
 var UserESRepository = require('../repositories/UserESRepository');
+var PlayerESRepository = require('../repositories/PlayerESRepository');
 var FacebookUser = require('../models/FacebookUser');
 var GoogleUser = require('../models/GoogleUser');
-var jwt = require('jsonwebtoken');
-var es = require('elasticsearch');
 var FacebookStrategy = require('passport-facebook').Strategy
 var GoogleStrategy = require('passport-google-oauth20').Strategy;
-var client = new es.Client({
-    host: config.get('dbConfig').database,
-    log: 'info'
-});
 
-var getNewUser = (info) => {
-    switch (info.type) {
-        case 'facebook':
-            return new FacebookUser(info.id);
-        case 'google':
-            return new GoogleUser(info.id);
-    }
-}
-var repo = new UserESRepository(client);
+var repoUser = null;
+var repoPlayer = null;
+var jwt = null;
 
 class AuthRoutes {
-    constructor() { }
+    constructor(esClient, jwtParam) {
+        this._addAllRoutes = this._addAllRoutes.bind(this);
+        this._authFacebook = this._authFacebook.bind(this);
+        this._authGoogle = this._authGoogle.bind(this);
+        this._createUser = this._createUser.bind(this);
+        this._generateToken = this._generateToken.bind(this);
+        this._configurePassport = this._configurePassport.bind(this);
+        this._getNewUser = this._getNewUser.bind(this);
+
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(AuthRoutes.INVALID_ES_CLIENT));
+        validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(AuthRoutes.INVALID_JWT));
+        validator.execute(() => {
+            repoUser = new UserESRepository(esClient);
+            repoPlayer = new PlayerESRepository(esClient);
+            jwt = jwtParam;
+        }, (err) => { throw err; });
+    }
 
     add(server, passport) {
         let validator = new Validator();
@@ -48,7 +54,7 @@ class AuthRoutes {
     }
 
     _authFacebook(req, token, refreshToken, profile, done) {
-        repo.getByIdAndType(profile.id, 'facebook')
+        repoUser.getByIdAndType(profile.id, 'facebook')
             .then((response) => {
                 if (response.resp) {
                     req.exists = true;
@@ -73,7 +79,7 @@ class AuthRoutes {
     }
 
     _authGoogle(req, token, refreshToken, profile, done) {
-        repo.getByIdAndType(profile.id, 'google')
+        repoUser.getByIdAndType(profile.id, 'google')
             .then((result) => {
                 if (result.resp) {
                     req.exists = true;
@@ -101,8 +107,8 @@ class AuthRoutes {
         if (req.exists) {
             next();
         } else {
-            let newUser = getNewUser(req.newUser);
-            repo.add(newUser)
+            let newUser = this._getNewUser(req.newUser);
+            repoUser.add(newUser)
                 .then((resp) => {
                     req.user = newUser;
                     next();
@@ -132,12 +138,29 @@ class AuthRoutes {
         }, this._authGoogle));
     }
 
+    _getNewUser(info) {
+        switch (info.type) {
+            case 'facebook':
+                return new FacebookUser(info.id);
+            case 'google':
+                return new GoogleUser(info.id);
+        }
+    }
+
     static get INVALID_PASSPORT() {
         return 'Invalid passport';
     }
 
     static get INVALID_SERVER() {
         return 'El server no puede ser null ni undefined';
+    }
+
+    static get INVALID_JWT() {
+        return 'El jwt no puede ser null ni undefined';
+    }
+
+    static get INVALID_ES_CLIENT() {
+        return 'El cliente de ElasticSearch no puede ser null ni undefined';
     }
 }
 

@@ -1,19 +1,21 @@
+let Validator = require('no-if-validator').Validator;
+let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var Routes = require('./Routes');
 var Match = require('../models/Match');
 var MatchRepository = require('../repositories/MatchESRepository');
-var es = require('elasticsearch');
-var config = require('config');
 
-var client = new es.Client({
-    host: config.get('dbConfig').database,
-    log: 'info'
-});
-
-var repo = new MatchRepository(client);
+var repo = null;
 
 class MatchRoutes extends Routes {
-    constructor() {
+    constructor(esClient) {
         super();
+
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(MatchRoutes.INVALID_ES_CLIENT));
+
+        validator.execute(() => {
+            repo = new MatchRepository(esClient);
+        }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
@@ -38,6 +40,10 @@ class MatchRoutes extends Routes {
         });
 
         server.del('/match/:id', (req, res, next) => { });
+    }
+
+    static get INVALID_ES_CLIENT() {
+        return 'El cliente de ElasticSearch no puede ser null ni undefined';
     }
 }
 

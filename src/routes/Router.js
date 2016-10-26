@@ -9,14 +9,14 @@ var ResetPasswordRoutes = require('./ResetPasswordRoutes');
 class Router {
     constructor() { }
 
-    addAll(server, passport) {
-        new InvitationRoutes().add(server);
-        new LogInRoutes().add(server, passport);
-        new MatchRoutes().add(server);
-        new PlayerRoutes().add(server);
-        new SignUpRoutes().add(server);
-        new AuthRoutes().add(server, passport);
-        new ResetPasswordRoutes().add(server);
+    addAll(server, passport, esClient, jwt) {
+        new InvitationRoutes(esClient).add(server);
+        new LogInRoutes(esClient, jwt).add(server, passport);
+        new MatchRoutes(esClient).add(server);
+        new PlayerRoutes(esClient).add(server);
+        new SignUpRoutes(esClient, jwt).add(server);
+        new AuthRoutes(esClient, jwt).add(server, passport);
+        new ResetPasswordRoutes(esClient, jwt).add(server);
     }
 }
 

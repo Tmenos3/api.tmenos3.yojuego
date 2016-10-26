@@ -1,24 +1,21 @@
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+var Routes = require('./Routes');
 var config = require('config');
 var UserESRepository = require('../repositories/UserESRepository');
 var PlayerESRepository = require('../repositories/PlayerESRepository');
 var YoJuegoUser = require('../models/YoJuegoUser');
 var Player = require('../models/Player');
-var jwt = require('jsonwebtoken');
-var es = require('elasticsearch');
-var LocalStrategy = require('passport-local').Strategy
-var client = new es.Client({
-    host: config.get('dbConfig').database,
-    log: 'info'
-});
 var moment = require('moment');
 
-var userRepo = new UserESRepository(client);
-var playerRepo = new PlayerESRepository(client);
+var userRepo = null;
+var playerRepo = null;
+var jwt = null;
 
-class SignUpRoutes {
-    constructor() {
+class SignUpRoutes extends Routes {
+    constructor(esClient, jwtParam) {
+        super();
+        
         this._createUser = this._createUser.bind(this);
         this._deleteUser = this._deleteUser.bind(this);
         this._createPlayer = this._createPlayer.bind(this);
@@ -26,20 +23,25 @@ class SignUpRoutes {
         this._validateRequest = this._validateRequest.bind(this);
         this._validateIfUserExists = this._validateIfUserExists.bind(this);
         this._generateToken = this._generateToken.bind(this);
-    }
+        this._insertUser = this._insertUser.bind(this);
 
-    add(server) {
         let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(server).throw(SignUpRoutes.INVALID_SERVER));
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(SignUpRoutes.INVALID_ES_CLIENT));
+        validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(SignUpRoutes.INVALID_JWT));
 
-        validator.execute(() => this._addAllRoutes(server), (err) => { throw err; });
+        validator.execute(() => {
+            userRepo = new UserESRepository(esClient);
+            playerRepo = new PlayerESRepository(esClient);
+            jwt = jwtParam;
+        }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
         server.post('/signup/yojuego',
             this._validateRequest,
-            this._validateIfUserExists,
             this._createUser,
+            this._validateIfUserExists,
+            this._insertUser,
             this._createPlayer,
             this._insertPlayer,
             this._generateToken,
@@ -52,20 +54,21 @@ class SignUpRoutes {
         if (req.body == null || req.body == undefined) {
             res.json(400, { code: 400, message: 'Body must be defined.', resp: null });
         } else {
-            if (req.body.email == null || req.body.email == undefined) {
-                res.json(400, { code: 400, message: 'EMail must be defined.', resp: null });
-            } else {
-                if (req.body.password == null || req.body.password == undefined) {
-                    res.json(400, { code: 400, message: 'Password must be defined.', resp: null });
-                } else {
-                    next();
-                }
-            }
+            next();
+        }
+    }
+
+    _createUser(req, res, next) {
+        try {
+            req.newUser = new YoJuegoUser(req.body.email, req.body.password);
+            next();
+        } catch (error) {
+            res.json(400, { code: 400, message: error.message, resp: null });
         }
     }
 
     _validateIfUserExists(req, res, next) {
-        userRepo.getByIdAndType(req.body.email, 'yojuego')
+        userRepo.getByIdAndType(req.newUser.id, 'yojuego')
             .then((response) => {
                 if (response.resp) {
                     res.json(400, { code: 400, message: 'La cuenta está en uso.', resp: null });
@@ -80,15 +83,18 @@ class SignUpRoutes {
             });
     }
 
-    _createUser(req, res, next) {
-        let newUser = new YoJuegoUser(req.body.email, req.body.password);
-        userRepo.add(newUser)
-            .then((userResp) => {
-                req.user = userResp.resp;
-                next();
-            }, (err) => {
-                res.json(400, { code: 400, message: err, resp: null });
-            })
+    _insertUser(req, res, next) {
+        try {
+            userRepo.add(req.newUser)
+                .then((userResp) => {
+                    req.user = userResp.resp;
+                    next();
+                }, (err) => {
+                    res.json(400, { code: 400, message: err, resp: null });
+                })
+        } catch (error) {
+            res.json(400, { code: 400, message: error.message, resp: null });
+        }
     }
 
     _createPlayer(req, res, next) {
@@ -152,8 +158,12 @@ class SignUpRoutes {
             });
     }
 
-    static get INVALID_SERVER() {
-        return 'El server no puede ser null ni undefined';
+    static get INVALID_JWT() {
+        return 'El jwt no puede ser null ni undefined';
+    }
+
+    static get INVALID_ES_CLIENT() {
+        return 'El cliente de ElasticSearch no puede ser null ni undefined';
     }
 }
 
