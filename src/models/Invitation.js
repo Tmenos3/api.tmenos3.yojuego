@@ -1,7 +1,6 @@
 'use strict'
-
-import { Validator,
-    NotNullOrUndefinedCondition } from 'no-if-validator';
+var Validator = require('no-if-validator').validator;
+var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 
 class Invitation {
     constructor(sender, recipient, match) {

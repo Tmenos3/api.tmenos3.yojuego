@@ -5,7 +5,7 @@ class MatchType {
     static get somos14() { return { code: 2, value: 'Somos_14' } };
     static get somos16() { return { code: 2, value: 'Somos_16' } };
     static get somos18() { return { code: 2, value: 'Somos_18' } };
-    static get somos22() { return { code: 3, value: 'Somos_21' } };
+    static get somos22() { return { code: 3, value: 'Somos_22' } };
 }
 
 module.exports = MatchType;

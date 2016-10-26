@@ -1,11 +1,8 @@
 'use strict'
-
-import {
-    Validator,
-    NotNullOrUndefinedCondition,
-    CustomCondition,
-    EqualCondition
-} from 'no-if-validator';
+var Validator = require('no-if-validator').Validator;
+var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+var CustomCondition = require('no-if-validator').CustomCondition;
+var EqualCondition = require('no-if-validator').EqualCondition;
 
 class Friendship {
     constructor(sender, recipient) {

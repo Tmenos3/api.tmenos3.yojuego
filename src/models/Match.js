@@ -1,5 +1,4 @@
 'use strict'
-
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
