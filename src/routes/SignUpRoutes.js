@@ -15,7 +15,7 @@ var jwt = null;
 class SignUpRoutes extends Routes {
     constructor(esClient, jwtParam) {
         super();
-        
+
         this._createUser = this._createUser.bind(this);
         this._deleteUser = this._deleteUser.bind(this);
         this._createPlayer = this._createPlayer.bind(this);
