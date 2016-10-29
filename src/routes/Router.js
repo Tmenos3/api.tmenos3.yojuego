@@ -11,7 +11,7 @@ class Router {
 
     addAll(server, passport, esClient, jwt) {
         new InvitationRoutes(esClient).add(server);
-        new LogInRoutes(esClient, jwt).add(server, passport);
+        new LogInRoutes(esClient, jwt).add(server);
         new MatchRoutes(esClient).add(server);
         new PlayerRoutes(esClient).add(server);
         new SignUpRoutes(esClient, jwt).add(server);

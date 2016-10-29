@@ -3,17 +3,16 @@ var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 var config = require('config');
 var UserESRepository = require('../repositories/UserESRepository');
 var User = require('../models/User');
-var LocalStrategy = require('passport-local').Strategy
 
 var userRepo = null;
 var jwt = null;
 
 class LogInRoutes {
-    constructor(esClient, jwtParam) { 
+    constructor(esClient, jwtParam) {
         this._addAllRoutes = this._addAllRoutes.bind(this);
-        this._loginLocal = this._loginLocal.bind(this);
+        this._validateRequest = this._validateRequest.bind(this);
+        this._validateLogin = this._validateLogin.bind(this);
         this._generateToken = this._generateToken.bind(this);
-        this._configurePassport = this._configurePassport.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(LogInRoutes.INVALID_ES_CLIENT));
@@ -25,68 +24,54 @@ class LogInRoutes {
         }, (err) => { throw err; });
     }
 
-    add(server, passport) {
+    add(server) {
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(server).throw(LogInRoutes.INVALID_SERVER));
-        validator.addCondition(new NotNullOrUndefinedCondition(passport).throw(LogInRoutes.INVALID_PASSPORT));
 
-        validator.execute(() => this._addAllRoutes(server, passport), (err) => { throw err; });
+        validator.execute(() => this._addAllRoutes(server), (err) => { throw err; });
     }
 
-    _addAllRoutes(server, passport) {
-        this._configurePassport(server, passport);
-
-        server.get('/login/yojuego', passport.authenticate('yojuego-login'), this._generateToken, (req, res, next) => { res.json(200, { token: req.token, userid: req.user.id }); });
-    }
-
-    _loginLocal(req, email, password, done) {
-        userRepo.getByIdAndType(email, 'yojuego')
-            .then((response) => {
-                if (!response.resp) {
-                    req.statusCode = 400;
-                    req.statusMessage = 'Nombre de usuario o contraseña incorrecto';
-                    return done({ code: 400, message: 'Nombre de usuario o contraseña incorrecto' }, null);
-                } else {
-                    if (response.resp.password != password) {
-                        req.statusCode = 400;
-                        req.statusMessage = 'Nombre de usuario o contraseña incorrecto';
-                        return done({ code: 400, message: 'Nombre de usuario o contraseña incorrecto' }, null);
-                    } else {
-                        req.user = response.resp;
-                        return done(null, response.resp);
-                    }
-                }
-            }, (err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 400, message: err }, null);
-            })
-            .catch((err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 500, message: err }, null);
+    _addAllRoutes(server) {
+        server.post('/login/yojuego',
+            this._validateRequest,
+            this._validateLogin,
+            this._generateToken,
+            (req, res, next) => {
+                res.json(200, { token: req.token, userid: req.body.email });
             });
     }
 
-    _generateToken(req, res, next) {
-        if (req.statusCode !== undefined && req.statusCode !== null) {
-            res.json(req.statusCode, req.statusMessage);
+    _validateRequest(req, res, next) {
+        if (req.body == null || req.body == undefined) {
+            res.json(400, { code: 400, message: 'Body must be defined.', resp: null });
         } else {
-            req.token = jwt.sign(req.user.id, config.get('serverConfig').secret);
             next();
         }
     }
 
-    _configurePassport(server, passport) {
-        passport.use('yojuego-login', new LocalStrategy({
-            usernameField: 'email',
-            passwordField: 'password',
-            passReqToCallback: true
-        }, this._loginLocal));
+    _validateLogin(req, res, next) {
+        userRepo.getByIdAndType(req.body.email, 'yojuego')
+            .then((response) => {
+                if (!response.resp) {
+                    res.json(400, { code: 400, message: 'Nombre de usuario o contraseña incorrecto', resp: null });
+                } else {
+                    if (response.resp.password != req.body.password) {
+                        res.json(400, { code: 400, message: 'Nombre de usuario o contraseña incorrecto', resp: null });
+                    } else {
+                        next();
+                    }
+                }
+            }, (err) => {
+                res.json(400, { code: 400, message: err, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
     }
 
-    static get INVALID_PASSPORT() {
-        return 'Invalid passport';
+    _generateToken(req, res, next) {
+        req.token = jwt.sign(req.body.email, config.get('serverConfig').secret);
+        next();
     }
 
     static get INVALID_SERVER() {
