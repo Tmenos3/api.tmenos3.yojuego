@@ -13,7 +13,12 @@ class PlayerRoutes extends Routes {
     constructor(esClient) {
         super();
         this._bodyIsNotNull = this._bodyIsNotNull.bind(this);
+        this._paramsIsNotNull = this._paramsIsNotNull.bind(this);
         this._getPlayer = this._getPlayer.bind(this);
+        this._returnTeamMates = this._returnTeamMates.bind(this);
+        this._deleteTeamMate = this._deleteTeamMate.bind(this);
+        this._addTeamMate = this._addTeamMate.bind(this);
+
         this._updateProfile = this._updateProfile.bind(this);
 
         let validator = new Validator();
@@ -30,6 +35,9 @@ class PlayerRoutes extends Routes {
         server.post('/player/:id/update', (req, res, next) => { });
         server.del('/player/:id', (req, res, next) => { });
         server.post('/player/profile', this._bodyIsNotNull, this._updateProfile);
+        server.get('/player/:id/teammate', this._paramsIsNotNull, this._getPlayer, this._returnTeamMates);
+        server.post('/player/:id/teammate/:teammateid', this._paramsIsNotNull, this._getPlayer, this._addTeamMate);
+        server.del('/player/:id/teammate/:teammateid', this._paramsIsNotNull, this._getPlayer, this._deleteTeamMate);
     }
 
     _bodyIsNotNull(req, res, next) {
@@ -39,16 +47,55 @@ class PlayerRoutes extends Routes {
         validator.execute(() => { next(); }, (err) => { res.json(400, { code: 400, message: err.message, resp: null }); });
     }
 
+    _paramsIsNotNull(req, res, next) {
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(req.params).throw(PlayerRoutes.INVALID_PARAMS));
+
+        validator.execute(() => { next(); }, (err) => { res.json(400, { code: 400, message: err.message, resp: null }); });
+    }
+
     _getPlayer(req, res, next) {
-        repo.getByUserId(req.user)
-            .then((resp) => {
-                if (!resp.resp) {
-                    ret404(res, 'Player inexistente', null);
+        // repo.getByUserId(req.user)
+        //     .then((resp) => {
+        //         if (!resp.resp) {
+        //             ret404(res, 'Player inexistente', null);
+        //         } else {
+        //             ret200(res, null, resp.resp);
+        //         }
+        //     }, (err) => { ret400(res, err, null); })
+        //     .catch((err) => { ret500(res, err, null); });
+        repo.get(req.params.id)
+            .then((response) => {
+                if (!response.resp) {
+                    res.json(401, { code: 401, message: 'Invalid player', resp: null });
                 } else {
-                    ret200(res, null, resp.resp);
+                    req.player = response.resp;
+                    next();
                 }
-            }, (err) => { ret400(res, err, null); })
-            .catch((err) => { ret500(res, err, null); });
+            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
+            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
+    }
+
+    _returnTeamMates(req, res, next) {
+        res.json(200, { code: 200, message: 'OK', resp: req.player.teamMates });
+    }
+
+    _deleteTeamMate(req, res, next) {
+        req.player.removeTeamMate(req.params.teammateid);
+        repo.update(req.player)
+            .then((response) => {
+                res.json(200, { code: 200, message: 'Teammate deleted successfuly', resp: req.player });
+            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
+            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
+    }
+
+    _addTeamMate(req, res, next) {
+        req.player.addTeamMate(req.params.teammateid);
+        repo.update(req.player)
+            .then((response) => {
+                res.json(200, { code: 200, message: 'Teammate added successfuly', resp: req.player });
+            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
+            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
     }
 
     _updateProfile(req, res, next) {
@@ -102,6 +149,10 @@ class PlayerRoutes extends Routes {
 
     static get INVALID_BODY() {
         return 'Invalid request body';
+    }
+
+    static get INVALID_PARAMS() {
+        return 'Invalid request params';
     }
 
     static get INVALID_NICKNAME() {

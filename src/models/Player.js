@@ -23,7 +23,20 @@ class Player {
             this.state = state;
             this.adminState = adminState;
             this.userid = userid;
+            this.teamMates = [];
         }, (err) => { throw err; });
+    }
+
+    addTeamMate(teamMateId) {
+        if (this.teamMates.indexOf(teamMateId) == -1) {
+            this.teamMates.push(teamMateId);
+        }
+    }
+
+    removeTeamMate(teamMateId) {
+        if (this.teamMates.indexOf(teamMateId) > -1) {
+            this.teamMates.splice(this.teamMates.indexOf(teamMateId), 1);
+        }
     }
 
     static playerStates() {

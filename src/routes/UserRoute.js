@@ -4,8 +4,6 @@ var User = require('../models/User');
 var UserESRepository = require('../repositories/UserESRepository');
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-//TODO: des instalar esta api
-var validator = require('validator');
 var userRepo = null;
 
 class UserRoute extends Routes {
