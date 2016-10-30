@@ -1,148 +1,89 @@
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var config = require('../../config');
-//var UserESRepository = require('../repositories/UserESRepository');
-var PlayerESRepository = require('../repositories/PlayerESRepository');
-var Player = require('../models/Player');
-var jwt = require('jsonwebtoken');
-var es = require('elasticsearch');
-var FacebookStrategy = require('passport-facebook').Strategy
-var LocalStrategy = require('passport-local').Strategy
-var client = new es.Client({
-    host: config.database,
-    log: 'info'
-});
+var config = require('config');
+var UserESRepository = require('../repositories/UserESRepository');
+var User = require('../models/User');
 
-//Este repo debiera ser UserESRepository
-var repo = new PlayerESRepository(client);
-let getResponse = (obj) => {
-    return {
-        response: obj
-    }
-}
+var userRepo = null;
+var jwt = null;
 
 class LogInRoutes {
-    constructor() { }
+    constructor(esClient, jwtParam) {
+        this._addAllRoutes = this._addAllRoutes.bind(this);
+        this._validateRequest = this._validateRequest.bind(this);
+        this._validateLogin = this._validateLogin.bind(this);
+        this._generateToken = this._generateToken.bind(this);
 
-    add(server, passport) {
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(LogInRoutes.INVALID_ES_CLIENT));
+        validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(LogInRoutes.INVALID_JWT));
+
+        validator.execute(() => {
+            userRepo = new UserESRepository(esClient);
+            jwt = jwtParam;
+        }, (err) => { throw err; });
+    }
+
+    add(server) {
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(server).throw(LogInRoutes.INVALID_SERVER));
-        validator.addCondition(new NotNullOrUndefinedCondition(passport).throw(LogInRoutes.INVALID_PASSPORT));
 
-        validator.execute(() => this._addAllRoutes(server, passport), (err) => { throw err; });
+        validator.execute(() => this._addAllRoutes(server), (err) => { throw err; });
     }
 
-    _addAllRoutes(server, passport) {
-        this._configurePassport(server, passport);
-
-        server.get('/login/facebook/callback', passport.authenticate('facebook-login', { session: false }), this._generateToken, (req, res, next) => {
-            res.redirect('/login/facebook/success/token=' + req.token, next);
-        });
-        server.get('/login/google/callback', passport.authenticate('google-login'), (req, res, next) => { });
-        server.get('/login/yojuego', passport.authenticate('yojuego-login'), this._generateToken, (req, res, next) => { res.json(200, getResponse({ token: req.token })); });
-        server.get('/login/facebook', passport.authenticate('facebook-login', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
-        server.get('/login/google', (req, res, next) => { });
-    }
-
-    _loginLocal(req, email, password, done) {
-        //repo.getbyUserId(profile.id, 'yojuego')
-        repo.getBy({ 'account.type': 'yojuego', 'account.id': email })
-            .then((result) => {
-                let player;
-                //Esta basura la estoy haciendo porque no me funca el filtro
-                //lo tengo que solucionar
-                for (let i = 0; i < result.length; i++) {
-                    if (result[i].account.id == email) {
-                        player = result[i];
-                    }
-                }
-
-                // //if (result.length > 0) {
-                if (player === undefined || player === null) {
-                    req.statusCode = 400;
-                    req.statusMessage = 'Nombre de usuario o contraseña incorrecto';
-                    return done({ code: 400, message: 'Nombre de usuario o contraseña incorrecto' }, null);
-                } else {
-                    req.player = player;
-                    return done(null, player);
-                }
-            }, (err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 400, message: err }, null);
-            })
-            .catch((err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 500, message: err }, null);
+    _addAllRoutes(server) {
+        server.post('/login/yojuego',
+            this._validateRequest,
+            this._validateLogin,
+            this._generateToken,
+            (req, res, next) => {
+                res.json(200, { token: req.token, userid: req.body.email });
             });
     }
 
-    _loginFacebook(req, token, refreshToken, profile, done) {
-        //repo.getbyUserId(profile.id, 'facebook')
-        repo.getBy({ 'account.type': 'facebook', 'account.id': profile.id })
-            .then((result) => {
-                let player;
-                //Esta basura la estoy haciendo porque no me funca el filtro
-                //lo tengo que solucionar
-                for (let i = 0; i < result.length; i++) {
-                    if (result[i].account.type == 'facebook' && result[i].account.id == profile.id) {
-                        player = result[i];
-                    }
-                }
-
-                // //if (result.length > 0) {
-                if (player === undefined || player === null) {
-                    req.statusCode = 400;
-                    req.statusMessage = 'Nombre de usuario o contraseña incorrecto';
-                    return done({ code: 400, message: 'Nombre de usuario o contraseña incorrecto' }, null);
-                } else {
-                    //aca hay que ver como me devuelve facebook esta info y sale con fritas
-                    req.player = player;
-                    return done(null, player);
-                }
-            }, (err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 400, message: err }, null);
-            })
-            .catch((err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 500, message: err }, null);
-            });
-    }
-
-    _generateToken(req, res, next) {
-        if (req.statusCode !== undefined && req.statusCode !== null) {
-            res.json(req.statusCode, req.statusMessage);
+    _validateRequest(req, res, next) {
+        if (req.body == null || req.body == undefined) {
+            res.json(400, { code: 400, message: 'Body must be defined.', resp: null });
         } else {
-            req.token = jwt.sign(req.player.id, config.secret);
             next();
         }
     }
 
-    _configurePassport(server, passport) {
-        passport.use('facebook-login', new FacebookStrategy({
-            clientID: config.facebook.appId,
-            clientSecret: config.facebook.appSecret,
-            callbackURL: config.facebook.callback,
-            passReqToCallback: true
-        }, this._loginFacebook));
-
-        passport.use('yojuego-login', new LocalStrategy({
-            usernameField: 'email',
-            passwordField: 'password',
-            passReqToCallback: true
-        }, this._loginLocal));
+    _validateLogin(req, res, next) {
+        userRepo.getByIdAndType(req.body.email, 'yojuego')
+            .then((response) => {
+                if (!response.resp) {
+                    res.json(400, { code: 400, message: 'Nombre de usuario o contraseña incorrecto', resp: null });
+                } else {
+                    if (response.resp.password != req.body.password) {
+                        res.json(400, { code: 400, message: 'Nombre de usuario o contraseña incorrecto', resp: null });
+                    } else {
+                        next();
+                    }
+                }
+            }, (err) => {
+                res.json(400, { code: 400, message: err, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
     }
 
-    static get INVALID_PASSPORT() {
-        return 'Invalid passport';
+    _generateToken(req, res, next) {
+        req.token = jwt.sign(req.body.email, config.get('serverConfig').secret);
+        next();
     }
 
     static get INVALID_SERVER() {
         return 'El server no puede ser null ni undefined';
+    }
+
+    static get INVALID_JWT() {
+        return 'El jwt no puede ser null ni undefined';
+    }
+
+    static get INVALID_ES_CLIENT() {
+        return 'El cliente de ElasticSearch no puede ser null ni undefined';
     }
 }
 

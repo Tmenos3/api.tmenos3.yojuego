@@ -1,82 +1,14 @@
-var restify = require('restify');
-var jwt = require('restify-jwt');
-var config = require('./config');
-var Router = require('./src/routes/Router');
-var passport = require('passport-restify');
-var es = require('elasticsearch');
-var setup = require('./src/setup/setup');
-var client = new es.Client({
-  host: config.database,
-  log: 'info'
-});
+//This should be configured individually for each environment
+process.env.NODE_ENV = 'dev';
 
-var router = new Router();
+let restify = require('restify');
+let config = require('config');
+let configureServer = require('./src/configureServer');
 
-var server = restify.createServer();
-server.use(restify.bodyParser());
-server.use(restify.queryParser());
-server.use(jwt({ secret: config.secret }).unless({ path: config.pathsWithoutAuthentication }));
-server.use(passport.initialize());
-passport.serializeUser((player, done) => {
-  done(null, player);
-});
+let server = restify.createServer();
 
+configureServer(server, restify);
 
-router.addAll(server, passport);
-
-server.get('/echo', (req, res, next) => {
-  //setup(client);
-  // client.indices.create({ index: 'yojuego' }, (err, resp, respcode) => {
-  //   if (!err) {
-  //     client.indices.putMapping({
-  //       index: 'yojuego',
-  //       type: "player",
-  //       body: {
-  //         properties: {
-  //           nickName: { type: "string" },
-  //           birthDate: { type: "string" },
-  //           state: { type: "string" },
-  //           adminState: { type: "string" },
-  //           account: {
-  //             type: "nested",
-  //             properties: {
-  //               id: { type: "string" },
-  //               type: { type: "string" },
-  //               password: { type: "string" }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }, (err, resp, respcode) => {
-  //       res.json(200, resp);
-  //     });
-  //   }
-  // });
-  // client.search({
-  //   index: "yojuego",
-  //   type: "user",
-  //   body: {
-  //     query: {
-  //       "bool": {
-  //         "must": [
-  //           { "term": { "userid": "123456789" } },
-  //           { "term": { "type": "yojuego" } }
-  //         ]
-  //       }
-  //     }
-  //   }
-  // }, (error, response, status) => {
-  //   if (error) {
-  //     res.json(400, err);
-  //   }
-  //   else {
-  //     res.json(200, response.hits.hits);
-  //   }
-  // });
-
-  res.json(200, { status: 'ok' });
-});
-
-server.listen(config.port, function () {
+server.listen(config.serverConfig.port, function () {
   console.log('%s listening at %s', server.name, server.url);
 });

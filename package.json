@@ -12,17 +12,23 @@
     "node": "0.8.x"
   },
   "dependencies": {
+    "config": "^1.21.0",
     "crypto-js": "^3.1.6",
     "elasticsearch": "^11.0.1",
     "jsonwebtoken": "^7.1.7",
+    "moment": "^2.15.2",
     "no-if-validator": "^1.0.0-4",
     "node-fetch": "^1.6.0",
+    "nodemailer": "^2.6.4",
+    "nodemailer-smtp-transport": "^2.7.2",
     "passport-facebook": "^2.1.1",
+    "passport-google-oauth20": "^1.0.0",
     "passport-local": "^1.0.0",
     "passport-restify": "^1.0.1",
     "react": "^15.3.1",
     "restify": "4.1.x",
-    "restify-jwt": "^0.4.0"
+    "restify-jwt": "^0.4.0",
+    "url-pattern": "^1.0.1"
   },
   "devDependencies": {
     "babel-cli": "*",

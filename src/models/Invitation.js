@@ -1,7 +1,6 @@
 'use strict'
-
-import { Validator,
-         NotNullOrUndefinedCondition } from 'no-if-validator';
+var Validator = require('no-if-validator').validator;
+var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 
 class Invitation {
     constructor(sender, recipient, match) {
@@ -14,11 +13,6 @@ class Invitation {
             this.sender = sender;
             this.recipient = recipient;
             this.match = match;
-            //Aceptada, rechazada, expirada? Que pasa si la quiero aceptar despues de que el partido se jugó?
-            //Necesito saber cuando cambio de estado?
-            //createdOn es necesario?
-            //limitDateToBeAccepted? Creo que es necesario...
-            this.guests = [];
         }, (err) => { throw err; });
     }
 

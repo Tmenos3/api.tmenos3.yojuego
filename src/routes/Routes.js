@@ -4,17 +4,17 @@ var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 class Routes {
     constructor() { }
 
-    add(server){
+    add(server) {
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(server).throw(Routes.INVALID_SERVER));
 
         validator.execute(() => this._addAllRoutes(server), (err) => { throw err; });
     }
 
-    _addAllRoutes(server){
+    _addAllRoutes(server) {
     }
 
-    static get INVALID_SERVER(){
+    static get INVALID_SERVER() {
         return 'El server no puede ser null ni undefined';
     }
 }

@@ -1,7 +1,6 @@
 import LogInRoutes from '../../../src/routes/LogInRoutes';
 
 describe('LogInRoutes', () => {
-    let config = require('../../../config');
     let serverMocked;
     let passportMocked;
 
@@ -24,15 +23,51 @@ describe('LogInRoutes', () => {
         passportMocked = null;
     });
 
+    it('Cannot add routes with an undefined server', () => {
+        let undefinedServer;
+        let routes = new LogInRoutes();
+
+        expect(() => routes.add(undefinedServer)).toThrowError(LogInRoutes.INVALID_SERVER);
+    });
+
+    it('Cannot add routes with an null server', () => {
+        let nullServer = null;
+        let routes = new LogInRoutes();
+
+        expect(() => routes.add(nullServer)).toThrowError(LogInRoutes.INVALID_SERVER);
+    });
+
+    it('Cannot add routes with an undefined passport', () => {
+        let undefinedPassport;
+        let routes = new LogInRoutes();
+
+        expect(() => routes.add({}, undefinedPassport)).toThrowError(LogInRoutes.INVALID_PASSPORT);
+    });
+
+    it('Cannot add routes with an null passport', () => {
+        let nullPassport = null;
+        let routes = new LogInRoutes();
+
+        expect(() => routes.add({}, nullPassport)).toThrowError(LogInRoutes.INVALID_PASSPORT);
+    });
+
+    it('Before add routes it must configure passport', () => {
+        let signUpRoutes = new LogInRoutes();
+        signUpRoutes.add(serverMocked, passportMocked);
+
+        expect(passportMocked.use.mock.calls.length).toEqual(1);
+        console.log('parameter: ' + JSON.stringify(passportMocked.use.mock.calls[0][1]));
+        expect(passportMocked.use.mock.calls[0][0]).toEqual('yojuego-login');
+        expect(passportMocked.use.mock.calls[0][1]._usernameField).toEqual('email');
+        expect(passportMocked.use.mock.calls[0][1]._passwordField).toEqual('password');
+        expect(passportMocked.use.mock.calls[0][1]._passReqToCallback).toEqual(true);
+    });
+
     it('Can add all routes', () => {
         let logInRoutes = new LogInRoutes();
         logInRoutes.add(serverMocked, passportMocked)
 
-        expect(serverMocked.get.mock.calls.length).toEqual(5);
-        expect(serverMocked.get.mock.calls[0][0]).toEqual('/login/facebook/callback');
-        expect(serverMocked.get.mock.calls[1][0]).toEqual('/login/google/callback');
-        expect(serverMocked.get.mock.calls[2][0]).toEqual('/login/yojuego');
-        expect(serverMocked.get.mock.calls[3][0]).toEqual('/login/facebook');
-        expect(serverMocked.get.mock.calls[4][0]).toEqual('/login/google');
+        expect(serverMocked.get.mock.calls.length).toEqual(1);
+        expect(serverMocked.get.mock.calls[0][0]).toEqual('/login/yojuego');
     });
 });

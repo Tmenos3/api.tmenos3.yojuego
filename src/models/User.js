@@ -1,5 +1,6 @@
 'use strict'
 var Validator = require('no-if-validator').Validator;
+var ValidMailCondition = require('no-if-validator').ValidMailCondition;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 
 class User {
@@ -10,8 +11,13 @@ class User {
 
         validator.execute(() => {
             this.type = userType;
-            this.userid = id;
+            this.id = id;
         }, (err) => { throw err; });
+    }
+
+    static isValidMail(eMail) {
+        var validMailCondition = new ValidMailCondition();
+        return validMailCondition.isValid(eMail);
     }
 
     static get INVALID_USER() {
@@ -20,6 +26,10 @@ class User {
 
     static get INVALID_ID() {
         return 'El Id de usuario no puede ser nulo o indefinido';
+    }
+
+    static get INVALID_EMAIL_FORMAT() {
+        return 'El formato del email no es válido';
     }
 }
 

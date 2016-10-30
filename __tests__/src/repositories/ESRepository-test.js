@@ -5,7 +5,9 @@ describe('ESRepository', () => {
     return {
       get: jest.fn((criteria, callback) => { callback(err, ret); }),
       search: jest.fn((criteria, callback) => { callback(err, ret); }),
-      index: jest.fn((criteria, callback) => { callback(err, ret); })
+      index: jest.fn((criteria, callback) => { callback(err, ret); }),
+      delete: jest.fn((criteria, callback) => { callback(err, ret); }),
+      update: jest.fn((criteria, callback) => { callback(err, ret); })
     }
   };
 
@@ -28,56 +30,56 @@ describe('ESRepository', () => {
     expect(repo.esclient).toEqual(validClient);
   });
 
-  pit('Cannot getById with undefined id', () => {
+  pit('Cannot get with undefined id', () => {
     let undefinedId;
     let repo = new ESRepository({});
 
-    return repo.getById(undefinedId, 'index', 'type')
+    return repo.get(undefinedId, 'index', 'type')
       .then(() => expect(true).toBe(false),
       (err) => expect(err.message).toEqual(ESRepository.INVALID_ID));
   });
 
-  pit('Cannot getById with null id', () => {
+  pit('Cannot get with null id', () => {
     let nullId = null;
     let repo = new ESRepository({});
 
-    return repo.getById(nullId, 'index', 'type')
+    return repo.get(nullId, 'index', 'type')
       .then(() => expect(true).toBe(false),
       (err) => expect(err.message).toEqual(ESRepository.INVALID_ID));
   });
 
-  pit('Cannot getById with undefined index', () => {
+  pit('Cannot get with undefined index', () => {
     let undefinedIndex;
     let repo = new ESRepository({});
 
-    return repo.getById('id', undefinedIndex, 'type')
+    return repo.get('id', undefinedIndex, 'type')
       .then(() => expect(true).toBe(false),
       (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
   });
 
-  pit('Cannot getById with null index', () => {
+  pit('Cannot get with null index', () => {
     let nullIndex = null;
     let repo = new ESRepository({});
 
-    return repo.getById('id', nullIndex, 'type')
+    return repo.get('id', nullIndex, 'type')
       .then(() => expect(true).toBe(false),
       (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
   });
 
-  pit('Cannot getById with undefined type', () => {
+  pit('Cannot get with undefined type', () => {
     let undefinedType;
     let repo = new ESRepository({});
 
-    return repo.getById('id', 'index', undefinedType)
+    return repo.get('id', 'index', undefinedType)
       .then(() => expect(true).toBe(false),
       (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
   });
 
-  pit('Cannot getById with null type', () => {
+  pit('Cannot get with null type', () => {
     let nullType = null;
     let repo = new ESRepository({});
 
-    return repo.getById('id', 'index', nullType)
+    return repo.get('id', 'index', nullType)
       .then(() => expect(true).toBe(false),
       (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
   });
@@ -87,121 +89,41 @@ describe('ESRepository', () => {
     let client = getMockedClient(false, toReturn);
 
     let repo = new ESRepository(client);
-    return repo.getById('id', 'index', 'type')
+    return repo.get('id', 'index', 'type')
       .then((objectReturned) => {
         expect(client.get.mock.calls[0][0].index).toEqual('index');
         expect(client.get.mock.calls[0][0].type).toEqual('type');
         expect(client.get.mock.calls[0][0].id).toEqual('id');
-        expect(objectReturned).toEqual(toReturn);
+
+        expect(objectReturned.code).toEqual(200);
+        expect(objectReturned.message).toBeNull();
+        expect(objectReturned.resp).toEqual(toReturn);
       }, (err) => expect(true).toEqual(false));
   });
 
-  pit('If element does not exist getById returns null', () => {
-    let client = getMockedClient({ status: 404 }, {});
+  pit('If element does not exist get returns null', () => {
+    let client = getMockedClient({ status: 404 }, { code: 0, message: null, resp: null });
 
     let repo = new ESRepository(client);
-    return repo.getById('id', 'index', 'type')
+    return repo.get('id', 'index', 'type')
       .then((objectReturned) => {
-        expect(objectReturned).toBeNull();
+        expect(objectReturned.code).toBe(200);
+        expect(objectReturned.resp).toBeNull();
       }, (err) => expect(true).toEqual(false));
   });
 
-  pit('If element esClient returns error getById must execute reject', () => {
-    let client = getMockedClient(true, {});
+  pit('If element esClient returns error get must execute reject', () => {
+    let error = { statusCode: 404, message: 'error' };
+    let client = getMockedClient(error, {});
 
     let repo = new ESRepository(client);
-    return repo.getById('id', 'index', 'type')
-      .then((objectReturned) => expect(true).toEqual(false), (err) => expect(err).toEqual(ESRepository.UNEXPECTED_ERROR));
-  });
-
-  pit('Cannot getBy with undefined criteria', () => {
-    let undefinedCriteria;
-    let repo = new ESRepository({});
-
-    return repo.getBy(undefinedCriteria, 'index', 'type')
-      .then(() => expect(true).toBe(false),
-      (err) => expect(err.message).toEqual(ESRepository.INVALID_CRITERIA));
-  });
-
-  pit('Cannot getBy with null criteria', () => {
-    let nullCriteria = null;
-    let repo = new ESRepository({});
-
-    return repo.getBy(nullCriteria, 'index', 'type')
-      .then(() => expect(true).toBe(false),
-      (err) => expect(err.message).toEqual(ESRepository.INVALID_CRITERIA));
-  });
-
-  pit('Cannot getBy with undefined index', () => {
-    let undefinedIndex;
-    let repo = new ESRepository({});
-
-    return repo.getBy({ criteria: 'criteria' }, undefinedIndex, 'type')
-      .then(() => expect(true).toBe(false),
-      (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
-  });
-
-  pit('Cannot getBy with null index', () => {
-    let nullIndex = null;
-    let repo = new ESRepository({});
-
-    return repo.getBy({ criteria: 'criteria' }, nullIndex, 'type')
-      .then(() => expect(true).toBe(false),
-      (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
-  });
-
-  pit('Cannot getBy with undefined type', () => {
-    let undefinedType;
-    let repo = new ESRepository({});
-
-    return repo.getBy({ criteria: 'criteria' }, 'index', undefinedType)
-      .then(() => expect(true).toBe(false),
-      (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
-  });
-
-  pit('Cannot getBy with null type', () => {
-    let nullType = null;
-    let repo = new ESRepository({});
-
-    return repo.getBy({ criteria: 'criteria' }, 'index', nullType)
-      .then(() => expect(true).toBe(false),
-      (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
-  });
-
-  pit('Can get documents by criteria', () => {
-    var arrayToReturn = [{ obj: 'object_one' }, { obj: 'object_two' }];
-    var criteria = { field1: '1', field2: 2 };
-    var client = {
-      search: jest.fn((criteria, callback) => { callback(false, { hits: { hits: arrayToReturn } }); })
-    };
-
-    let repo = new ESRepository(client);
-    return repo.getBy(criteria, 'index', 'type')
-      .then((list) => {
-        expect(client.search.mock.calls[0][0].index).toEqual('index');
-        expect(client.search.mock.calls[0][0].type).toEqual('type');
-        expect(client.search.mock.calls[0][0].query).toEqual(criteria);
-        expect(list.length).toEqual(arrayToReturn.length);
-      }, (err) => expect(true).toEqual(false));
-  });
-
-  pit('If element does not exist getBy returns []', () => {
-    let client = getMockedClient(false, { hits: { hits: [] } });
-
-    //Hay que ver que devuelve ES cuando no encuentra registros, dependiendo de ese resultado
-    //quizas haya que refactorizar el test
-
-    let repo = new ESRepository(client);
-    return repo.getBy({ criteria: 'id' }, 'index', 'type')
-      .then((list) => expect(list).toEqual([]), (err) => expect(true).toEqual(false));
-  });
-
-  pit('If element esClient returns error getBy must execute reject', () => {
-    let client = getMockedClient(true, {});
-
-    let repo = new ESRepository(client);
-    return repo.getBy({ criteria: 'id' }, 'index', 'type')
-      .then((list) => expect(true).toEqual(false), (err) => expect(err).toEqual(ESRepository.UNEXPECTED_ERROR));
+    return repo.get('id', 'index', 'type')
+      .then((objectReturned) => expect(true).toEqual(false),
+      (err) => {
+        expect(err.code).toEqual(error.statusCode);
+        expect(err.message).toEqual(error.message);
+        expect(err.resp).toEqual(error);
+      });
   });
 
   pit('Cannot add document with undefined document', () => {
@@ -235,7 +157,7 @@ describe('ESRepository', () => {
     let nullIndex = null;
     let repo = new ESRepository({});
 
-    return repo.getBy({ document: 'document' }, nullIndex, 'type')
+    return repo.add({ document: 'document' }, nullIndex, 'type')
       .then(() => expect(true).toBe(false),
       (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
   });
@@ -268,16 +190,127 @@ describe('ESRepository', () => {
         expect(client.index.mock.calls[0][0].index).toEqual('index');
         expect(client.index.mock.calls[0][0].type).toEqual('type');
         expect(client.index.mock.calls[0][0].body).toEqual(document);
+        expect(resp.code).toEqual(200);
         expect(resp.message).toEqual(ESRepository.DOCUMENT_INSERTED);
         expect(resp.resp).toEqual({});
       }, (err) => expect(true).toEqual(false));
   });
 
   pit('If element esClient returns error add must execute reject', () => {
-    let client = getMockedClient(true, {});
+    let error = { statusCode: 404, message: 'error' };
+    let client = getMockedClient(error, {});
 
     let repo = new ESRepository(client);
     return repo.add({ document: 'id' }, 'index', 'type')
-      .then((list) => expect(true).toEqual(false), (err) => expect(err).toEqual(ESRepository.UNEXPECTED_ERROR));
+      .then((list) => expect(true).toEqual(false),
+      (err) => {
+        expect(err.code).toEqual(error.statusCode);
+        expect(err.message).toEqual(error.message);
+        expect(err.resp).toEqual(error);
+      });
+  });
+
+  pit('Cannot update document with undefined id', () => {
+    let undefinedId;
+    let repo = new ESRepository({});
+
+    return repo.update(undefinedId, {}, 'index', 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_ID));
+  });
+
+  pit('Cannot update document with null id', () => {
+    let nullId = null;
+    let repo = new ESRepository({});
+
+    return repo.update(nullId, {}, 'index', 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_ID));
+  });
+
+  pit('Cannot update document with undefined document', () => {
+    let undefinedDocument;
+    let repo = new ESRepository({});
+
+    return repo.update('id', undefinedDocument, 'index', 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_DOCUMENT));
+  });
+
+  pit('Cannot update document with null document', () => {
+    let nullDocument = null;
+    let repo = new ESRepository({});
+
+    return repo.update('id', nullDocument, 'index', 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_DOCUMENT));
+  });
+
+  pit('Cannot update document with undefined index', () => {
+    let undefinedIndex;
+    let repo = new ESRepository({});
+
+    return repo.update('id', { document: 'document' }, undefinedIndex, 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
+  });
+
+  pit('Cannot update document with null index', () => {
+    let nullIndex = null;
+    let repo = new ESRepository({});
+
+    return repo.update('id', { document: 'document' }, nullIndex, 'type')
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_INDEX));
+  });
+
+  pit('Cannot update document with undefined type', () => {
+    let undefinedType;
+    let repo = new ESRepository({});
+
+    return repo.update('id', { document: 'document' }, 'index', undefinedType)
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
+  });
+
+  pit('Cannot update document with null type', () => {
+    let nullType = null;
+    let repo = new ESRepository({});
+
+    return repo.update('id', { document: 'document' }, 'index', nullType)
+      .then(() => expect(true).toBe(false),
+      (err) => expect(err.message).toEqual(ESRepository.INVALID_TYPE));
+  });
+
+  pit('Can update documents', () => {
+    var document = {id: 'id', document: { field1: '1', field2: 2 }};
+    let client = getMockedClient(false, document);
+
+    let repo = new ESRepository(client);
+    return repo.update(document.id, document.document, 'index', 'type')
+      .then((resp) => {
+        expect(client.update.mock.calls[0][0].index).toEqual('index');
+        expect(client.update.mock.calls[0][0].type).toEqual('type');
+        expect(client.update.mock.calls[0][0].id).toEqual(document.id);
+        expect(client.update.mock.calls[0][0].body.doc).toEqual(document.document);
+
+        expect(resp.code).toEqual(200);
+        expect(resp.message).toEqual(ESRepository.DOCUMENT_UPDATED);
+        expect(resp.resp).toEqual(document);
+      }, (err) => expect(true).toEqual(false));
+  });
+
+  pit('If element esClient returns error update must execute reject', () => {
+    let error = { statusCode: 404, message: 'error' };
+    let client = getMockedClient(error, {});
+
+    let repo = new ESRepository(client);
+    return repo.update('id', { document: 'id' }, 'index', 'type')
+      .then((list) => expect(true).toEqual(false),
+      (err) => {
+        expect(err.code).toEqual(error.statusCode);
+        expect(err.message).toEqual(error.message);
+        expect(err.resp).toEqual(error);
+      });
   });
 });

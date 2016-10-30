@@ -1,149 +1,169 @@
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var config = require('../../config');
+var Routes = require('./Routes');
+var config = require('config');
 var UserESRepository = require('../repositories/UserESRepository');
+var PlayerESRepository = require('../repositories/PlayerESRepository');
 var YoJuegoUser = require('../models/YoJuegoUser');
-var FacebookUser = require('../models/FacebookUser');
-var GoogleUser = require('../models/GoogleUser');
-var jwt = require('jsonwebtoken');
-var es = require('elasticsearch');
-var FacebookStrategy = require('passport-facebook').Strategy
-var LocalStrategy = require('passport-local').Strategy
-var client = new es.Client({
-    host: config.database,
-    log: 'info'
-});
+var Player = require('../models/Player');
+var moment = require('moment');
 
-var getNewUser = (info) => {
-    switch (info.type) {
-        case 'yojuego':
-            return new YoJuegoUser(info.userid, info.password);
-        case 'facebook':
-            return new FacebookUser(info.userid);
-        case 'google':
-            return new GoogleUser(info.userid);
-    }
-}
-var repo = new UserESRepository(client);
+var userRepo = null;
+var playerRepo = null;
+var jwt = null;
 
-class SignUpRoutes {
-    constructor() { }
+class SignUpRoutes extends Routes {
+    constructor(esClient, jwtParam) {
+        super();
 
-    add(server, passport) {
+        this._createUser = this._createUser.bind(this);
+        this._deleteUser = this._deleteUser.bind(this);
+        this._createPlayer = this._createPlayer.bind(this);
+        this._insertPlayer = this._insertPlayer.bind(this);
+        this._validateRequest = this._validateRequest.bind(this);
+        this._validateIfUserExists = this._validateIfUserExists.bind(this);
+        this._generateToken = this._generateToken.bind(this);
+        this._insertUser = this._insertUser.bind(this);
+
         let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(server).throw(SignUpRoutes.INVALID_SERVER));
-        validator.addCondition(new NotNullOrUndefinedCondition(passport).throw(SignUpRoutes.INVALID_PASSPORT));
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(SignUpRoutes.INVALID_ES_CLIENT));
+        validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(SignUpRoutes.INVALID_JWT));
 
-        validator.execute(() => this._addAllRoutes(server, passport), (err) => { throw err; });
+        validator.execute(() => {
+            userRepo = new UserESRepository(esClient);
+            playerRepo = new PlayerESRepository(esClient);
+            jwt = jwtParam;
+        }, (err) => { throw err; });
     }
 
-    _addAllRoutes(server, passport) {
-        this._configurePassport(server, passport);
-
-        server.get('/signup/facebook/callback', passport.authenticate('facebook-signup', { session: false }), this._createUser, this._generateToken, (req, res, next) => {
-            res.redirect('/signup/facebook/success/token=' + req.token, next);
-        });
-        server.get('/signup/google/callback', passport.authenticate('google-signup'), (req, res, next) => { });
-        server.get('/signup/yojuego', passport.authenticate('yojuego-signup'), this._createUser, this._generateToken, (req, res, next) => { res.json(200, { token: req.token }); });
-        server.get('/signup/facebook', passport.authenticate('facebook-signup', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
-        server.get('/signup/google', (req, res, next) => { });
-    }
-
-    _signUpYoJuego(req, email, password, done) {
-        repo.getByUserId(email, 'yojuego')
-            .then((user) => {
-                if (user) {
-                    req.statusCode = 400;
-                    req.statusMessage = 'La cuenta está en uso';
-                    return done({ code: 400, message: 'La cuenta está en uso' }, null);
-                } else {
-                    var newUser = {
-                        type: 'yojuego',
-                        userid: email,
-                        password: password
-                    };
-                    req.newUser = newUser;
-                    return done(null, newUser);
-                }
-            }, (err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 400, message: err }, null);
-            })
-            .catch((err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 500, message: err }, null);
+    _addAllRoutes(server) {
+        server.post('/signup/yojuego',
+            this._validateRequest,
+            this._createUser,
+            this._validateIfUserExists,
+            this._insertUser,
+            this._createPlayer,
+            this._insertPlayer,
+            this._generateToken,
+            (req, res, next) => {
+                res.json(200, { token: req.token, userid: req.user.id });
             });
     }
 
-    _signUpFacebook(req, token, refreshToken, profile, done) {
-        repo.getByUserId(profile.id, 'facebook')
-            .then((user) => {
-                if (user) {
-                    req.statusCode = 400;
-                    req.statusMessage = 'La cuenta está en uso';
-                    return done({ code: 400, message: 'La cuenta está en uso' }, null);
-                } else {
-                    let newUser = {
-                        userid: profile.id,
-                        type: 'facebook'
-                    }
-                    req.newUser = newUser;
-                    return done(null, profile);
-                }
-            }, (err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 400, message: err }, null);
-            })
-            .catch((err) => {
-                req.statusCode = 400;
-                req.statusMessage = err;
-                return done({ code: 500, message: err }, null);
-            });
-    }
-
-    _createUser(req, res, next) {
-        if (req.statusCode !== undefined && req.statusCode !== null) {
-            res.json(req.statusCode, req.statusMessage);
+    _validateRequest(req, res, next) {
+        if (req.body == null || req.body == undefined) {
+            res.json(400, { code: 400, message: 'Body must be defined.', resp: null });
         } else {
-            let newUser = getNewUser(req.newUser);
-            repo.add(newUser)
-                .then((resp) => {
-                    req.user = newUser;
-                    next();
-                }, (err) => { res.json(400, err); });
+            next();
         }
     }
 
+    _createUser(req, res, next) {
+        try {
+            req.newUser = new YoJuegoUser(req.body.email, req.body.password);
+            next();
+        } catch (error) {
+            res.json(400, { code: 400, message: error.message, resp: null });
+        }
+    }
+
+    _validateIfUserExists(req, res, next) {
+        userRepo.getByIdAndType(req.newUser.id, 'yojuego')
+            .then((response) => {
+                if (response.resp) {
+                    res.json(400, { code: 400, message: 'La cuenta está en uso.', resp: null });
+                } else {
+                    next();
+                }
+            }, (err) => {
+                res.json(400, { code: 400, message: err, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
+    }
+
+    _insertUser(req, res, next) {
+        try {
+            userRepo.add(req.newUser)
+                .then((userResp) => {
+                    req.user = userResp.resp;
+                    next();
+                }, (err) => {
+                    res.json(400, { code: 400, message: err, resp: null });
+                })
+        } catch (error) {
+            res.json(400, { code: 400, message: error.message, resp: null });
+        }
+    }
+
+    _createPlayer(req, res, next) {
+        try {
+            if (!(moment(req.body.birthDate, "YYYY-MM-DDTHH:mm:ssZ", true).isValid()))
+                throw new Error("Invalid birthDate.");
+
+            req.player = new Player(req.body.nickName,
+                new Date(req.body.birthDate),
+                req.body.state,
+                req.body.adminState,
+                req.user._id);
+
+            next();
+        } catch (error) {
+            this._deleteUser(req.user, (err) => {
+                if (err) {
+                    res.json(500, { code: 500, message: err, resp: null });
+                } else {
+                    res.json(400, { code: 400, message: error.message, resp: error });
+                }
+            });
+        }
+    }
+
+    _insertPlayer(req, res, next) {
+        playerRepo.add(req.player)
+            .then((playerResp) => {
+                next();
+            }, (err) => {
+                this._deleteUser(req.user, (error) => {
+                    if (error) {
+                        res.json(500, { code: 500, message: error, resp: null });
+                    } else {
+                        res.json(400, { code: 400, message: err, resp: null });
+                    }
+                });
+            })
+            .catch((err) => {
+                this._deleteUser(req.user, (error) => {
+                    if (error) {
+                        res.json(500, { code: 500, message: error, resp: null });
+                    } else {
+                        res.json(400, { code: 400, message: err, resp: null });
+                    }
+                });
+            });
+    }
+
     _generateToken(req, res, next) {
-        req.token = jwt.sign(req.user.id, config.secret);
+        req.token = jwt.sign(req.user.id, config.get('serverConfig').secret);
         next();
     }
 
-    _configurePassport(server, passport) {
-        passport.use('facebook-signup', new FacebookStrategy({
-            clientID: config.facebook.appId,
-            clientSecret: config.facebook.appSecret,
-            callbackURL: config.facebook.callback,
-            profileFields: ['id', 'birthday', 'displayName', 'picture.type(large)', 'email'],
-            passReqToCallback: true
-        }, this._signUpFacebook));
-
-        passport.use('yojuego-signup', new LocalStrategy({
-            usernameField: 'email',
-            passwordField: 'password',
-            passReqToCallback: true
-        }, this._signUpYoJuego));
+    _deleteUser(user, doAfterDelete) {
+        userRepo.delete(user)
+            .then((resp) => {
+                doAfterDelete();
+            }, (err) => {
+                doAfterDelete(err);
+            });
     }
 
-    static get INVALID_PASSPORT() {
-        return 'Invalid passport';
+    static get INVALID_JWT() {
+        return 'El jwt no puede ser null ni undefined';
     }
 
-    static get INVALID_SERVER() {
-        return 'El server no puede ser null ni undefined';
+    static get INVALID_ES_CLIENT() {
+        return 'El cliente de ElasticSearch no puede ser null ni undefined';
     }
 }
 

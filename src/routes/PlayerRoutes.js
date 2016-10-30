@@ -1,64 +1,85 @@
+let ret200 = require('./returns/return200');
+let ret400 = require('./returns/return400');
+let ret404 = require('./returns/return404');
+let ret500 = require('./returns/return500');
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var Routes = require('./Routes');
-var config = require('../../config');
 var PlayerESRepository = require('../repositories/PlayerESRepository');
 var Player = require('../models/Player');
-var es = require('elasticsearch');
-var client = new es.Client({
-    host: config.database,
-    log: 'info'
-});
-var repo = new PlayerESRepository(client);
+var repo = null;
 
 class PlayerRoutes extends Routes {
-    constructor() {
+    constructor(esClient) {
         super();
+        this._bodyIsNotNull = this._bodyIsNotNull.bind(this);
+        this._getPlayer = this._getPlayer.bind(this);
+        this._updateProfile = this._updateProfile.bind(this);
+
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(PlayerRoutes.INVALID_ES_CLIENT));
+        validator.execute(() => {
+            repo = new PlayerESRepository(esClient);
+        }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
-        server.get('/player/:id/profile', (req, res, next) => { });
+        server.get('/player', this._getPlayer);
         server.get('/player/:id/upcomingMatches', (req, res, next) => { });
         server.post('/player/create', (req, res, next) => { });
         server.post('/player/:id/update', (req, res, next) => { });
         server.del('/player/:id', (req, res, next) => { });
-        server.post('/:userid/player/profile', this._bodyIsNotNull, this._updateProfile);
+        server.post('/player/profile', this._bodyIsNotNull, this._updateProfile);
     }
 
     _bodyIsNotNull(req, res, next) {
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(req.body).throw(PlayerRoutes.INVALID_BODY));
 
-        validator.execute(() => { next(); }, (err) => { res.json(400, { code: 1, message: err.message }); });
+        validator.execute(() => { next(); }, (err) => { res.json(400, { code: 400, message: err.message, resp: null }); });
+    }
+
+    _getPlayer(req, res, next) {
+        repo.getByUserId(req.user)
+            .then((resp) => {
+                if (!resp.resp) {
+                    ret404(res, 'Player inexistente', null);
+                } else {
+                    ret200(res, null, resp.resp);
+                }
+            }, (err) => { ret400(res, err, null); })
+            .catch((err) => { ret500(res, err, null); });
     }
 
     _updateProfile(req, res, next) {
-        repo.getByUserId(req.params.userid)
-            .then((playerReturned) => {
-                if (playerReturned) {
-                    playerReturned.nickName = req.body.nickname;
-                    playerReturned.birthday = new Date(req.body.birthday);
-                    playerReturned.state = req.body.state;
-                    playerReturned.adminState = req.body.adminState;
-                    return repo.update(playerReturned);
-                } else {
-                    let player = new Player(req.body.nickname, new Date(req.body.birthday), req.body.state, req.body.adminState, req.params.userid);
-                    return repo.add(player);
-                }
-            }, (err) => { res.json(400, { code: 400, message: err }); })
-            .then((ret) => {
-                if(ret.code === 0){
-                    res.json(200, 'saved');
-                    next();
-                }else{
-                    res.json(400, { code: 400, message: ret.message });
-                }
-            }, (err) => { res.json(400, { code: 400, message: err }); })
-            .catch((err) => { res.json(500, { code: 500, message: err }); });
-    }
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(req.body.nickname).throw(PlayerRoutes.INVALID_NICKNAME));
+        validator.addCondition(new NotNullOrUndefinedCondition(req.body.birthday).throw(PlayerRoutes.INVALID_BIRTHDAY));
+        validator.addCondition(new NotNullOrUndefinedCondition(req.body.state).throw(PlayerRoutes.INVALID_STATE));
+        validator.addCondition(new NotNullOrUndefinedCondition(req.body.adminState).throw(PlayerRoutes.INVALID_ADMINSTATE));
 
-    static get INVALID_BODY() {
-        return 'Invalid request body';
+        validator.execute(() => {
+            repo.getByUserId(req.user)
+                .then((ret) => {
+                    let player = null;
+                    if (ret.resp) {
+                        player = ret.resp;
+                        player.nickName = req.body.nickname;
+                        player.birthday = new Date(req.body.birthday);
+                        player.state = req.body.state;
+                        player.adminState = req.body.adminState;
+                        return repo.update(player);
+                    } else {
+                        player = new Player(req.body.nickname, new Date(req.body.birthday), req.body.state, req.body.adminState, req.user);
+                        return repo.add(player);
+                    }
+                }, (err) => { res.json(400, { code: 400, message: err, resp: null }); })
+                .then((resp) => {
+                    res.json(200, { code: 200, message: 'Profile saved.', resp: resp.resp });
+                    next();
+                }, (err) => { res.json(400, { code: 400, message: err, resp: null }); })
+                .catch((err) => { res.json(500, { code: 500, message: err, resp: null }); });
+        }, (err) => { res.json(400, { code: 400, message: err.message, resp: null }); });
     }
 
     /*
@@ -78,6 +99,30 @@ class PlayerRoutes extends Routes {
 
             ref: https://www.elastic.co/guide/en/elasticsearch/guide/current/application-joins.html
     */
+
+    static get INVALID_BODY() {
+        return 'Invalid request body';
+    }
+
+    static get INVALID_NICKNAME() {
+        return 'Invalid nickname';
+    }
+
+    static get INVALID_BIRTHDAY() {
+        return 'Invalid birthday';
+    }
+
+    static get INVALID_STATE() {
+        return 'Invalid state';
+    }
+
+    static get INVALID_ADMINSTATE() {
+        return 'Invalid admin state';
+    }
+
+    static get INVALID_ES_CLIENT() {
+        return 'El cliente de ElasticSearch no puede ser null ni undefined';
+    }
 }
 
 module.exports = PlayerRoutes;

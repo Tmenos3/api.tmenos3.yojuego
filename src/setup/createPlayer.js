@@ -4,13 +4,11 @@ let createPlayer = (client) => {
         type: 'player',
         body: {
             properties: {
-                userId: { type: 'string' },
+                userid: { type: 'string' },
                 nickname: { type: 'string' },
                 birthday: { type: 'date' },
                 state: { type: 'string' },
-                adminState: { type: 'string' },
-                createdOn: { type: 'date' },
-                modifiedOn: { type: 'date' }
+                adminState: { type: 'string' }
             }
         }
     });

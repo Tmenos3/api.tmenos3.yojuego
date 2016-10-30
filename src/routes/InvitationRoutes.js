@@ -1,7 +1,7 @@
 var Routes = require('./Routes');
 
 class InvitationRoutes extends Routes{
-    constructor() { 
+    constructor(esClient) { 
         super(); 
     }
 

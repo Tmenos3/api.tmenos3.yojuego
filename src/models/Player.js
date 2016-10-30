@@ -6,7 +6,7 @@ var CustomCondition = require('no-if-validator').CustomCondition;
 var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
 
 class Player {
-    constructor(nickName, birthDate, state, adminState, userID) {
+    constructor(nickName, birthDate, state, adminState, userid) {
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(nickName).throw(new Error(Player.INVALID_NICKNAME)));
         validator.addCondition(new HasNotBlankSpacesCondition(nickName).throw(new Error(Player.INVALID_NICKNAME_HAS_BLANKSPACES)));
@@ -15,14 +15,14 @@ class Player {
         validator.addCondition(new InstanceOfCondition(birthDate, Date).throw(new Error(Player.INVALID_DATE_TYPE)));
         validator.addCondition(new NotNullOrUndefinedCondition(state).throw(new Error(Player.INVALID_STATE)));
         validator.addCondition(new NotNullOrUndefinedCondition(adminState).throw(new Error(Player.INVALID_ADMIN_STATE)));
-        validator.addCondition(new NotNullOrUndefinedCondition(userID).throw(new Error(Player.INVALID_USERID)));
+        validator.addCondition(new NotNullOrUndefinedCondition(userid).throw(new Error(Player.INVALID_USERID)));
 
         validator.execute(() => {
             this.nickName = nickName;
             this.birthDate = birthDate;
             this.state = state;
             this.adminState = adminState;
-            this.userID = userID;
+            this.userid = userid;
         }, (err) => { throw err; });
     }
 
