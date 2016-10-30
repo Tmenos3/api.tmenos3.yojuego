@@ -9,13 +9,12 @@ var validator = require('validator');
 var userRepo = null;
 
 class UserRoute extends Routes {
-    constructor(esClient, jwtParam) {
+    constructor(esClient) {
         super();
+        var validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(UserRoute.INVALID_ES_CLIENT));
 
-        Validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(UserRoute.INVALID_ES_CLIENT));
-        Validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(UserRoute.INVALID_JWT));
-
-        Validator.excute(() => {
+        validator.execute(() => {
             userRepo = new UserESRepository(esClient);
         }, (err) => { throw err; });
     }
@@ -24,14 +23,14 @@ class UserRoute extends Routes {
         server.get('/user/validar',
             this._validateRequest,
             this._validateMailFormat,
-            this.validateIfMailIsUsed,
+            this._validateIfUserExists,
             (res, req, next) => {
                 res.json(200, { return: req.return });
             });
     }
 
     _validateRequest(req, res, next) {
-        if (req.body == null || req.body == undefined) {
+        if (req.params == null || req.params == undefined) {
             res.json(400, { code: 400, message: 'Body must be defined.', resp: null });
         } else {
             next();
@@ -39,15 +38,27 @@ class UserRoute extends Routes {
     }
 
     _validateMailFormat(req, res, next) {
-        if (User.isValidMail(req.body.email)) {
+        if (User.isValidMail(req.params.email)) {
             next();
         } else {
             res.json(400, { code: 400, message: 'Invalid eMail format', resp: false });
         }
     }
 
-    validateIfMailIsUsed(req, res, next) {
-
+    _validateIfUserExists(req, res, next) {
+        userRepo.getByIdAndType(req.params.email, 'yojuego')
+            .then((response) => {
+                if (response.resp) {
+                    res.json(400, { code: 400, message: 'La cuenta está en uso.', resp: null });
+                } else {
+                    next();
+                }
+            }, (err) => {
+                res.json(400, { code: 400, message: err, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
     }
 
     static get INVALID_JWT() {
@@ -57,7 +68,6 @@ class UserRoute extends Routes {
     static get INVALID_ES_CLIENT() {
         return 'El cliente de ElasticSearch no puede ser null ni undefined';
     }
-
 }
 
 module.exports = UserRoute;
