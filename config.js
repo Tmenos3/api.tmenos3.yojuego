@@ -8,7 +8,10 @@ module.exports = {
         appId: '854114285051-7pi1os5u7bifv8i8ed5vbfjlpkg9ulea.apps.googleusercontent.com',
         appSecret: 'YNWKX6gPs8UTUpjXMe7c2reX',
         callback: 'http://ec2-54-174-177-82.compute-1.amazonaws.com:8081/auth/google/callback'
+<<<<<<< HEAD
         //callback: 'http://localhost:8080/auth/google/callback'
+=======
+>>>>>>> c1248aea18a6ab0c0eb49b14c0e8bce19a2f73c1
     },
     'secret': 'tmenos3-revolutioningtheinovation',
     'database': 'https://search-yojuegoes-cb2mgiednpd4tf5epwebnbszfe.us-east-1.es.amazonaws.com/',
