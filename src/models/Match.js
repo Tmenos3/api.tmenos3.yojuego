@@ -1,4 +1,5 @@
 'use strict'
+var MatchComment = require('./MatchComment');
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
@@ -34,7 +35,52 @@ class Match {
             this.creator = creator;
             this.matchType = matchType;
             this.players = [];
+            this.comments = [];
         }, (err) => { throw err; });
+    }
+
+    addComment(owner, text, writtenOn) {
+        this.comments.push(new MatchComment(this._getNewCommentId(), owner, text, writtenOn));
+    }
+
+    updateComment(id, newText) {
+        var indexToUpdate = null;
+        for (var i = 0; i < this.comments.length; i++) {
+            if (this.comments[i].id == id) {
+                indexToUpdate = i;
+            }
+        }
+        if (indexToUpdate != null) {
+            var commentToUpdate = this.comments[indexToUpdate];
+            commentToUpdate.text = newText;
+
+            this.removeComment(commentToUpdate.id);
+            this.comments.push(commentToUpdate);
+        }
+    }
+
+    removeComment(id) {
+        var indexToRemove = null;
+        for (var i = 0; i < this.comments.length; i++) {
+            if (this.comments[i].id == id) {
+                indexToRemove = i;
+            }
+        }
+
+        if (indexToRemove != null)
+            this.comments.splice(indexToRemove, 1);
+    }
+
+    _getNewCommentId() {
+        var newId = 0
+
+        for (var i = 0; i < this.comments.length; i++) {
+            if (this.comments[i].id > newId) {
+                newId = this.comments[i].id;
+            }
+        }
+
+        return newId + 1;
     }
 
     static INVALID_DATE() {

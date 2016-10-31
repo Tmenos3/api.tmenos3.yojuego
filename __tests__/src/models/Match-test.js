@@ -1,4 +1,5 @@
 import Match from '../../../src/models/Match';
+import MatchComment from '../../../src/models/MatchComment';
 import Player from '../../../src/models/Player';
 
 describe('Match', () => {
@@ -102,12 +103,50 @@ describe('Match', () => {
 
     var match = new Match(aTitle, aDate, aFromTime, aToTime, aLocation, aCreator, aMatchType);
 
-    expect(match.title).toBe(aTitle);
-    expect(match.date).toBe(aDate);
-    expect(match.fromTime).toBe(aFromTime);
-    expect(match.toTime).toBe(aToTime);
-    expect(match.location).toBe(aLocation);
-    expect(match.creator).toBe(aCreator);
-    expect(match.matchType).toBe(aMatchType);
+    expect(match.title).toEqual(aTitle);
+    expect(match.date).toEqual(aDate);
+    expect(match.fromTime).toEqual(aFromTime);
+    expect(match.toTime).toEqual(aToTime);
+    expect(match.location).toEqual(aLocation);
+    expect(match.creator).toEqual(aCreator);
+    expect(match.matchType).toEqual(aMatchType);
+    expect(match.comments.length).toEqual(0);
+  });
+
+  it('Can add a comment', () => {
+    var match = new Match('aTitle', new Date(2010, 10, 10), '18:00', '19:00', 'aLocation', 'aCreator', 1);
+    match.addComment('owner', 'this is a match comment', new Date());
+
+    expect(match.comments.length).toEqual(1);
+  });
+
+  it('When add a comment must increment id by one', () => {
+    var match = new Match('aTitle', new Date(2010, 10, 10), '18:00', '19:00', 'aLocation', 'aCreator', 1);
+    match.addComment('owner', 'comment1', new Date());
+    match.addComment('owner', 'comment2', new Date());
+
+    expect(match.comments[0].id).toEqual(1);
+    expect(match.comments[1].id).toEqual(2);
+  });
+
+  it('Can update a comment', () => {
+    var match = new Match('aTitle', new Date(2010, 10, 10), '18:00', '19:00', 'aLocation', 'aCreator', 1);
+    match.addComment('owner', 'comment1', new Date());
+
+    var newComment = 'newComment';
+    match.updateComment(match.comments[0].id, newComment);
+
+    expect(match.comments[0].text).toEqual(newComment);
+  });
+
+  it('Can remove a comment', () => {
+    var match = new Match('aTitle', new Date(2010, 10, 10), '18:00', '19:00', 'aLocation', 'aCreator', 1);
+    match.addComment('owner', 'comment1', new Date());
+    match.addComment('owner', 'comment2', new Date());
+
+    match.removeComment(match.comments[0].id);
+
+    expect(match.comments.length).toEqual(1);
+    expect(match.comments[0].id).toEqual(2);
   });
 })

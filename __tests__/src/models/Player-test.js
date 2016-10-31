@@ -87,5 +87,49 @@ describe('Player', () => {
     expect(player.state).toBe(aState);
     expect(player.adminState).toBe(anAdminState);
     expect(player.userid).toBe(anUserID);
+    expect(player.teamMates.length).toEqual(0);
+  });
+
+  it('Can add a teammate if it does not exist', () => {
+    var nonExistantTeamMateId = 'ihna8rt7q09';
+    var player = new Player('aNickName', new Date(2010, 10, 10), 'aState', 'anAdminState', 'anUserID');
+
+    player.addTeamMate(nonExistantTeamMateId);
+
+    expect(player.teamMates.length).toEqual(1);
+    expect(player.teamMates.indexOf(nonExistantTeamMateId)).toBeGreaterThanOrEqual(-1);
+  });
+
+  it('If teammate exists player does not add it again', () => {
+    var existantTeamMateId = 'ihna8rt7q09';
+    var player = new Player('aNickName', new Date(2010, 10, 10), 'aState', 'anAdminState', 'anUserID');
+
+    player.addTeamMate(existantTeamMateId);
+    player.addTeamMate(existantTeamMateId);
+
+    expect(player.teamMates.length).toEqual(1);
+    expect(player.teamMates.indexOf(existantTeamMateId)).toBeGreaterThanOrEqual(-1);
+  });
+
+  it('Can remove a teammate if it exists', () => {
+    var existantTeamMateId = 'ihna8rt7q09';
+    var player = new Player('aNickName', new Date(2010, 10, 10), 'aState', 'anAdminState', 'anUserID');
+
+    player.addTeamMate(existantTeamMateId);
+
+    player.removeTeamMate(existantTeamMateId);
+
+    expect(player.teamMates.length).toEqual(0);
+    expect(player.teamMates.indexOf(existantTeamMateId)).toEqual(-1);
+  });
+
+  it('If teammate does not exist player does not remove it', () => {
+    var nonExistantTeamMateId = 'ihna8rt7q09';
+    var player = new Player('aNickName', new Date(2010, 10, 10), 'aState', 'anAdminState', 'anUserID');
+
+    player.removeTeamMate(nonExistantTeamMateId);
+    
+    expect(player.teamMates.length).toEqual(0);
+    expect(player.teamMates.indexOf(nonExistantTeamMateId)).toBeGreaterThanOrEqual(-1);
   });
 });
