@@ -11,7 +11,8 @@ module.exports = {
         //callback: 'http://localhost:8080/auth/google/callback'
     },
     'secret': 'tmenos3-revolutioningtheinovation',
-    'database': 'https://search-yojuegoes-cb2mgiednpd4tf5epwebnbszfe.us-east-1.es.amazonaws.com/',
+    //'database': 'https://search-yojuegoes-cb2mgiednpd4tf5epwebnbszfe.us-east-1.es.amazonaws.com/',
+    'database': 'http://127.0.0.1:9200/',
     'expiresIn': 86400, //Time in seconds
     'port': 8081,
     'pathsWithoutAuthentication': ['/',
