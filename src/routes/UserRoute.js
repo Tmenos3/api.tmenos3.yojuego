@@ -5,7 +5,7 @@ var UserESRepository = require('../repositories/UserESRepository');
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var userRepo = null;
-var validator = require('validator');
+
 
 class UserRoute extends Routes {
     constructor(esClient) {
@@ -37,8 +37,8 @@ class UserRoute extends Routes {
     }
 
     _validateMailFormat(req, res, next) {
-        //    if (!User.isValidMail(req.params.email)) {
-        if (validator.isEmail(req.params.email)) {
+
+        if (User.isValidMail(req.params.email)) {
             next();
         } else {
             res.json(400, { code: 400, message: 'Invalid eMail format', resp: false });

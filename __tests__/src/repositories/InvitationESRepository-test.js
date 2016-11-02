@@ -11,7 +11,7 @@ describe('InvitationESRepository', () => {
     };
 
     pit('Can get Invitation by id', () => {
-        let invitation = new Invitation('aSender', 'aRecipient', 'aMatch');
+        let invitation = new Invitation('aSender', 'aRecipient', 'aMatch', new Date(2010, 10, 10));
         invitation._id = 'id';
 
         let client = getMockedClient(false, { _id: invitation._id, source: invitation });

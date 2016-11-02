@@ -37,15 +37,28 @@ describe('Invitation', () => {
     expect(() => new Invitation(1, 2, aNullMatch)).toThrowError(Invitation.INVALID_MATCH);
   });
 
+  it('Cannot create with an undefined createdOn', () => {
+    var aCreatedOn;
+
+    expect(() => new Invitation(1, 2, 1, aCreatedOn)).toThrowError(Invitation.INVALID_CREATEDON);
+  });
+
+  it('Cannot create with a null createdOn', () => {
+    var aNullCreatedOn = null;
+
+    expect(() => new Invitation(1, 2, 1, aNullCreatedOn)).toThrowError(Invitation.INVALID_CREATEDON);
+  });
+
   it('Can create a valid Invitation', () => {
     var aSender = 1;
     var aRecipient = 2;
     var aMatch = 1;
-
-    var aInvitation = new Invitation(aSender, aRecipient, aMatch);
+    var aCreatedOn = new Date(2010, 10, 10);
+    var aInvitation = new Invitation(aSender, aRecipient, aMatch, aCreatedOn);
 
     expect(aInvitation.sender).toBe(aSender);
     expect(aInvitation.recipient).toBe(aRecipient);
     expect(aInvitation.match).toBe(aMatch);
+    expect(aInvitation.createdOn).toBe(aCreatedOn);
   });
 });

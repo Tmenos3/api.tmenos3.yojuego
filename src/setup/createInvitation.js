@@ -4,14 +4,11 @@ let createInvitation = (client) => {
         type: 'invitation',
         body: {
             properties: {
+                invitationid: { type: 'string' },
                 sender: { type: 'string' },
                 recipient: { type: 'string' },
                 match: { type: 'string' },
-                state: { type: 'string' },
-                limitToBeAccepted: { type: 'date' },
-                createdBy: { type: 'string' },
-                createdOn: { type: 'date' },
-                modifiedOn: { type: 'date' }
+                createdOn: { type: 'date' }
             }
         }
     });
