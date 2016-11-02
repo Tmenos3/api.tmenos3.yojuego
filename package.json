@@ -25,7 +25,6 @@
     "passport-google-oauth20": "^1.0.0",
     "passport-local": "^1.0.0",
     "passport-restify": "^1.0.1",
-    "react": "^15.3.1",
     "restify": "4.1.x",
     "restify-jwt": "^0.4.0",
     "url-pattern": "^1.0.1"
