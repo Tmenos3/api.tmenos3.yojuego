@@ -16,8 +16,7 @@ class User {
     }
 
     static isValidMail(eMail) {
-        var validMailCondition = new ValidMailCondition();
-        return validMailCondition.isValid(eMail);
+        return new ValidMailCondition(eMail).isValidMail();
     }
 
     static get INVALID_USER() {

@@ -4,9 +4,8 @@ var User = require('../models/User');
 var UserESRepository = require('../repositories/UserESRepository');
 var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-//TODO: des instalar esta api
-var validator = require('validator');
 var userRepo = null;
+var validator = require('validator');
 
 class UserRoute extends Routes {
     constructor(esClient) {
@@ -20,7 +19,7 @@ class UserRoute extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/user/validar',
+        server.get('/user/validate',
             this._validateRequest,
             this._validateMailFormat,
             this._validateIfUserExists,
@@ -38,7 +37,8 @@ class UserRoute extends Routes {
     }
 
     _validateMailFormat(req, res, next) {
-        if (User.isValidMail(req.params.email)) {
+        //    if (!User.isValidMail(req.params.email)) {
+        if (validator.isEmail(req.params.email)) {
             next();
         } else {
             res.json(400, { code: 400, message: 'Invalid eMail format', resp: false });
@@ -59,10 +59,6 @@ class UserRoute extends Routes {
             .catch((err) => {
                 res.json(500, { code: 500, message: err, resp: null });
             });
-    }
-
-    static get INVALID_JWT() {
-        return 'El jwt no puede ser null ni undefined';
     }
 
     static get INVALID_ES_CLIENT() {
