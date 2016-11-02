@@ -20,7 +20,7 @@
         "port": 8081,
         "pathsWithoutAuthentication": [
             "/",
-            "/echo",
+            "/status",
             "/signup/yojuego",
             "/login/yojuego",
             "/auth/facebook/callback",
