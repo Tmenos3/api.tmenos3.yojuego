@@ -55,25 +55,25 @@ class PlayerRoutes extends Routes {
     }
 
     _getPlayer(req, res, next) {
-        // repo.getByUserId(req.user)
-        //     .then((resp) => {
-        //         if (!resp.resp) {
-        //             ret404(res, 'Player inexistente', null);
-        //         } else {
-        //             ret200(res, null, resp.resp);
-        //         }
-        //     }, (err) => { ret400(res, err, null); })
-        //     .catch((err) => { ret500(res, err, null); });
-        repo.get(req.params.id)
-            .then((response) => {
-                if (!response.resp) {
-                    res.json(401, { code: 401, message: 'Invalid player', resp: null });
+        repo.getByUserId(req.user.id)
+            .then((resp) => {
+                if (!resp.resp) {
+                    ret404(res, 'Player inexistente', null);
                 } else {
-                    req.player = response.resp;
-                    next();
+                    ret200(res, null, resp.resp);
                 }
-            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
-            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
+            }, (err) => { ret400(res, err, null); })
+            .catch((err) => { ret500(res, err, null); });
+        // repo.get(req.params.id)
+        //     .then((response) => {
+        //         if (!response.resp) {
+        //             res.json(401, { code: 401, message: 'Invalid player', resp: null });
+        //         } else {
+        //             req.player = response.resp;
+        //             next();
+        //         }
+        //     }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
+        //     .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
     }
 
     _returnTeamMates(req, res, next) {

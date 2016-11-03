@@ -13,7 +13,7 @@ var client = new es.Client({
 var configureServer = (server, restify) => {
     server.use(restify.bodyParser());
     server.use(restify.queryParser());
-    //server.use(jwtRestify({ secret: config.serverConfig.secret }).unless({ path: config.serverConfig.pathsWithoutAuthentication }));
+    server.use(jwtRestify({ secret: config.serverConfig.secret }).unless({ path: config.serverConfig.pathsWithoutAuthentication }));
     server.use(passport.initialize());
 
     passport.serializeUser((player, done) => {
