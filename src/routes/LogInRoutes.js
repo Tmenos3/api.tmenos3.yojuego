@@ -58,6 +58,7 @@ class LogInRoutes {
                     if (response.resp.password != req.body.password) {
                         res.json(400, { code: 400, message: 'Nombre de usuario o contraseña incorrecto', resp: null });
                     } else {
+                        req.user = response.resp;
                         next();
                     }
                 }
@@ -70,7 +71,11 @@ class LogInRoutes {
     }
 
     _generateToken(req, res, next) {
-        req.token = jwt.sign(req.body.email, config.get('serverConfig').secret);
+        let claims = {
+            email: req.user.email,
+            id: req.user._id
+        };
+        req.token = jwt.sign(claims, config.get('serverConfig').secret);
         next();
     }
 
