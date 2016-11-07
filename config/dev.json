@@ -3,12 +3,12 @@
         "facebook": {
             "appId": "289976541370822",
             "appSecret": "c619851f38a6d9bfb1d6d2a208ee6bc0",
-            "callback": "http://localhost:8080/auth/facebook/callback"
+            "callback": "http://192.168.0.11:8080/auth/facebook/callback"
         },
         "google": {
             "appId": "854114285051-7pi1os5u7bifv8i8ed5vbfjlpkg9ulea.apps.googleusercontent.com",
             "appSecret": "YNWKX6gPs8UTUpjXMe7c2reX",
-            "callback": "http://localhost:8080/auth/google/callback"
+            "callback": "http://192.168.0.11:8080/auth/google/callback"
         }
     },
     "dbConfig": {

@@ -5,19 +5,19 @@ PUT _mapping
         "properties": {
             "id": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "password": {
                 "type": "string"
             },
             "type": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             }
         }
     }
 }
-      }
+
 
 http://localhost:9200/yojuego/player/
 PUT _mapping
@@ -25,8 +25,7 @@ PUT _mapping
     "player": {
         "properties": {
             "nickName": {
-                "type": "string",
-                "index": "not_analyzed"
+                "type": "string"
             },
             "birthDate": {
                 "type": "string"
@@ -39,7 +38,7 @@ PUT _mapping
             },
             "userid": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             }
         }
     }
@@ -58,18 +57,18 @@ PUT _mapping
             "matchType": { "type": "integer" },
             "creator": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "players" : {
                 "properties" : {
-                    "_id" : { "type" : "string"}
+                    "_id" : { "type" : "string" }
                 }
             },
             "comments" : {
                 "properties" : {
-                    "id" : { "type" : "integer"},
-                    "owner" : { "type" : "string"},
-                    "text" : { "type" : "string"},
+                    "id" : { "type" : "integer" },
+                    "owner" : { "type" : "string" },
+                    "text" : { "type" : "string" },
                     "writtenOn": { "type": "date" }
                 }
             }

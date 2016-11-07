@@ -106,7 +106,7 @@ class PlayerRoutes extends Routes {
         validator.addCondition(new NotNullOrUndefinedCondition(req.body.adminState).throw(PlayerRoutes.INVALID_ADMINSTATE));
 
         validator.execute(() => {
-            repo.getByUserId(req.user)
+            repo.getByUserId(req.user.id)
                 .then((ret) => {
                     let player = null;
                     if (ret.resp) {
@@ -117,13 +117,16 @@ class PlayerRoutes extends Routes {
                         player.adminState = req.body.adminState;
                         return repo.update(player);
                     } else {
-                        player = new Player(req.body.nickname, new Date(req.body.birthday), req.body.state, req.body.adminState, req.user);
-                        return repo.add(player);
+                        try {
+                            player = new Player(req.body.nickname, new Date(req.body.birthday), req.body.state, req.body.adminState, req.user.id);
+                            return repo.add(player);
+                        } catch (error) {
+                            res.json(400, { code: 400, message: error.message, resp: error });
+                        }
                     }
                 }, (err) => { res.json(400, { code: 400, message: err, resp: null }); })
                 .then((resp) => {
                     res.json(200, { code: 200, message: 'Profile saved.', resp: resp.resp });
-                    next();
                 }, (err) => { res.json(400, { code: 400, message: err, resp: null }); })
                 .catch((err) => { res.json(500, { code: 500, message: err, resp: null }); });
         }, (err) => { res.json(400, { code: 400, message: err.message, resp: null }); });

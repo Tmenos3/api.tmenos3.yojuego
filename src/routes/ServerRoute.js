@@ -1,12 +1,16 @@
+let Validator = require('no-if-validator').Validator;
+let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var Routes = require('./Routes');
 var config = require('config');
 var fetch = require('node-fetch');
 
+var jwt = null;
+
 class ServerRoute extends Routes {
     constructor(jwtParam) {
-        super(jwt);
+        super();
         let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(AuthRoutes.INVALID_JWT));
+        validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(ServerRoute.INVALID_JWT));
         validator.execute(() => {
             jwt = jwtParam;
         }, (err) => { throw err; });
