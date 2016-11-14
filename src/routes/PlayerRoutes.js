@@ -18,7 +18,6 @@ class PlayerRoutes extends Routes {
         this._returnTeamMates = this._returnTeamMates.bind(this);
         this._deleteTeamMate = this._deleteTeamMate.bind(this);
         this._addTeamMate = this._addTeamMate.bind(this);
-
         this._updateProfile = this._updateProfile.bind(this);
 
         let validator = new Validator();
@@ -33,7 +32,7 @@ class PlayerRoutes extends Routes {
         server.get('/player/:id/upcomingMatches', (req, res, next) => { });
         server.post('/player/create', (req, res, next) => { });
         server.post('/player/:id/update', (req, res, next) => { });
-        server.del('/player/:id', (req, res, next) => { });
+        server.del('/player/:id', this._paramsIsNotNull, (req, res, next) => { });
         server.post('/player/profile', this._bodyIsNotNull, this._updateProfile);
         server.get('/player/:id/teammate', this._paramsIsNotNull, this._getPlayer, this._returnTeamMates);
         server.post('/player/:id/teammate/:teammateid', this._paramsIsNotNull, this._getPlayer, this._addTeamMate);
@@ -64,16 +63,6 @@ class PlayerRoutes extends Routes {
                 }
             }, (err) => { ret400(res, err, null); })
             .catch((err) => { ret500(res, err, null); });
-        // repo.get(req.params.id)
-        //     .then((response) => {
-        //         if (!response.resp) {
-        //             res.json(401, { code: 401, message: 'Invalid player', resp: null });
-        //         } else {
-        //             req.player = response.resp;
-        //             next();
-        //         }
-        //     }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
-        //     .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
     }
 
     _returnTeamMates(req, res, next) {

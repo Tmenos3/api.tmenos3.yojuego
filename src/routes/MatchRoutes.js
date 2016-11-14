@@ -16,6 +16,7 @@ class MatchRoutes extends Routes {
         this._deleteComment = this._deleteComment.bind(this);
         this._updateComment = this._updateComment.bind(this);
         this._returnComments = this._returnComments.bind(this);
+        this._returnPlayers = this._returnPlayers.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(MatchRoutes.INVALID_ES_CLIENT));
@@ -26,6 +27,8 @@ class MatchRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
+        server.get('/match/:id', this._paramsIsNotNull, this._getMatch, this._returnMatch);
+        server.get('/match/:id/players', this._paramsIsNotNull, this._getMatch, this._returnPlayers);
         server.get('/match/:id/comment', this._paramsIsNotNull, this._getMatch, this._returnComments);
         server.post('/match/:id/comment', this._paramsIsNotNull, this._bodyIsNotNull, this._getMatch, this._addComment);
         server.put('/match/:id/comment/:commentid', this._paramsIsNotNull, this._bodyIsNotNull, this._getMatch, this._updateComment);
@@ -41,6 +44,14 @@ class MatchRoutes extends Routes {
 
     _returnComments(req, res, next) {
         res.json(200, { code: 200, message: 'OK', resp: req.match.comments });
+    }
+
+    _returnPlayers(req, res, next) {
+        res.json(200, { code: 200, message: 'OK', resp: req.match.players });
+    }
+
+    _returnMatch(req, res, next) {
+        res.json(200, { code: 200, message: 'OK', resp: req.match });
     }
 
     _paramsIsNotNull(req, res, next) {
