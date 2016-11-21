@@ -75,3 +75,91 @@ PUT _mapping
         }
     }
 }
+
+http://localhost:9200/yojuego/club/
+PUT _mapping
+{
+    "club": {
+        "properties": {
+            "isActive": { "type": "boolean" },
+            "description": { "type": "string" },
+            "allowOnLineBooking": { "type": "boolean" },
+            "allowOnLinePayment": { "type": "boolean" },
+            "cancelingTimeForFree": { "type": "string" },
+            "facilities" : {
+                "properties" : {
+                    "buffet" : { "type" : "boolean" },
+                    "parking" : { "type" : "boolean" },
+                    "wifi" : { "type" : "boolean" },
+                    "dressingRoom" : { "type" : "boolean" }
+                }
+            },
+            "fields" : {
+                "properties" : {
+                    "id" : { "type" : "integer" },
+                    "groundType" : { "type" : "integer" },
+                    "roofed" : { "type" : "boolean" },
+                    "size" : { "type" : "integer" },
+                    "value" : { "type" : "double" },
+                    "minToBook" : { "type" : "double" }
+                }
+            },
+            "contactInfo" : {
+                "properties" : {
+                    "mails" : {
+                        "properties" : {
+                            "mail": {
+                                "type": "string",
+                                "index": "not_analyzed"
+                            }
+                        }
+                    },
+                    "telephones" : {
+                        "properties" : {
+                            "telephone": {
+                                "type": "string",
+                                "index": "not_analyzed"
+                            }
+                        }
+                    },
+                    "location": {
+                        "properties" : {
+                            "latitude": {
+                                "type": "string",
+                                "index": "not_analyzed"
+                            },
+                            "longitude": {
+                                "type": "string",
+                                "index": "not_analyzed"
+                            },
+                            "state": {
+                                "type": "string",
+                                "index": "not_analyzed"
+                            },
+                            "city": {
+                                "type": "string",
+                                "index": "not_analyzed"
+                            }
+                        }
+                    }
+                }
+            },
+            "calendar" : {
+                "properties" : {
+                    "events" : {
+                        "properties" : {
+                            "date": {
+                                "type": "date",
+                                "index": "not_analyzed"
+                            },
+                            "matchId": {
+                                "type": "string",
+                                "index": "not_analyzed"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

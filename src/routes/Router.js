@@ -7,6 +7,7 @@ var AuthRoutes = require('./AuthRoutes');
 var ResetPasswordRoutes = require('./ResetPasswordRoutes');
 var UserRoute = require('./UserRoute');
 var ServerRoute = require('./ServerRoute');
+var ClubRoute = require('./ClubRoute');
 
 class Router {
     constructor() { }
@@ -14,6 +15,7 @@ class Router {
     addAll(server, passport, esClient, jwt) {
         new InvitationRoutes(esClient).add(server);
         new LogInRoutes(esClient, jwt).add(server);
+        new ClubRoute(esClient).add(server);
         new MatchRoutes(esClient).add(server);
         new PlayerRoutes(esClient).add(server);
         new SignUpRoutes(esClient, jwt).add(server);
