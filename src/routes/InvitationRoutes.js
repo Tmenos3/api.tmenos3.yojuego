@@ -4,6 +4,8 @@ var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 var Invitation = require('../models/Invitation');
 var invitationRepo = null;
 var InvitationESRepository = require('../repositories/InvitationESRepository');
+var MatchESRepository = require('../repositories/MatchESRepository');
+var PlayerESRepository = require('../repositories/PlayerESRepository');
 var NotificationService = require('../models/notification/NotificationService');
 var noticationService = null;
 
@@ -15,12 +17,17 @@ class InvitationRoutes extends Routes {
         this._createInvitation = this._createInvitation.bind(this);
         this._insertInvitation = this._insertInvitation.bind(this);
         this._sendNotification = this._sendNotification.bind(this);
+        this._validateMatch = this._validateMatch.bind(this);
+        this._validateSender = this._validateSender.bind(this);
+        this._validateRecipient = this._validateRecipient.bind(this);
 
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(InvitationRoutes.INVALID_ES_CLIENT));
 
         validator.execute(() => {
             invitationRepo = new InvitationESRepository(esClient);
+            matchRepo = new MatchESRepository(esClient);
+            playerRepo = new PlayerESRepository(esClient);
             noticationService = new NotificationService();
         }, (err) => { throw err; });
     }
@@ -31,6 +38,9 @@ class InvitationRoutes extends Routes {
         server.post('/invitation/:id/reject', (req, res, next) => { });
         server.post('/invitation',
             this._bodyIsNotNull,
+            this._validateMatch,
+            this._validateSender,
+            this._validateRecipient,
             this._createInvitation,
             this._insertInvitation);
         server.del('/invitation/:id', (req, res, next) => { });
@@ -45,8 +55,8 @@ class InvitationRoutes extends Routes {
 
     _createInvitation(req, res, next) {
         try {
-            req.invitation = new Invitation(req.body.sender,
-                req.body.recipient,
+            req.invitation = new Invitation(req.body.senderId,
+                req.body.recipientId,
                 req.body.matchId,
                 req.body.createdOn);
             next();
@@ -68,8 +78,61 @@ class InvitationRoutes extends Routes {
             });
     }
 
-    _sendNotification(invitation){
+    _sendNotification(invitation) {
         notificationService.send(invitation);
+    }
+
+    _validateMatch(req, res, next) {
+        matchRepo.get(req.body.matchId)
+            .then((response) => {
+                if (response.code == 404) {
+                    res.json(400, { code: 400, message: 'Match inválido', resp: null });
+                } else {
+                    req.match = response.resp;
+                    next();
+                }
+            }, (cause) => {
+                res.json(400, { code: cause.code, message: cause.message, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: error.code, message: error.message, resp: null });
+            });
+    }
+
+    _validateSender(req, res, next) {
+        playerRepo.get(req.body.senderId)
+            .then((response) => {
+                if (response.code == 404) {
+                    res.json(400, { code: 400, message: 'Match inválido', resp: null });
+                } else {
+                    if (req.user._id != response.resp.userid) {
+                        res.json(400, { code: 400, message: 'Sender inválido', resp: null });
+                    } else {
+                        next();
+                    }
+                }
+            }, (cause) => {
+                res.json(400, { code: cause.code, message: cause.message, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: error.code, message: error.message, resp: null });
+            });
+    }
+
+    _validateRecipient(req, res, next) {
+        playerRepo.get(req.body.recipientId)
+            .then((response) => {
+                if (response.code == 404) {
+                    res.json(400, { code: 400, message: 'Match inválido', resp: null });
+                } else {
+                    next();
+                }
+            }, (cause) => {
+                res.json(400, { code: cause.code, message: cause.message, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: error.code, message: error.message, resp: null });
+            });
     }
 
     static get INVALID_ES_CLIENT() {

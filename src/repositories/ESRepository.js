@@ -27,7 +27,7 @@ class ESRepository {
                 }, (error, response, status) => {
                     if (error) {
                         if (error.status == 404) {
-                            resolve({ code: 200, message: null, resp: null });
+                            resolve({ code: 404, message: null, resp: null });
                         } else {
                             reject({ code: error.status, message: error.message, resp: error });
                         }
