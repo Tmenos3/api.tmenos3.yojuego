@@ -123,7 +123,7 @@ class InvitationRoutes extends Routes {
         playerRepo.get(req.body.recipientId)
             .then((response) => {
                 if (response.code == 404) {
-                    res.json(400, { code: 400, message: 'Match inválido', resp: null });
+                    res.json(400, { code: 400, message: 'Recipient inválido', resp: null });
                 } else {
                     next();
                 }
