@@ -20,6 +20,7 @@ class InvitationRoutes extends Routes {
         this._validateMatch = this._validateMatch.bind(this);
         this._validateSender = this._validateSender.bind(this);
         this._validateRecipient = this._validateRecipient.bind(this);
+        this._updateMatch = this._updateMatch.bind(this);
 
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(InvitationRoutes.INVALID_ES_CLIENT));
@@ -42,7 +43,8 @@ class InvitationRoutes extends Routes {
             this._validateSender,
             this._validateRecipient,
             this._createInvitation,
-            this._insertInvitation);
+            this._insertInvitation,
+            this._updateMatch);
         server.del('/invitation/:id', (req, res, next) => { });
     }
 
@@ -69,7 +71,8 @@ class InvitationRoutes extends Routes {
         invitationRepo.add(req.invitation)
             .then((response) => {
                 this._sendNotification(response.resp);
-                res.json(200, { code: 200, message: 'OK', resp: response.resp });
+                req.invitation = response.resp;
+                next();
             }, (cause) => {
                 res.json(400, { code: cause.code, message: cause.message, resp: null });
             })
@@ -127,6 +130,19 @@ class InvitationRoutes extends Routes {
                 } else {
                     next();
                 }
+            }, (cause) => {
+                res.json(400, { code: cause.code, message: cause.message, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: error.code, message: error.message, resp: null });
+            });
+    }
+
+    _updateMatch() {
+        req.match.addInvitedPlayer(req.body.recipientId);
+        matchRepo.update(req.match)
+            .then((response) => {
+                res.json(200, { code: 200, message: 'OK', resp: req.invitation });
             }, (cause) => {
                 res.json(400, { code: cause.code, message: cause.message, resp: null });
             })

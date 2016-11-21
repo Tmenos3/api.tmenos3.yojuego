@@ -39,6 +39,25 @@ class Match {
         }, (err) => { throw err; });
     }
 
+    addInvitedPlayer(playerId){
+        // add to pending players
+        // this players have been invited but they are not confirmed yet
+    }
+
+    removeInvitedPlayer(playerId){
+        // remove from pending players
+        // this players have been invited but they are not confirmed yet
+    }
+
+    addConfirmPlayer(playerId){
+        // this player has to change from invited to confirmed
+        // this player is actually in pending 
+    }
+
+    removeConfirmPlayer(playerId){
+        // this player is confirmed and it is going to be remove from de match
+    }
+
     addComment(owner, text, writtenOn) {
         this.comments.push(new MatchComment(this._getNewCommentId(), owner, text, writtenOn));
     }
