@@ -37,7 +37,6 @@ class UserRoute extends Routes {
     }
 
     _validateMailFormat(req, res, next) {
-
         if (User.isValidMail(req.params.email)) {
             next();
         } else {

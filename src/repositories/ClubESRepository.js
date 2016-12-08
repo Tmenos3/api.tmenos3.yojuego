@@ -14,11 +14,39 @@ class ClubESRepository extends ESRepository {
         this._mapContactInfo = this._mapContactInfo.bind(this);
         this._mapFields = this._mapFields.bind(this);
         this._mapFacilities = this._mapFacilities.bind(this);
+        this._getNewClub = this._getNewClub.bind(this);
+    }
+
+    get(clubId) {
+        return new Promise((resolve, reject) => {
+            super.get(clubId, 'yojuego', 'club')
+                .then((objRet) => {
+                    if (objRet.code == 404) {
+                        resolve({ code: 404, message: 'Club does not exist', resp: null });
+                    } else {
+                        var club = this._getNewClub(objRet.resp._source);
+
+                        club._id = objRet.resp._id;
+                        resolve({ code: 200, message: null, resp: club });
+                    }
+                }, reject);
+        });
     }
 
     getAll() {
         return new Promise((resolve, reject) => {
-            resolve({ code: 200, message: null, resp: [] });
+            super.getAll('yojuego', 'club')
+                .then((objRet) => {
+                    var clubs = [];
+
+                    for (var i = 0; i < objRet.resp.hits.hits.length; i++) {
+                        var club = this._getNewClub(objRet.resp.hits.hits[i]._source);
+                        club._id = objRet.resp.hits.hits[i]._id;
+                        clubs.push(club);
+                    }
+
+                    resolve({ code: 200, message: null, resp: clubs });
+                }, reject);
         });
     }
 
@@ -46,20 +74,12 @@ class ClubESRepository extends ESRepository {
                 }
                 else {
                     if (response.hits.hits.length < 1) {
-                        resolve({ code: 404, message: 'No clubs were found.', resp: null });
+                        resolve({ code: 404, message: 'No clubs were found.', resp: [] });
                     } else {
-                        let clubs = [];
+                        var clubs = [];
 
-                        for (let i = 0; i < response.hits.hits.length; i++) {
-                            constructor(description, facilities, fields, allowOnLineBooking, allowOnLinePayment, cancelingTimeForFree, contactInfo, calendar)
-                            let club = new Club(response.hits.hits[i]._source.description,
-                                this._mapFacilities(response.hits.hits[i]._source.facilities),
-                                this._mapFields(response.hits.hits[i]._source.fields),
-                                response.hits.hits[i]._source.allowOnLineBooking,
-                                response.hits.hits[i]._source.allowOnLinePayment,
-                                response.hits.hits[i]._source.cancelingTimeForFree,
-                                this._mapContactInfo(response.hits.hits[i]._source.contactInfo),
-                                this._mapCalendar(response.hits.hits[i]._source.calendar));
+                        for (var i = 0; i < response.hits.hits.length; i++) {
+                            var club = this._getNewClub(response.hits.hits[i]._source);
 
                             club._id = response.hits.hits[i]._id;
                             clubs.push(club);
@@ -75,7 +95,7 @@ class ClubESRepository extends ESRepository {
     _mapCalendar(calendar) {
         let events = [];
 
-        for (let i = 0; i < calendar.events; i++) {
+        for (let i = 0; i < calendar.events.length; i++) {
             let event = new Event(calendar.events[i].date, calendar.events[i].time, calendar.events[i].matchId)
         }
 
@@ -89,7 +109,7 @@ class ClubESRepository extends ESRepository {
     _mapFields(fields) {
         let ret = [];
 
-        for (let i = 0; i < fields; i++) {
+        for (let i = 0; i < fields.length; i++) {
             let field = new Field(fields[i].groundType, fields[i].roofed, fields[i].size, fields[i].value, fields[i].minToBook);
             ret.push(field);
         }
@@ -99,6 +119,17 @@ class ClubESRepository extends ESRepository {
 
     _mapFacilities(facilities) {
         return new Facilities(facilities.buffet, facilities.parking, facilities.wifi, facilities.dressingRoom);
+    }
+
+    _getNewClub(source) {
+        return new Club(source.description,
+            this._mapFacilities(source.facilities),
+            this._mapFields(source.fields),
+            source.allowOnLineBooking,
+            source.allowOnLinePayment,
+            source.cancelingTimeForFree,
+            this._mapContactInfo(source.contactInfo),
+            this._mapCalendar(source.calendar));
     }
 
     static get INVALID_CLUB() {

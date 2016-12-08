@@ -4,21 +4,28 @@ var Invitation = require('../models/Invitation');
 class InvitationESRepository extends ESRepository {
     constructor(client) {
         super(client);
+
+        this._getNewInvitation = this._getNewInvitation.bind(this);
     }
 
     get(invitationId) {
         return new Promise((resolve, reject) => {
             super.get(invitationId, 'yojuego', 'invitation')
                 .then((objRet) => {
-                    let invitation = new Invitation(
-                        objRet.resp.source.sender,
-                        objRet.resp.source.recipient,
-                        objRet.resp.source.match,
-                        objRet.resp.source.createdOn);
-                    invitation._id = objRet.resp._id;
-                    resolve({ code: 200, message: null, resp: invitation });
+                    if (objRet.code == 404) {
+                        resolve({ code: 404, message: 'Invitation does not exist', resp: null });
+                    } else {
+                        var invitation = this._getNewInvitation(objRet.resp._source);
+
+                        invitation._id = objRet.resp._id;
+                        resolve({ code: 200, message: null, resp: invitation });
+                    }
                 }, reject);
         });
+    }
+
+    _getNewInvitation(source) {
+        return new Invitation(source.senderId, source.recipientId, source.matchId, source.createdOn, source.state);
     }
 
     getByInvitationId(invitationid) {
@@ -41,14 +48,14 @@ class InvitationESRepository extends ESRepository {
                     reject({ code: error.statusCode, message: error.message, resp: error });
                 }
                 else {
-                    let invitation = null;
+                    var invitation = null;
 
                     for (let i = 0; i < response.hits.hits.length; i++) {
-
-                        invitation = new Invitation(response.hits.hits[i]._source.sender,
-                            response.hits.hits[i]._source.sender,
-                            response.hits.hits[i]._source.match,
-                            response.hits.hits[i]._source.createdOn);
+                        // invitation = new Invitation(response.hits.hits[i]._source.sender,
+                        //     response.hits.hits[i]._source.sender,
+                        //     response.hits.hits[i]._source.match,
+                        //     response.hits.hits[i]._source.createdOn);
+                        invitation = this._getNewInvitation(response.hits.hits[i]._source);
                         invitation._id = response.hits.hits[i]._id;
                         break;
                     }
@@ -70,14 +77,15 @@ class InvitationESRepository extends ESRepository {
     update(invitation) {
         if (invitation instanceof Invitation) {
             let document = {
-                sender: invitation.sender,
-                recipient: invitation.recipient,
-                match: invitation.match,
-                createdOn: invitation.createdOn
+                senderId: invitation.senderId,
+                recipientId: invitation.recipientId,
+                matchId: invitation.matchId,
+                createdOn: invitation.createdOn,
+                state: invitation.state
             };
             return super.update(invitation._id, document, 'yojuego', 'invitation');
         } else {
-            return Promise.reject({ code: 410, message: MatchESRepository.INVALID_INSTANCEOFINVITATION });
+            return Promise.reject({ code: 410, message: InvitationESRepository.INVALID_INSTANCEOFINVITATION });
         }
     }
 

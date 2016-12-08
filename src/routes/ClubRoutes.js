@@ -1,7 +1,7 @@
 let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var Routes = require('./Routes');
-var ClubRepository = require('../repositories/ClubRepository');
+var ClubESRepository = require('../repositories/ClubESRepository');
 
 var repo = null;
 
@@ -15,26 +15,29 @@ class ClubRoutes extends Routes {
         this._getFilters = this._getFilters.bind(this);
         this._filterClubsByDate = this._filterClubsByDate.bind(this);
         this._filterClubsByTime = this._filterClubsByTime.bind(this);
+        this._returnClub = this._returnClub.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(ClubRoutes.INVALID_ES_CLIENT));
 
         validator.execute(() => {
-            repo = new ClubRepository(esClient);
+            repo = new ClubESRepository(esClient);
         }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
         server.get('/club/:id', this._paramsIsNotNull, this._returnClub);
         server.get('/club', this._returnAll);
-        server.post('/club', this._bodyIsNotNull, this._returnFilteredClubs);
+        server.post('/club', this._returnFilteredClubs);
     }
 
     _bodyIsNotNull(req, res, next) {
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(req.body).throw(ClubRoutes.INVALID_BODY));
 
-        validator.execute(() => { next(); }, (err) => { res.json(400, { code: 400, message: err.message, resp: null }); });
+        validator.execute(() => { next(); }, (err) => {
+            res.json(400, { code: 400, message: err, resp: null });
+        });
     }
 
     _paramsIsNotNull(req, res, next) {
@@ -57,22 +60,26 @@ class ClubRoutes extends Routes {
     }
 
     _returnFilteredClubs(req, res, next) {
-        let filters = this._getFilters(req.body);
-        repo.getBy(filters)
-            .then((response) => {
-                if (req.body.date)
-                    this._filterClubsByDate(req.body.date);
+        if (!req.body) {
+            this._returnAll(req, res, next);
+        } else {
+            var filters = this._getFilters(req.body);
+            repo.getBy(filters)
+                .then((response) => {
+                    if (req.body.date)
+                        this._filterClubsByDate(req.body.date);
 
-                if (req.body.time)
-                    this._filterClubsByTime(req.body.time);
+                    if (req.body.time)
+                        this._filterClubsByTime(req.body.time);
 
-                res.json(200, { code: 200, message: 'OK', resp: response.resp });
-            }, (cause) => {
-                res.json(cause.code, { code: cause.code, message: cause.message, resp: null });
-            })
-            .catch((error) => {
-                res.json(cause.code, { code: cause.code, message: cause.message, resp: null });
-            });
+                    res.json(200, { code: 200, message: 'OK', resp: response.resp });
+                }, (cause) => {
+                    res.json(cause.code, { code: cause.code, message: cause.message, resp: null });
+                })
+                .catch((error) => {
+                    res.json(cause.code, { code: cause.code, message: cause.message, resp: null });
+                });
+        }
     }
 
     _getFilters(filters) {
@@ -122,6 +129,18 @@ class ClubRoutes extends Routes {
 
     _filterClubsByTime(time) {
 
+    }
+
+    _returnClub(req, res, next) {
+        repo.get(req.params.id)
+            .then((response) => {
+                if (!response.resp) {
+                    res.json(401, { code: 401, message: 'Club does not exist', resp: null });
+                } else {
+                    res.json(200, { code: 200, message: null, resp: response.resp });
+                }
+            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
+            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
     }
 
     static get INVALID_BODY() {

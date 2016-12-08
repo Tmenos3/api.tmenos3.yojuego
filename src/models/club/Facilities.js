@@ -25,4 +25,4 @@ class Facilities {
     }
 }
 
-module.exports = Player;
+module.exports = Facilities;

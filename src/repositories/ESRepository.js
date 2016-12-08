@@ -12,6 +12,37 @@ class ESRepository {
         }, (err) => { throw err; });
     }
 
+    getAll(index, type) {
+        return new Promise((resolve, reject) => {
+            let validator = new Validator();
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+
+            validator.execute(() => {
+                this.esclient.search({
+                "index": index,
+                "type": type,
+                "body": {
+                    "query": {
+                        "match_all": {}
+                    }
+                }
+            }, (error, response, status) => {
+                    if (error) {
+                        if (error.status == 404) {
+                            resolve({ code: 200, message: null, resp: [] });
+                        } else {
+                            reject({ code: error.status, message: error.message, resp: error });
+                        }
+                    }
+                    else {
+                        resolve({ code: 200, message: null, resp: response });
+                    }
+                });
+            }, (err) => { throw err; });
+        });
+    }
+
     get(id, index, type) {
         return new Promise((resolve, reject) => {
             let validator = new Validator();

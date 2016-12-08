@@ -8,6 +8,9 @@ var MatchESRepository = require('../repositories/MatchESRepository');
 var PlayerESRepository = require('../repositories/PlayerESRepository');
 var NotificationService = require('../models/notification/NotificationService');
 var noticationService = null;
+var invitationRepo = null;
+var matchRepo = null;
+var playerRepo = null;
 
 class InvitationRoutes extends Routes {
     constructor(esClient) {
@@ -21,6 +24,17 @@ class InvitationRoutes extends Routes {
         this._validateSender = this._validateSender.bind(this);
         this._validateRecipient = this._validateRecipient.bind(this);
         this._updateMatch = this._updateMatch.bind(this);
+        this._returnInvitation = this._returnInvitation.bind(this);
+        this._paramsIsNotNull = this._paramsIsNotNull.bind(this);
+        this._validateInvitation = this._validateInvitation.bind(this);
+        this._validateRecipientInvitation = this._validateRecipientInvitation.bind(this);
+        this._acceptInvitation = this._acceptInvitation.bind(this);
+        this._rejectInvitation = this._rejectInvitation.bind(this);
+        this._updateInvitation = this._updateInvitation.bind(this);
+        this._addPlayerToMatch = this._addPlayerToMatch.bind(this);
+        this._removePlayerFromPending = this._removePlayerFromPending.bind(this);
+        this._confirmPlayerToMatch = this._confirmPlayerToMatch.bind(this);
+        this._getMatch = this._getMatch.bind(this);
 
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(InvitationRoutes.INVALID_ES_CLIENT));
@@ -34,9 +48,25 @@ class InvitationRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/invitation/:id', (req, res, next) => { });
-        server.post('/invitation/:id/accept', (req, res, next) => { });
-        server.post('/invitation/:id/reject', (req, res, next) => { });
+        server.get('/invitation/:id', this._paramsIsNotNull, this._returnInvitation);
+        server.post('/invitation/:id/accept',
+            this._paramsIsNotNull,
+            this._validateInvitation,
+            this._validateRecipientInvitation,
+            this._acceptInvitation,
+            this._getMatch,
+            this._confirmPlayerToMatch,
+            this._updateInvitation,
+            this._updateMatch);
+        server.post('/invitation/:id/reject',
+            this._paramsIsNotNull,
+            this._validateInvitation,
+            this._validateRecipientInvitation,
+            this._rejectInvitation,
+            this._getMatch,
+            this._removePlayerFromPending,
+            this._updateInvitation,
+            this._updateMatch);
         server.post('/invitation',
             this._bodyIsNotNull,
             this._validateMatch,
@@ -44,8 +74,16 @@ class InvitationRoutes extends Routes {
             this._validateRecipient,
             this._createInvitation,
             this._insertInvitation,
+            this._addPlayerToMatch,
             this._updateMatch);
         server.del('/invitation/:id', (req, res, next) => { });
+    }
+
+    _paramsIsNotNull(req, res, next) {
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(req.params).throw(InvitationRoutes.INVALID_PARAMS));
+
+        validator.execute(() => { next(); }, (err) => { res.json(400, { code: 400, message: err, resp: null }); });
     }
 
     _bodyIsNotNull(req, res, next) {
@@ -60,7 +98,8 @@ class InvitationRoutes extends Routes {
             req.invitation = new Invitation(req.body.senderId,
                 req.body.recipientId,
                 req.body.matchId,
-                req.body.createdOn);
+                new Date(),
+                'pending');
             next();
         } catch (error) {
             res.json(error.code, { code: error.code, message: error.message, resp: null });
@@ -70,7 +109,7 @@ class InvitationRoutes extends Routes {
     _insertInvitation(req, res, next) {
         invitationRepo.add(req.invitation)
             .then((response) => {
-                this._sendNotification(response.resp);
+                //this._sendNotification(response.resp);
                 req.invitation = response.resp;
                 next();
             }, (cause) => {
@@ -106,9 +145,9 @@ class InvitationRoutes extends Routes {
         playerRepo.get(req.body.senderId)
             .then((response) => {
                 if (response.code == 404) {
-                    res.json(400, { code: 400, message: 'Match inválido', resp: null });
+                    res.json(400, { code: 400, message: 'Sender inválido', resp: null });
                 } else {
-                    if (req.user._id != response.resp.userid) {
+                    if (req.user.id != response.resp.userid) {
                         res.json(400, { code: 400, message: 'Sender inválido', resp: null });
                     } else {
                         next();
@@ -138,8 +177,12 @@ class InvitationRoutes extends Routes {
             });
     }
 
-    _updateMatch() {
+    _addPlayerToMatch(req, res, next) {
         req.match.addInvitedPlayer(req.body.recipientId);
+        next();
+    }
+
+    _updateMatch(req, res, next) {
         matchRepo.update(req.match)
             .then((response) => {
                 res.json(200, { code: 200, message: 'OK', resp: req.invitation });
@@ -151,12 +194,108 @@ class InvitationRoutes extends Routes {
             });
     }
 
-    static get INVALID_ES_CLIENT() {
-        return 'El cliente de ElasticSearch no puede ser null ni undefined';
+    _returnInvitation(req, res, next) {
+        invitationRepo.get(req.params.id)
+            .then((response) => {
+                if (!response.resp) {
+                    res.json(401, { code: 401, message: 'Invitation does not exist', resp: null });
+                } else {
+                    res.json(200, { code: 200, message: null, resp: response.resp });
+                }
+            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
+            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
+    }
+
+    _validateInvitation(req, res, next) {
+        invitationRepo.get(req.params.id)
+            .then((response) => {
+                if (!response.resp) {
+                    res.json(401, { code: 401, message: 'Invitation does not exist', resp: null });
+                } else if (response.resp.state != 'pending') {
+                    res.json(401, { code: 401, message: 'Invitation is not pending', resp: null });
+                } else {
+                    req.invitation = response.resp;
+                    next();
+                }
+            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
+            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
+    }
+
+    _validateRecipientInvitation(req, res, next) {
+        playerRepo.getByUserId(req.user.id)
+            .then((response) => {
+                if (req.invitation.recipientId != response.resp._id) {
+                    res.json(400, { code: 400, message: 'Solo el receptor de la invitacion puede aceptarla o cancelarla.', resp: null });
+                } else {
+                    next();
+                }
+            }, (cause) => {
+                res.json(400, { code: cause.code, message: cause.message, resp: null });
+            })
+            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
+    }
+
+    _acceptInvitation(req, res, next) {
+        req.invitation.accept();
+        next();
+    }
+
+    _rejectInvitation(req, res, next) {
+        req.invitation.reject();
+        next();
+    }
+
+    _updateInvitation(req, res, next) {
+        invitationRepo.update(req.invitation)
+            .then((response) => {
+                next();
+            }, (cause) => {
+                res.json(400, { code: cause.code, message: cause.message, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: error.code, message: error.message, resp: null });
+            });
+    }
+
+    _getMatch(req, res, next) {
+        matchRepo.get(req.invitation.matchId)
+            .then((response) => {
+                if (response.code == 404) {
+                    res.json(400, { code: 400, message: 'Match inválido', resp: null });
+                } else {
+                    req.match = response.resp;
+                    next();
+                }
+            }, (cause) => {
+                res.json(400, { code: cause.code, message: cause.message, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: error.code, message: error.message, resp: null });
+            });
+    }
+
+    _confirmPlayerToMatch(req, res, next) {
+        req.match.addConfirmPlayer(req.invitation.recipientId);
+        //this._sendNotification(invitation);
+        next();
+    }
+
+    _removePlayerFromPending(req, res, next) {
+        req.match.removeInvitedPlayer(req.invitation.recipientId);
+        //this._sendNotification(invitation);
+        next();
     }
 
     static get INVALID_BODY() {
         return 'Invalid request body';
+    }
+
+    static get INVALID_PARAMS() {
+        return 'Invalid request params';
+    }
+
+    static get INVALID_ES_CLIENT() {
+        return 'El cliente de ElasticSearch no puede ser null ni undefined';
     }
 }
 

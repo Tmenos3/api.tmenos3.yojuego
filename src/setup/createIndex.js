@@ -59,11 +59,8 @@ PUT _mapping
                 "type": "string",
                     "index": "not_analyzed"
             },
-            "players" : {
-                "properties" : {
-                    "_id" : { "type" : "string" }
-                }
-            },
+            "confirmedPlayers" : { "type": "string" },
+            "pendingPlayers" : { "type": "string" },
             "comments" : {
                 "properties" : {
                     "id" : { "type" : "integer" },
@@ -160,6 +157,29 @@ PUT _mapping
                     }
                 }
             }
+        }
+    }
+}
+
+http://localhost:9200/yojuego/invitation/
+PUT _mapping
+{
+    "invitation": {
+        "properties": {
+            "senderId": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "recipientId": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "matchId": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "createdOn": { "type": "date" },
+            "state": { "type": "string" }
         }
     }
 }

@@ -8,6 +8,9 @@ var IsNumberCondition = require('no-if-validator').IsNumberCondition;
 
 class Match {
     constructor(title, date, fromTime, toTime, location, creator, matchType) {
+        this._existsInPendingPlayers = this._existsInPendingPlayers.bind(this);
+        this._existsInConfirmedPlayers = this._existsInConfirmedPlayers.bind(this);
+
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(title).throw(new Error(Match.INVALID_TITLE)));
         validator.addCondition(new NotNullOrUndefinedCondition(date).throw(new Error(Match.INVALID_DATE)));
@@ -34,27 +37,35 @@ class Match {
             this.location = location;
             this.creator = creator;
             this.matchType = matchType;
-            this.players = [];
+            this.confirmedPlayers = [];
+            this.pendingPlayers = [];
             this.comments = [];
         }, (err) => { throw err; });
     }
 
-    addInvitedPlayer(playerId){
+    addInvitedPlayer(playerId) {
         // add to pending players
         // this players have been invited but they are not confirmed yet
+        if (!this._existsInPendingPlayers(playerId)) {
+            this.pendingPlayers.push(playerId)
+        }
     }
 
-    removeInvitedPlayer(playerId){
-        // remove from pending players
-        // this players have been invited but they are not confirmed yet
+    removeInvitedPlayer(playerId) {
+        var position = this.pendingPlayers.indexOf(playerId);
+        if (position > -1) {
+            this.pendingPlayers.splice(position, 1);
+        }
     }
 
-    addConfirmPlayer(playerId){
-        // this player has to change from invited to confirmed
-        // this player is actually in pending 
+    addConfirmPlayer(playerId) {
+        if (!this._existsInConfirmedPlayers(playerId)) {
+            this.confirmedPlayers.push(playerId);
+            this.removeInvitedPlayer(playerId);
+        }
     }
 
-    removeConfirmPlayer(playerId){
+    removeConfirmPlayer(playerId) {
         // this player is confirmed and it is going to be remove from de match
     }
 
@@ -100,6 +111,24 @@ class Match {
         }
 
         return newId + 1;
+    }
+
+    _existsInPendingPlayers(playerId) {
+        for (var i = 0; i < this.pendingPlayers.length; i++) {
+            if (this.pendingPlayers[i] == playerId)
+                return true
+
+            return false;
+        }
+    }
+
+    _existsInConfirmedPlayers(playerId) {
+        for (var i = 0; i < this.confirmedPlayers.length; i++) {
+            if (this.confirmedPlayers[i] == playerId)
+                return true
+
+            return false;
+        }
     }
 
     static INVALID_DATE() {
