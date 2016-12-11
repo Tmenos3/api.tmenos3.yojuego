@@ -183,3 +183,25 @@ PUT _mapping
         }
     }
 }
+
+http://localhost:9200/yojuego/device/
+PUT _mapping
+{
+    "invitation": {
+        "properties": {
+            "deviceId": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "platform": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "userId": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "createdOn": { "type": "date" }
+        }
+    }
+}
