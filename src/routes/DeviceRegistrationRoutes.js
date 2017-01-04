@@ -2,8 +2,10 @@ var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var Routes = require('./Routes');
 var DeviceESRepository = require('../repositories/DeviceESRepository');
+var NotificationService = require('../helpers/NotificationService/NotificationService');
 
 var repo = null;
+var ns = null;
 
 class DeviceRegistrationRoutes extends Routes {
     constructor(esClient) {
@@ -18,11 +20,16 @@ class DeviceRegistrationRoutes extends Routes {
 
         validator.execute(() => {
             repo = new DeviceESRepository(esClient);
+            ns = new NotificationService();
         }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
         server.post('/device/register', super._bodyIsNotNull, this._checkDeviceAndPlatform, this._checkIfDeviceExists, this._registerDevice);
+        server.post('/device/sendTest', (req, res, next) => {
+            ns.send(null);
+            res.json(200, { id: 1 });
+        });
     }
 
     _checkDeviceAndPlatform(req, res, next) {

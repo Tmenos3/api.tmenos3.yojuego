@@ -1,11 +1,11 @@
 //This should be configured individually for each environment
 process.env.NODE_ENV = 'dev';
 
-let restify = require('restify');
-let config = require('config');
-let configureServer = require('./src/configureServer');
+var restify = require('restify');
+var configureServer = require('./src/configureServer');
+var config = require('config');
 
-let server = restify.createServer();
+var server = restify.createServer();
 
 configureServer(server, restify);
 

@@ -1,4 +1,8 @@
 {
+    "gcmService": {
+        "serverApiKey":"AIzaSyBXezGJFU1Q7GlHm-8neIZc8dCkawHgsaQ",
+        "senderID": "854114285051"
+    },
     "auth": {
         "facebook": {
             "appId": "289976541370822",

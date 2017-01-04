@@ -1,4 +1,8 @@
 {
+    "gcmService": {
+        "serverApiKey":"AIzaSyBXezGJFU1Q7GlHm-8neIZc8dCkawHgsaQ",
+        "senderID": "854114285051"
+    },
     "auth": {
         "facebook": {
             "appId": "289976541370822",
@@ -28,7 +32,8 @@
             "/auth/facebook",
             "/auth/google",
             "/resetPassword",
-            "/setNewPassword/:token"
+            "/setNewPassword/:token",
+            "/device/sendTest"
         ]
     }
 }
