@@ -42,8 +42,8 @@ class SignUpRoutes extends Routes {
             this._createUser,
             this._validateIfUserExists,
             this._insertUser,
-            this._createPlayer,
-            this._insertPlayer,
+            // this._createPlayer,
+            // this._insertPlayer,
             this._generateToken,
             (req, res, next) => {
                 res.json(200, { token: req.token, userid: req.user.id });
@@ -99,13 +99,9 @@ class SignUpRoutes extends Routes {
 
     _createPlayer(req, res, next) {
         try {
-            if (!(moment(req.body.birthDate, "YYYY-MM-DDTHH:mm:ssZ", true).isValid()))
-                throw new Error("Invalid birthDate.");
-
-            req.player = new Player(req.body.nickName,
-                new Date(req.body.birthDate),
-                req.body.state,
-                req.body.adminState,
+            req.player = new Player(req.body.firstName,
+                req.body.lastName,
+                req.body.nickName,
                 req.user._id);
 
             next();

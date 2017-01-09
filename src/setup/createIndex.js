@@ -1,3 +1,6 @@
+http://localhost:9200/
+PUT yojuego
+
 http://localhost:9200/yojuego/user/
 PUT _mapping
 {
@@ -24,21 +27,18 @@ PUT _mapping
 {
     "player": {
         "properties": {
+            "firstName": {
+                "type": "string"
+            },
+            "lastName": {
+                "type": "string"
+            },
             "nickName": {
-                "type": "string"
-            },
-            "birthDate": {
-                "type": "string"
-            },
-            "state": {
-                "type": "string"
-            },
-            "adminState": {
                 "type": "string"
             },
             "userid": {
                 "type": "string",
-                    "index": "not_analyzed"
+                "index": "not_analyzed"
             }
         }
     }
