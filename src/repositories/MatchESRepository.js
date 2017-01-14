@@ -1,5 +1,5 @@
-var ESRepository = require('./ESRepository');
-var Match = require('../models/Match');
+let ESRepository = require('./ESRepository');
+let Match = require('../models/Match');
 
 class MatchESRepository extends ESRepository {
     constructor(client) {
@@ -13,13 +13,52 @@ class MatchESRepository extends ESRepository {
                     if (objRet.code == 404) {
                         resolve({ code: 404, message: 'Match does not exist', resp: null });
                     } else {
-                        var match = new Match(objRet.resp._source.title, new Date(objRet.resp._source.date), objRet.resp._source.fromTime, objRet.resp._source.toTime, objRet.resp._source.location, objRet.resp._source.creator, objRet.resp._source.matchType);
+                        let match = new Match(objRet.resp._source.title, new Date(objRet.resp._source.date), objRet.resp._source.fromTime, objRet.resp._source.toTime, objRet.resp._source.location, objRet.resp._source.creator, objRet.resp._source.matchType);
                         match._id = objRet.resp._id;
                         match.confirmedPlayers = objRet.resp._source.confirmedPlayers;
                         match.pendingPlayers = objRet.resp._source.pendingPlayers;
                         resolve({ code: 200, message: null, resp: match });
                     }
                 }, reject);
+        });
+    }
+
+    getByPlayerId(playerId) {
+        return new Promise((resolve, reject) => {
+            this.esclient.search({
+                "index": "yojuego",
+                "type": "match",
+                "body": {
+                    "query": {
+                        "bool": {
+                            "should": [
+                                { "term": { "confirmedPlayers": { "value": playerId } } },
+                                { "term": { "pendingPlayers": { "value": playerId } } },
+                                { "term": { "creator": { "value": playerId } } }
+                            ]
+                        }
+                    }
+                }
+            }, (error, response) => {
+                if (error) {
+                    reject({ code: error.statusCode, message: error.message, resp: error });
+                }
+                else {
+                    let matches = [];
+
+                    for (let i = 0; i < response.hits.hits.length; i++) {
+                        let source = response.hits.hits[i]._source;
+                        let match = new Match(source.title, new Date(source.date), source.fromTime, source.toTime, source.location, source.creator, source.matchType);
+                        match._id = response.hits.hits[i]._id;
+                        match.confirmedPlayers = source.confirmedPlayers;
+                        match.pendingPlayers = source.pendingPlayers;
+
+                        matches.push(match);
+                    }
+
+                    resolve({ code: 200, message: null, resp: matches });
+                }
+            });
         });
     }
 

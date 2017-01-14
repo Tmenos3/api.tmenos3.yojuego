@@ -57,10 +57,16 @@ PUT _mapping
             "matchType": { "type": "integer" },
             "creator": {
                 "type": "string",
-                    "index": "not_analyzed"
+                "index": "not_analyzed"
             },
-            "confirmedPlayers" : { "type": "string" },
-            "pendingPlayers" : { "type": "string" },
+            "confirmedPlayers" : {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "pendingPlayers" : {
+                "type": "string",
+                "index": "not_analyzed"
+            },
             "comments" : {
                 "properties" : {
                     "id" : { "type" : "integer" },

@@ -1,90 +1,81 @@
 let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var Routes = require('./Routes');
-var Match = require('../models/Match');
-var MatchRepository = require('../repositories/MatchESRepository');
+let Routes = require('./Routes');
+let Match = require('../models/Match');
+let MatchRepository = require('../repositories/MatchESRepository');
+let PlayerRepository = require('../repositories/PlayerESRepository');
 
-var repo = null;
+let repoMatch = null;
+let repoPlayer = null;
 
 class MatchRoutes extends Routes {
     constructor(esClient) {
         super();
 
-        this._getMatch = this._getMatch.bind(this);
-        this._addComment = this._addComment.bind(this);
-        this._deleteComment = this._deleteComment.bind(this);
-        this._updateComment = this._updateComment.bind(this);
-        this._returnComments = this._returnComments.bind(this);
-        this._returnPlayers = this._returnPlayers.bind(this);
+        this._createMatch = this._createMatch.bind(this);
+        this._searchByPlayer = this._searchByPlayer.bind(this);
+        this._getArrayFromString = this._getArrayFromString.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(MatchRoutes.INVALID_ES_CLIENT));
 
         validator.execute(() => {
-            repo = new MatchRepository(esClient);
+            repoMatch = new MatchRepository(esClient);
+            repoPlayer = new PlayerRepository(esClient);
         }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
-        server.get('/match/:id', super._paramsIsNotNull, this._getMatch, this._returnMatch);
-        server.get('/match/:id/players', super._paramsIsNotNull, this._getMatch, this._returnPlayers);
-        server.get('/match/:id/comment', super._paramsIsNotNull, this._getMatch, this._returnComments);
-        server.post('/match/:id/comment', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._addComment);
-        server.post('/match', (req, res, next) => { res.json(200, { resp: 'ok', message: 'Done' }) });
-        server.put('/match/:id/comment/:commentid', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._updateComment);
-        server.del('/match/:id/comment/:commentid', super._paramsIsNotNull, this._getMatch, this._deleteComment);
+        server.post('/match', super._bodyIsNotNull, this._createMatch, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Match created' }) });
+        server.post('/match/searchbyplayer', super._bodyIsNotNull, this._searchByPlayer, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
+        server.put('/match/:id', super._bodyIsNotNull, this._searchByPlayer, (req, res, next) => { res.json(200, { resp: 'ok', message: 'Done' }) });
+        server.post('/match/:id/player', super._bodyIsNotNull, (req, res, next) => { res.json(200, { resp: 'ok', message: 'Done' }) });
+        server.del('/match/:id/player', super._bodyIsNotNull, (req, res, next) => { res.json(200, { resp: 'ok', message: 'Done' }) });
     }
 
-    _returnComments(req, res, next) {
-        res.json(200, { code: 200, message: 'OK', resp: req.match.comments });
-    }
+    _createMatch(req, res, next) {
+        repoPlayer.getByUserId(req.user.id)
+            .then((resp) => {
+                try {
+                    var match = new Match(req.body.title, new Date(req.body.date), req.body.fromTime, req.body.toTime, req.body.location, resp.resp._id, req.body.matchType);
+                    match.pendingPlayers = this._getArrayFromString(req.body.pendingPlayers);
 
-    _returnPlayers(req, res, next) {
-        res.json(200, { code: 200, message: 'OK', resp: req.match.players });
-    }
-
-    _returnMatch(req, res, next) {
-        res.json(200, { code: 200, message: 'OK', resp: req.match });
-    }
-
-    _getMatch(req, res, next) {
-        repo.get(req.params.id)
-            .then((response) => {
-                if (!response.resp) {
-                    res.json(401, { code: 401, message: 'Invalid match', resp: null });
-                } else {
-                    req.match = response.resp;
-                    next();
+                    repoMatch.add(match)
+                        .then((respMatch) => {
+                            req.match = respMatch.resp;
+                            next();
+                        }, (cause) => {
+                            res.json(400, { code: 400, message: cause, resp: null });
+                        });
+                } catch (error) {
+                    res.json(400, { code: 400, message: error.message, resp: error });
                 }
-            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
-            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch(() => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
     }
 
-    _addComment(req, res, next) {
-        req.match.addComment(req.body.owner, req.body.text, new Date());
-        repo.update(req.match)
-            .then((response) => {
-                res.json(200, { code: 200, message: 'Comment added successfuly', resp: req.match });
-            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
-            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
+    _searchByPlayer(req, res, next) {
+        repoMatch.getByPlayerId(req.body.playerId)
+            .then((resp) => {
+                req.matches = resp.resp;
+                next();
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
     }
 
-    _deleteComment(req, res, next) {
-        req.match.removeComment(req.params.commentid);
-        repo.update(req.match)
-            .then((response) => {
-                res.json(200, { code: 200, message: 'Comment deleted successfuly', resp: req.match });
-            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
-            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
-    }
+    _getArrayFromString(stringList) {
+        if (stringList)
+            return stringList.split(";");
 
-    _updateComment(req, res, next) {
-        req.match.updateComment(req.params.commentid, req.body.newText);
-        repo.update(req.match)
-            .then((response) => {
-                res.json(200, { code: 200, message: 'Comment updated successfuly', resp: req.match });
-            }, (err) => res.json(400, { code: 400, message: err.message, resp: null }))
-            .catch((err) => res.json(500, { code: 500, message: err.message, resp: null }));
+        return [];
     }
 
     static get INVALID_ES_CLIENT() {
