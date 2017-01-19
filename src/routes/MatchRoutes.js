@@ -28,7 +28,6 @@ class MatchRoutes extends Routes {
     _addAllRoutes(server) {
         server.post('/match', super._bodyIsNotNull, this._createMatch, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Match created' }) });
         server.post('/match/searchbyplayer', super._bodyIsNotNull, this._searchByPlayer, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
-        server.put('/match/:id', super._bodyIsNotNull, this._searchByPlayer, (req, res, next) => { res.json(200, { resp: 'ok', message: 'Done' }) });
         server.post('/match/:id/player', super._bodyIsNotNull, (req, res, next) => { res.json(200, { resp: 'ok', message: 'Done' }) });
         server.del('/match/:id/player', super._bodyIsNotNull, (req, res, next) => { res.json(200, { resp: 'ok', message: 'Done' }) });
     }
@@ -72,10 +71,7 @@ class MatchRoutes extends Routes {
     }
 
     _getArrayFromString(stringList) {
-        if (stringList)
-            return stringList.split(";");
-
-        return [];
+        return stringList ? stringList.split(";") : [];
     }
 
     static get INVALID_ES_CLIENT() {
