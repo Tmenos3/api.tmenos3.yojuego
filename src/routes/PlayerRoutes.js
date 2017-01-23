@@ -52,22 +52,22 @@ class PlayerRoutes extends Routes {
                     res.json(400, { code: 400, message: 'Player already exists', resp: null });
                 } else {
                     try {
-                        let player = new Player(req.body.firstName, req.body.lastName, req.body.nickname, req.user.id);
+                        let player = new Player(req.body.firstName, req.body.lastName, req.body.nickName, req.user.id);
                         return repo.add(player);
                     } catch (error) {
                         res.json(400, { code: 400, message: error.message, resp: error });
                     }
                 }
-            }, (err) => { 
-                res.json(400, { code: 400, message: err, resp: null }); 
+            }, (err) => {
+                res.json(400, { code: 400, message: err, resp: null });
             })
             .then((resp) => {
                 res.json(200, { code: 200, message: 'Player created.', resp: resp.resp });
-            }, (err) => { 
-                res.json(400, { code: 400, message: err, resp: null }); 
+            }, (err) => {
+                res.json(400, { code: 400, message: err, resp: null });
             })
-            .catch((err) => { 
-                res.json(500, { code: 500, message: err, resp: null }); 
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
             });
     }
 

@@ -118,7 +118,7 @@ class AuthRoutes {
 
     _generateToken(req, res, next) {
         let claims = {
-            id: req.user.id
+            id: req.user._id
         };
         req.token = jwt.sign(claims, config.get('serverConfig').secret);
         next();
