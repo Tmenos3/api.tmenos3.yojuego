@@ -12,8 +12,7 @@ var repo = null;
 class PlayerRoutes extends Routes {
     constructor(esClient) {
         super();
-        this._bodyIsNotNull = this._bodyIsNotNull.bind(this);
-        this._paramsIsNotNull = this._paramsIsNotNull.bind(this);
+
         this._getPlayer = this._getPlayer.bind(this);
         this._update = this._update.bind(this);
         this._create = this._create.bind(this);
@@ -27,22 +26,8 @@ class PlayerRoutes extends Routes {
 
     _addAllRoutes(server) {
         server.get('/player', this._getPlayer); // revisar
-        server.put('/player/create', this._bodyIsNotNull, this._create);
-        server.post('/player/:id/update', this._paramsIsNotNull, this._bodyIsNotNull, this._update);
-    }
-
-    _bodyIsNotNull(req, res, next) {
-        let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(req.body).throw(PlayerRoutes.INVALID_BODY));
-
-        validator.execute(() => { next(); }, (err) => { res.json(400, { code: 400, message: err, resp: null }); });
-    }
-
-    _paramsIsNotNull(req, res, next) {
-        let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(req.params).throw(PlayerRoutes.INVALID_PARAMS));
-
-        validator.execute(() => { next(); }, (err) => { res.json(400, { code: 400, message: err.message, resp: null }); });
+        server.put('/player/create', super._bodyIsNotNull, this._create);
+        server.post('/player/:id/update', super._paramsIsNotNull, super._bodyIsNotNull, this._update);
     }
 
     _create(req, res, next) {
