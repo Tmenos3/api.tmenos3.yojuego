@@ -79,6 +79,24 @@ PUT _mapping
     }
 }
 
+http://localhost:9200/yojuego/friendship/
+PUT _mapping
+{
+    "friendship": {
+        "properties": {
+            "playerId": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "friendId": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "status": { "type": "string"}
+        }
+    }
+}
+
 http://localhost:9200/yojuego/club/
 PUT _mapping
 {

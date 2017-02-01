@@ -23,45 +23,6 @@ class MatchESRepository extends ESRepository {
         });
     }
 
-    // getByPlayerId(playerId) {
-    //     return new Promise((resolve, reject) => {
-    //         this.esclient.search({
-    //             "index": "yojuego",
-    //             "type": "match",
-    //             "body": {
-    //                 "query": {
-    //                     "bool": {
-    //                         "should": [
-    //                             { "term": { "confirmedPlayers": { "value": playerId } } },
-    //                             { "term": { "pendingPlayers": { "value": playerId } } },
-    //                             { "term": { "creator": { "value": playerId } } }
-    //                         ]
-    //                     }
-    //                 }
-    //             }
-    //         }, (error, response) => {
-    //             if (error) {
-    //                 reject({ code: error.statusCode, message: error.message, resp: error });
-    //             }
-    //             else {
-    //                 let matches = [];
-
-    //                 for (let i = 0; i < response.hits.hits.length; i++) {
-    //                     let source = response.hits.hits[i]._source;
-    //                     let match = new Match(source.title, new Date(source.date), source.fromTime, source.toTime, source.location, source.creator, source.matchType);
-    //                     match._id = response.hits.hits[i]._id;
-    //                     match.confirmedPlayers = source.confirmedPlayers;
-    //                     match.pendingPlayers = source.pendingPlayers;
-
-    //                     matches.push(match);
-    //                 }
-
-    //                 resolve({ code: 200, message: null, resp: matches });
-    //             }
-    //         });
-    //     });
-    // }
-
     getByPlayerIdAndDate(playerId, date) {
         return new Promise((resolve, reject) => {
             this.esclient.search({
