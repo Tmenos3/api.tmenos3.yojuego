@@ -92,7 +92,17 @@ PUT _mapping
                 "type": "string",
                 "index": "not_analyzed"
             },
-            "status": { "type": "string"}
+            "status": { "type": "string"},
+            "info" : {
+                "properties" : {
+                    "email" : { "type" : "string" },
+                    "phone" : { "type" : "string" },
+                    "photo" : { "type" : "string" },
+                    "firstName": { "type": "string" },
+                    "lastName": { "type": "string" },
+                    "nickName": { "type": "string" }
+                }
+            }
         }
     }
 }

@@ -37,7 +37,7 @@ class FriendshipRoutes extends Routes {
     _addAllRoutes(server) {
         server.get('/friendship/:id', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkPlayerFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: 'Match created' }) });
         server.get('/friendship', this._getPlayer, this._getAllFriendships, (req, res, next) => { res.json(200, { code: 200, resp: req.friendships, message: 'Match created' }) });
-        server.post('/friendship/create', super._bodyIsNotNull, this._createFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
+        server.post('/friendship/create', super._bodyIsNotNull, this._getPlayer, this._createFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
         server.post('/friendship/:id/accetp', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkFriendFriendship, this._acceptFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
         server.post('/friendship/:id/reject', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkFriendFriendship, this._rejectFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
         server.del('/friendship/:id', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkPlayerFriendship, this._deleteFriendship, this._updateFriendshipsByFriend, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
@@ -74,7 +74,11 @@ class FriendshipRoutes extends Routes {
     }
 
     _createFriendship(req, res, next) {
-        let friendship = new Friendship(req.player._id, req.body.friendId, null);
+        let info = {
+            email: req.body.email,
+            phone: req.body.phone
+        }
+        let friendship = new Friendship(req.player._id, null, 'CREATED', info);
         repoFriendship.add(friendship)
             .then((resp) => {
                 req.friendship = resp.resp;
@@ -177,6 +181,7 @@ class FriendshipRoutes extends Routes {
                     res.json(404, { code: 404, message: 'Player inexistente', resp: null });
                 } else {
                     req.player = resp.resp;
+                    next();
                 }
             }, (cause) => {
                 res.json(404, { code: 404, message: cause, resp: null });

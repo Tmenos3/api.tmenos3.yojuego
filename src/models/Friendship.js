@@ -6,14 +6,12 @@ class Friendship {
     constructor(playerId, friendId, status, info) {
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(playerId).throw(new Error(Friendship.INVALID_PLAYER)));
-        validator.addCondition(new NotNullOrUndefinedCondition(friendId).throw(new Error(Friendship.INVALID_FRIEND)));
-        validator.addCondition(new EqualCondition(sender, recipient).not().throw(new Error(Friendship.INVALIDAD_FRIENDSHIP)));
 
         validator.execute(() => {
             this.playerId = playerId;
             this.friendId = friendId;
             this.info = info;
-            this.status = status ? 'CREATED' : status;
+            this.status = status;
         }, (err) => { throw err; });
     }
 
