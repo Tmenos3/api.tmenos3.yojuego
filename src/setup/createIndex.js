@@ -107,6 +107,30 @@ PUT _mapping
     }
 }
 
+http://localhost:9200/yojuego/group/
+PUT _mapping
+{
+    "group": {
+        "properties": {
+            "description": { "type": "string" },
+            "photo": { "type": "string" },
+            "players" : {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "admins" : {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "groupCreatedBy": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "groupCreatedOn": { "type": "date" }
+        }
+    }
+}
+
 http://localhost:9200/yojuego/club/
 PUT _mapping
 {
