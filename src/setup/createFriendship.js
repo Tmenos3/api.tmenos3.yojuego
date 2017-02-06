@@ -4,8 +4,27 @@ let createFriendship = (client) => {
         type: 'friendShip',
         body: {
             properties: {
-                sender: { type: 'string' },
-                recipient: { type: 'string' }
+                playerId: { type: 'string', index: 'not_analyzed' },
+                friendId: { type: 'string', index: 'not_analyzed' },
+                status: { type: 'string' },
+                info: {
+                    properties: {
+                        email: { type: 'string' },
+                        phone: { type: 'string' },
+                        photo: { type: 'string' },
+                        firstName: { type: 'string' },
+                        lastName: { type: 'string' },
+                        nickName: { type: 'string' }
+                    }
+                },
+                friendshipAudit: {
+                    createdBy: { type: 'string', index: 'not_analyzed' },
+                    createdOn: { type: 'date' },
+                    createdFrom: { type: 'string' },
+                    modifiedBy: { type: 'string', index: 'not_analyzed' },
+                    modifiedOn: { type: 'date' },
+                    modifiedFrom: { type: 'string' }
+                }
             }
         }
     });

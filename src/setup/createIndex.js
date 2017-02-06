@@ -8,14 +8,28 @@ PUT _mapping
         "properties": {
             "id": {
                 "type": "string",
-                    "index": "not_analyzed"
+                "index": "not_analyzed"
             },
             "password": {
                 "type": "string"
             },
             "type": {
                 "type": "string",
+                "index": "not_analyzed"
+            },
+            "userAudit": {
+                "createdBy": {
+                    "type": "string",
                     "index": "not_analyzed"
+                },
+                "createdOn": { "type": "date" },
+                "createdFrom": {"type":"string"}
+                "modifiedBy": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "modifiedOn": { "type": "date" },
+                "modifiedFrom": {"type":"string"}
             }
         }
     }
@@ -39,6 +53,20 @@ PUT _mapping
             "userid": {
                 "type": "string",
                 "index": "not_analyzed"
+            },
+            "playerAudit": {
+                "createdBy": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "createdOn": { "type": "date" },
+                "createdFrom": {"type":"string"}
+                "modifiedBy": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "modifiedOn": { "type": "date" },
+                "modifiedFrom": {"type":"string"}
             }
         }
     }
@@ -57,15 +85,15 @@ PUT _mapping
             "matchType": { "type": "integer" },
             "creator": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "confirmedPlayers" : {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "pendingPlayers" : {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "comments" : {
                 "properties" : {
@@ -74,6 +102,20 @@ PUT _mapping
                     "text" : { "type" : "string" },
                     "writtenOn": { "type": "date" }
                 }
+            },
+            "matchAudit": {
+                "createdBy": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "createdOn": { "type": "date" },
+                "createdFrom": {"type":"string"}
+                "modifiedBy": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "modifiedOn": { "type": "date" },
+                "modifiedFrom": {"type":"string"}
             }
         }
     }
@@ -86,13 +128,13 @@ PUT _mapping
         "properties": {
             "playerId": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "friendId": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
-            "status": { "type": "string"},
+            "status": { "type": "string" },
             "info" : {
                 "properties" : {
                     "email" : { "type" : "string" },
@@ -102,6 +144,20 @@ PUT _mapping
                     "lastName": { "type": "string" },
                     "nickName": { "type": "string" }
                 }
+            },
+            "friendshipAudit": {
+                "createdBy": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "createdOn": { "type": "date" },
+                "createdFrom": {"type":"string"}
+                "modifiedBy": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "modifiedOn": { "type": "date" },
+                "modifiedFrom": {"type":"string"}
             }
         }
     }
@@ -122,11 +178,20 @@ PUT _mapping
                 "type": "string",
                 "index": "not_analyzed"
             },
-            "groupCreatedBy": {
-                "type": "string",
-                "index": "not_analyzed"
-            },
-            "groupCreatedOn": { "type": "date" }
+            "groupAudit": {
+                "createdBy": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "createdOn": { "type": "date" },
+                "createdFrom": {"type":"string"}
+                "modifiedBy": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                },
+                "modifiedOn": { "type": "date" },
+                "modifiedFrom": {"type":"string"}
+            }
         }
     }
 }
@@ -165,7 +230,7 @@ PUT _mapping
                         "properties" : {
                             "mail": {
                                 "type": "string",
-                                "index": "not_analyzed"
+                                    "index": "not_analyzed"
                             }
                         }
                     },
@@ -173,7 +238,7 @@ PUT _mapping
                         "properties" : {
                             "telephone": {
                                 "type": "string",
-                                "index": "not_analyzed"
+                                    "index": "not_analyzed"
                             }
                         }
                     },
@@ -181,19 +246,19 @@ PUT _mapping
                         "properties" : {
                             "latitude": {
                                 "type": "string",
-                                "index": "not_analyzed"
+                                    "index": "not_analyzed"
                             },
                             "longitude": {
                                 "type": "string",
-                                "index": "not_analyzed"
+                                    "index": "not_analyzed"
                             },
                             "state": {
                                 "type": "string",
-                                "index": "not_analyzed"
+                                    "index": "not_analyzed"
                             },
                             "city": {
                                 "type": "string",
-                                "index": "not_analyzed"
+                                    "index": "not_analyzed"
                             }
                         }
                     }
@@ -205,11 +270,11 @@ PUT _mapping
                         "properties" : {
                             "date": {
                                 "type": "date",
-                                "index": "not_analyzed"
+                                    "index": "not_analyzed"
                             },
                             "matchId": {
                                 "type": "string",
-                                "index": "not_analyzed"
+                                    "index": "not_analyzed"
                             }
                         }
                     }
@@ -226,15 +291,15 @@ PUT _mapping
         "properties": {
             "senderId": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "recipientId": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "matchId": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "createdOn": { "type": "date" },
             "state": { "type": "string" }
@@ -249,15 +314,15 @@ PUT _mapping
         "properties": {
             "deviceId": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "platform": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "userId": {
                 "type": "string",
-                "index": "not_analyzed"
+                    "index": "not_analyzed"
             },
             "createdOn": { "type": "date" }
         }

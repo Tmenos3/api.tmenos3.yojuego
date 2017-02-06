@@ -1,17 +1,14 @@
-let createPlayer = (client) => {
+let createGroup = (client) => {
     return client.indices.putMapping({
         index: 'yojuego',
-        type: 'player',
+        type: 'friendShip',
         body: {
             properties: {
-                firstName: { type: 'string' },
-                lastName: { type: 'string' },
-                nickName: { type: 'string' },
-                email: { type: 'string', index: 'not_analyzed' },
+                description: { type: 'string' },
                 photo: { type: 'string' },
-                phone: { type: 'string', index: 'not_analyzed' },
-                userid: { type: 'string', index: 'not_analyzed' },
-                playerAudit: {
+                players: { type: 'string', index: 'not_analyzed' },
+                admins: { type: 'string', index: 'not_analyzed' },
+                groupAudit: {
                     createdBy: { type: 'string', index: 'not_analyzed' },
                     createdOn: { type: 'date' },
                     createdFrom: { type: 'string' },
@@ -24,4 +21,4 @@ let createPlayer = (client) => {
     });
 }
 
-module.exports = createPlayer;
+module.exports = createGroup;
