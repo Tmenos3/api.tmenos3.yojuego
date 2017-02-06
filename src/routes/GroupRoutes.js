@@ -23,19 +23,20 @@ class GroupRoutes extends Routes {
         this._createGroup = this._createGroup.bind(this);
         this._deleteGroup = this._deleteGroup.bind(this);
         this._makeAdminPlayer = this._makeAdminPlayer.bind(this);
+        this._checkPlayerMember = this._checkPlayerMember.bind(this);
 
         let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(FriendshipRoutes.INVALID_ES_CLIENT));
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(GroupRoutes.INVALID_ES_CLIENT));
 
         validator.execute(() => {
-            repoFriendship = new FriendshipRepository(esClient);
+            repoGroup = new GroupRepository(esClient);
             repoPlayer = new PlayerRepository(esClient);
         }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
-        server.get('/group/:id', super._paramsIsNotNull, this._getPlayer, this._getGroup, this._checkPlayerFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
-        server.get('/group', this._getPlayer, this._getAllGroups, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: 'Group created' }) });
+        server.get('/group/:id', super._paramsIsNotNull, this._getPlayer, this._getGroup, this._checkPlayerMember, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
+        server.get('/group', this._getPlayer, this._getAllGroups, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: null }) });
         server.post('/group/create', super._bodyIsNotNull, this._getPlayer, this._createGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.post('/group/:id/addPlayer', super._paramsIsNotNull, this._getPlayer, this._getGroup, this._addPlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.post('/group/:id/removePlayer', super._paramsIsNotNull, this._getPlayer, this._getGroup, this._removePlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
@@ -179,6 +180,13 @@ class GroupRoutes extends Routes {
             .catch((err) => {
                 res.json(500, { code: 500, message: err, resp: null });
             });
+    }
+
+    _checkPlayerMember(req, res, next) {
+        if (req.group.isMember(req.player._id))
+            next();
+        else
+            res.json(400, { code: 400, message: 'El player no es miembro del group.', resp: null });
     }
 
     _updateGroup(req, res, next) {

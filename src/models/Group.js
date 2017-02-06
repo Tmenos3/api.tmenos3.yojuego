@@ -57,6 +57,10 @@ class Group {
         return this._existsInAdmins(playerId);
     }
 
+    isMember(playerId) {
+        return this._existsInAdmins(playerId) || this._existsInPlayers(playerId);
+    }
+
     _removePlayer(playerId) {
         var position = this.players.indexOf(playerId);
         if (position > -1)
