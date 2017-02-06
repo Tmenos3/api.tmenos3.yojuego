@@ -84,6 +84,14 @@ class FriendshipRoutes extends Routes {
         }
 
         let friendship = new Friendship(req.player._id, null, 'CREATED', info);
+        friendship.friendshipAudit = {
+            createdBy: req.player._id, //We should store deviceId here
+            createdOn: new Date(),
+            createdFrom: req.body.platform,
+            modifiedBy: null,
+            modifiedOn: null,
+            modifiedFrom: null
+        }
         repoFriendship.add(friendship)
             .then((resp) => {
                 repoFriendship.get(resp.resp._id)
@@ -114,6 +122,10 @@ class FriendshipRoutes extends Routes {
             nickName: req.player.nickName,
             telephone: '12431234'
         };
+        friendship.friendshipAudit.modifiedBy = req.player._id; //We should store deviceId here
+        friendship.friendshipAudit.modifiedOn = new Date();
+        friendship.friendshipAudit.modifiedFrom = req.body.platform;
+
 
         repoFriendship.update(friendship)
             .then((resp) => {
@@ -131,6 +143,9 @@ class FriendshipRoutes extends Routes {
         let friendship = req.friendship;
         friendship.status = 'REJECTED'
         friendship.info = null;
+        friendship.friendshipAudit.modifiedBy = req.body.platform; //We should store deviceId here
+        friendship.friendshipAudit.modifiedOn = new Date();
+        friendship.friendshipAudit.modifiedFrom = req.body.platform;
 
         repoFriendship.update(friendship)
             .then((resp) => {

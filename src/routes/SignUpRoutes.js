@@ -18,12 +18,13 @@ class SignUpRoutes extends Routes {
 
         this._createUser = this._createUser.bind(this);
         this._deleteUser = this._deleteUser.bind(this);
-        this._createPlayer = this._createPlayer.bind(this);
-        this._insertPlayer = this._insertPlayer.bind(this);
+        // this._createPlayer = this._createPlayer.bind(this);
+        // this._insertPlayer = this._insertPlayer.bind(this);
         this._validateRequest = this._validateRequest.bind(this);
         this._validateIfUserExists = this._validateIfUserExists.bind(this);
         this._generateToken = this._generateToken.bind(this);
         this._insertUser = this._insertUser.bind(this);
+        this._auditUser = this._auditUser.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(SignUpRoutes.INVALID_ES_CLIENT));
@@ -45,6 +46,7 @@ class SignUpRoutes extends Routes {
             // this._createPlayer,
             // this._insertPlayer,
             this._generateToken,
+            this._auditUser,
             (req, res, next) => {
                 res.json(200, { token: req.token, userid: req.user.id });
             });
@@ -97,48 +99,48 @@ class SignUpRoutes extends Routes {
         }
     }
 
-    _createPlayer(req, res, next) {
-        try {
-            req.player = new Player(req.body.firstName,
-                req.body.lastName,
-                req.body.nickName,
-                req.user._id);
+    // _createPlayer(req, res, next) {
+    //     try {
+    //         req.player = new Player(req.body.firstName,
+    //             req.body.lastName,
+    //             req.body.nickName,
+    //             req.user._id);
 
-            next();
-        } catch (error) {
-            this._deleteUser(req.user, (err) => {
-                if (err) {
-                    res.json(500, { code: 500, message: err, resp: null });
-                } else {
-                    res.json(400, { code: 400, message: error.message, resp: error });
-                }
-            });
-        }
-    }
+    //         next();
+    //     } catch (error) {
+    //         this._deleteUser(req.user, (err) => {
+    //             if (err) {
+    //                 res.json(500, { code: 500, message: err, resp: null });
+    //             } else {
+    //                 res.json(400, { code: 400, message: error.message, resp: error });
+    //             }
+    //         });
+    //     }
+    // }
 
-    _insertPlayer(req, res, next) {
-        playerRepo.add(req.player)
-            .then((playerResp) => {
-                next();
-            }, (err) => {
-                this._deleteUser(req.user, (error) => {
-                    if (error) {
-                        res.json(500, { code: 500, message: error, resp: null });
-                    } else {
-                        res.json(400, { code: 400, message: err, resp: null });
-                    }
-                });
-            })
-            .catch((err) => {
-                this._deleteUser(req.user, (error) => {
-                    if (error) {
-                        res.json(500, { code: 500, message: error, resp: null });
-                    } else {
-                        res.json(400, { code: 400, message: err, resp: null });
-                    }
-                });
-            });
-    }
+    // _insertPlayer(req, res, next) {
+    //     playerRepo.add(req.player)
+    //         .then((playerResp) => {
+    //             next();
+    //         }, (err) => {
+    //             this._deleteUser(req.user, (error) => {
+    //                 if (error) {
+    //                     res.json(500, { code: 500, message: error, resp: null });
+    //                 } else {
+    //                     res.json(400, { code: 400, message: err, resp: null });
+    //                 }
+    //             });
+    //         })
+    //         .catch((err) => {
+    //             this._deleteUser(req.user, (error) => {
+    //                 if (error) {
+    //                     res.json(500, { code: 500, message: error, resp: null });
+    //                 } else {
+    //                     res.json(400, { code: 400, message: err, resp: null });
+    //                 }
+    //             });
+    //         });
+    // }
 
     _generateToken(req, res, next) {
         let claims = {
@@ -155,6 +157,30 @@ class SignUpRoutes extends Routes {
                 doAfterDelete();
             }, (err) => {
                 doAfterDelete(err);
+            });
+    }
+
+    _auditUser(req, res, next) {
+        req.user.userAudit = {
+            lastAccess: new Date(),
+            lastToken: req.token,
+            createdBy: req.body.platform, //We should store deviceId here
+            createdOn: new Date(),
+            createdFrom: req.body.platform,
+            modifiedBy: null,
+            modifiedOn: null,
+            modifiedFrom: null
+        }
+
+        userRepo.update(req.user)
+            .then((resp) => {
+                req.user = resp.resp;
+                next();
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
             });
     }
 

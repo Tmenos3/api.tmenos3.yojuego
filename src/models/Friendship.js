@@ -3,7 +3,7 @@ let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 let EqualCondition = require('no-if-validator').EqualCondition;
 
 class Friendship {
-    constructor(playerId, friendId, status, info) {
+    constructor(playerId, friendId, status, info, auditInfo) {
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(playerId).throw(new Error(Friendship.INVALID_PLAYER)));
 
@@ -12,6 +12,7 @@ class Friendship {
             this.friendId = friendId;
             this.info = info;
             this.status = status;
+            this.audit = auditInfo;
         }, (err) => { throw err; });
     }
 

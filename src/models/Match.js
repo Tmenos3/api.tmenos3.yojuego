@@ -7,7 +7,7 @@ var CustomCondition = require('no-if-validator').CustomCondition;
 var IsNumberCondition = require('no-if-validator').IsNumberCondition;
 
 class Match {
-    constructor(title, date, fromTime, toTime, location, creator, matchType) {
+    constructor(title, date, fromTime, toTime, location, creator, matchType, club, auditInfo) {
         this._existsInPendingPlayers = this._existsInPendingPlayers.bind(this);
         this._existsInConfirmedPlayers = this._existsInConfirmedPlayers.bind(this);
 
@@ -37,6 +37,8 @@ class Match {
             this.location = location;
             this.creator = creator;
             this.matchType = matchType;
+            this.club = club;
+            this.audit = auditInfo;
             this.confirmedPlayers = [];
             this.pendingPlayers = [];
             this.comments = [];

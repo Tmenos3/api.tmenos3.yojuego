@@ -75,7 +75,15 @@ class GroupRoutes extends Routes {
     }
 
     _createGroup(req, res, next) {
-        let group = new Group(req.players, [req.player._id], req.description, req.photo, req.player._id, new Date());
+        let group = new Group(req.body.players, [req.player._id], req.body.description, req.body.photo, req.player._id, new Date());
+        group.groupAudit = {
+            createdBy: req.body.platform, //We should store deviceId here
+            createdOn: new Date(),
+            createdFrom: req.body.platform,
+            modifiedBy: null,
+            modifiedOn: null,
+            modifiedFrom: null
+        }
         repoGroup.add(group)
             .then((resp) => {
                 repoGroup.get(resp.resp._id)
@@ -190,8 +198,9 @@ class GroupRoutes extends Routes {
     }
 
     _updateGroup(req, res, next) {
-        req.group.modifiedBy = req.player._id;
-        req.group.modifiedOn = new Date();
+        req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
+        req.group.groupAudit.modifiedOn = new Date();
+        req.group.groupAudit.modifiedFrom = req.body.platform;
 
         repoGroup.update(req.group)
             .then((resp) => {
