@@ -5,6 +5,7 @@ var UserESRepository = require('../repositories/UserESRepository');
 var PlayerESRepository = require('../repositories/PlayerESRepository');
 var FacebookUser = require('../models/FacebookUser');
 var GoogleUser = require('../models/GoogleUser');
+var Player = require('../models/Player');
 var FacebookStrategy = require('passport-facebook').Strategy
 var GoogleStrategy = require('passport-google-oauth20').Strategy;
 
@@ -18,6 +19,7 @@ class AuthRoutes {
         this._authFacebook = this._authFacebook.bind(this);
         this._authGoogle = this._authGoogle.bind(this);
         this._createUser = this._createUser.bind(this);
+        this._createOrUpdatePLayer = this._createOrUpdatePLayer.bind(this);
         this._generateToken = this._generateToken.bind(this);
         this._configurePassport = this._configurePassport.bind(this);
         this._getNewUser = this._getNewUser.bind(this);
@@ -45,11 +47,11 @@ class AuthRoutes {
         this._configurePassport(server, passport);
 
         server.get('/auth/facebook', passport.authenticate('facebook', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
-        server.get('/auth/google', passport.authenticate('google', { session: false, scope: ['profile'] }));
-        server.get('/auth/facebook/callback', passport.authenticate('facebook', { session: false }), this._createUser, this._generateToken, this._auditUser, (req, res, next) => {
+        server.get('/auth/google', passport.authenticate('google', { session: false, scope: ['profile', 'email'] }));
+        server.get('/auth/facebook/callback', passport.authenticate('facebook', { session: false }), this._createUser, this._createOrUpdatePLayer, this._generateToken, this._auditUser, (req, res, next) => {
             res.redirect('/auth/success?token=' + req.token, next);
         });
-        server.get('/auth/google/callback', passport.authenticate('google', { session: false }), this._createUser, this._generateToken, this._auditUser, (req, res, next) => {
+        server.get('/auth/google/callback', passport.authenticate('google', { session: false }), this._createUser, this._createOrUpdatePLayer, this._generateToken, this._auditUser, (req, res, next) => {
             res.redirect('/auth/success?token=' + req.token, next);
         });
     }
@@ -59,13 +61,23 @@ class AuthRoutes {
             .then((response) => {
                 if (response.resp) {
                     req.exists = true;
-                    req.user = response.resp;
+                    req.existingUser = response.resp;
                 } else {
                     req.newUser = {
                         id: profile.id,
+                        email: profile.emails[0].value,
                         type: 'facebook'
                     };
                 }
+
+                req.providerInfo = {
+                    email: profile.emails[0].value,
+                    photo: profile.photos[0].value,
+                    nickName: profile.displayName,
+                    firstName: profile.name.givenName,
+                    lastName: profile.name.familyName
+                }
+
                 return done(null, profile);
             }, (err) => {
                 req.statusCode = 400;
@@ -88,9 +100,15 @@ class AuthRoutes {
                 } else {
                     req.newUser = {
                         id: profile.id,
+                        email: profile.emails[0].value,
                         type: 'google'
                     };
                 }
+                let email = profile.emails[0].value;
+                let photo = profile.photos[0].value;
+                let nickName = profile.displayName;
+                let firstName = profile.name.givenName;
+                let lastName = profile.name.familyName;
                 return done(null, profile);
             }, (err) => {
                 req.statusCode = 400;
@@ -107,16 +125,63 @@ class AuthRoutes {
     _createUser(req, res, next) {
         if (req.exists) {
             req.isNewUser = false;
+            req.user = req.existingUser;
             next();
         } else {
             let newUser = this._getNewUser(req.newUser);
             repoUser.add(newUser)
                 .then((resp) => {
-                    req.user = newUser;
+                    req.user = resp.resp;
                     req.isNewUser = true;
                     next();
                 }, (err) => { res.json(400, err); });
         }
+    }
+
+    _createOrUpdatePLayer(req, res, next) {
+        repoPlayer.getByUserId(req.user._id)
+            .then((ret) => {
+                if (ret.resp) {
+                    //Si ya existe actualizo la info segun facebook o google
+                    let player = ret.resp;
+                    player.firstName = req.providerInfo.firstName;
+                    player.lastName = req.providerInfo.lastName;
+                    player.nickName = req.providerInfo.nickName;
+                    player.photo = req.providerInfo.photo;
+                    player.email = req.providerInfo.email;
+                    player.playerAudit.modifiedBy = 'MOBILE_APP';
+                    player.playerAudit.modifiedOn = new Date();
+                    player.playerAudit.modifiedFrom = 'MOBILE_APP';
+
+                    return repoPlayer.update(player);
+                } else {
+                    try {
+                        let player = new Player(req.providerInfo.firstName, req.providerInfo.lastName, req.providerInfo.nickName, req.user._id, req.providerInfo.email, req.providerInfo.photo, null);
+                        player.playerAudit = {
+                            createdBy: 'MOBILE_APP', //We should store deviceId here
+                            createdOn: new Date(),
+                            createdFrom: 'MOBILE_APP',
+                            modifiedBy: null,
+                            modifiedOn: null,
+                            modifiedFrom: null
+                        }
+
+                        return repoPlayer.add(player);
+                    } catch (error) {
+                        res.json(400, { code: 400, message: error.message, resp: error });
+                    }
+                }
+            }, (err) => {
+                res.json(400, { code: 400, message: err, resp: null });
+            })
+            .then((resp) => {
+                next();
+            }, (err) => {
+                res.json(400, { code: 400, message: err, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
     }
 
     _generateToken(req, res, next) {
@@ -131,24 +196,23 @@ class AuthRoutes {
         if (!req.isNewUser) {
             req.user.userAudit.lastAccess = new Date();
             req.user.userAudit.lastToken = req.token;
-            req.user.userAudit.modifiedBy = req.body.platform; //We should store deviceId here
+            req.user.userAudit.modifiedBy = 'MOBILE_APP';
             req.user.userAudit.modifiedOn = new Date();
-            req.user.userAudit.modifiedFrom = req.body.platform;
+            req.user.userAudit.modifiedFrom = 'MOBILE_APP';
         } else {
             req.user.userAudit = {
                 lastAccess: new Date(),
                 lastToken: req.token,
-                createdBy: req.body.platform, //We should store deviceId here
+                createdBy: 'MOBILE_APP',
                 createdOn: new Date(),
-                createdFrom: req.body.platform,
+                createdFrom: 'MOBILE_APP',
                 modifiedBy: null,
                 modifiedOn: null,
                 modifiedFrom: null
             }
-
         }
 
-        userRepo.update(req.user)
+        repoUser.update(req.user)
             .then((resp) => {
                 req.user = resp.resp;
                 next();
@@ -165,7 +229,7 @@ class AuthRoutes {
             clientID: config.get('auth').facebook.appId,
             clientSecret: config.get('auth').facebook.appSecret,
             callbackURL: config.get('auth').facebook.callback,
-            profileFields: ['id', 'birthday', 'displayName', 'picture.type(large)', 'email'],
+            profileFields: ['id', 'birthday', 'name', 'displayName', 'picture.type(large)', 'email'],
             passReqToCallback: true
         }, this._authFacebook));
 

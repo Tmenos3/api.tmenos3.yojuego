@@ -1,13 +1,14 @@
-'use strict'
-var Validator = require('no-if-validator').Validator;
-var ValidMailCondition = require('no-if-validator').ValidMailCondition;
-var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+let Validator = require('no-if-validator').Validator;
+let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+let CustomCondition = require('no-if-validator').CustomCondition;
 
 class User {
     constructor(userType, id) {
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(userType).throw(new Error(User.INVALID_USER)));
         validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(User.INVALID_ID)));
+        validator.addCondition(new CustomCondition(() => { return userType != "" }).throw(new Error(User.INVALID_USER)));
+        validator.addCondition(new CustomCondition(() => { return id != "" }).throw(new Error(User.INVALID_ID)));
 
         validator.execute(() => {
             this.type = userType;

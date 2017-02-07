@@ -4,35 +4,25 @@ PUT yojuego
 http://localhost:9200/yojuego/user/
 PUT _mapping
 {
-    "user": {
-        "properties": {
-            "id": {
-                "type": "string",
-                "index": "not_analyzed"
-            },
-            "password": {
-                "type": "string"
-            },
-            "type": {
-                "type": "string",
-                "index": "not_analyzed"
-            },
-            "userAudit": {
-                "createdBy": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
-                "createdOn": { "type": "date" },
-                "createdFrom": {"type":"string"}
-                "modifiedBy": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
-                "modifiedOn": { "type": "date" },
-                "modifiedFrom": {"type":"string"}
+   "user": {
+      "properties": {
+         "id": { "type": "string", "index": "not_analyzed" },
+         "password": { "type": "string" },
+         "type": { "type": "string", "index": "not_analyzed" },
+         "userAudit": {
+            "properties": {
+               "lastAccess": { "type": "date" },
+               "lastToken": { "type": "string", "index": "not_analyzed" },
+               "createdBy": { "type": "string", "index": "not_analyzed" },
+               "createdOn": { "type": "date" },
+               "createdFrom": { "type": "string" },
+               "modifiedBy": { "type": "string", "index": "not_analyzed" },
+               "modifiedOn": { "type": "date" },
+               "modifiedFrom": { "type": "string" }
             }
-        }
-    }
+         }
+      }
+   }
 }
 
 
@@ -41,32 +31,22 @@ PUT _mapping
 {
     "player": {
         "properties": {
-            "firstName": {
-                "type": "string"
-            },
-            "lastName": {
-                "type": "string"
-            },
-            "nickName": {
-                "type": "string"
-            },
-            "userid": {
-                "type": "string",
-                "index": "not_analyzed"
-            },
+            "firstName": { "type": "string" },
+            "lastName": { "type": "string" },
+            "nickName": { "type": "string" },
+            "photo": { "type": "string" },
+            "email": { "type": "string", "index": "not_analyzed" },
+            "phone": { "type": "string", "index": "not_analyzed" },
+            "userid": { "type": "string", "index": "not_analyzed" },
             "playerAudit": {
-                "createdBy": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
+                "properties": {
+                "createdBy": { "type": "string", "index": "not_analyzed" },
                 "createdOn": { "type": "date" },
-                "createdFrom": {"type":"string"}
-                "modifiedBy": {
-                    "type": "string",
-                    "index": "not_analyzed"
-                },
+                "createdFrom": { "type": "string" },
+                "modifiedBy": { "type": "string", "index": "not_analyzed" },
                 "modifiedOn": { "type": "date" },
-                "modifiedFrom": {"type":"string"}
+                "modifiedFrom": { "type": "string" }
+                }
             }
         }
     }

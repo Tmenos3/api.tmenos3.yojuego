@@ -119,7 +119,16 @@ class UserESRepository extends ESRepository {
                 let document = {
                     type: user.type,
                     id: user.id,
-                    userAudit: user.userAudit
+                    userAudit: {
+                        lastAccess: user.userAudit.lastAccess,
+                        lastToken: user.userAudit.lastToken,
+                        createdBy: user.userAudit.createdBy,
+                        createdOn: user.userAudit.createdOn,
+                        createdFrom: user.userAudit.createdFrom,
+                        modifiedBy: user.userAudit.modifiedBy,
+                        modifiedOn: user.userAudit.modifiedOn,
+                        modifiedFrom: user.userAudit.modifiedFrom
+                    }
                 };
 
                 if (user.type == UserType.yoJuego) {
@@ -127,20 +136,6 @@ class UserESRepository extends ESRepository {
                 }
                 super.update(user._id, document, 'yojuego', 'user')
                     .then((resp) => {
-                        let user = null;
-                        switch (resp._source.type) {
-                            case UserType.facebook:
-                                user = new FacebookUser(resp._source.id);
-                                break;
-                            case UserType.google:
-                                user = new GoogleUser(resp._source.id);
-                                break;
-                            case UserType.yoJuego:
-                                user = new YoJuegoUser(resp._source.id, resp._source.password);
-                                break;
-                        }
-                        user._id = resp._id;
-                        user.userAudit = resp._source.userAudit;
                         resolve({ code: 200, message: UserESRepository.DOCUMENT_UPDATED, resp: user });
                     }, reject);
             } else {

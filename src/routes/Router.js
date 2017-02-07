@@ -28,7 +28,7 @@ class Router {
         new AuthRoutes(esClient, jwt).add(server, passport);
         new ResetPasswordRoutes(esClient, jwt).add(server);
         new UserRoute(esClient).add(server);
-        new ServerRoute(jwt).add(server);
+        new ServerRoute(esClient, jwt).add(server);
     }
 }
 

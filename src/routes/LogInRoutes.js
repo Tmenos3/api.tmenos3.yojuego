@@ -84,9 +84,9 @@ class LogInRoutes {
     _auditUser(req, res, next) {
         req.user.userAudit.lastAccess = new Date();
         req.user.userAudit.lastToken = req.token;
-        req.user.userAudit.modifiedBy = req.body.platform; //We should store deviceId here
+        req.user.userAudit.modifiedBy = req.body.platform || 'MOBILE_APP'; //We should store deviceId here
         req.user.userAudit.modifiedOn = new Date();
-        req.user.userAudit.modifiedFrom = req.body.platform;
+        req.user.userAudit.modifiedFrom = req.body.platform || 'MOBILE_APP';
 
         userRepo.update(req.user)
             .then((resp) => {

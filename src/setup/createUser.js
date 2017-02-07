@@ -4,16 +4,16 @@ let createUser = (client) => {
         type: 'user',
         body: {
             properties: {
-                id: { type: 'string', index: 'not_analyzed' },
+                id: { type: 'string', index: 'keyword' },
                 password: { type: 'string' },
-                type: { type: 'string', index: 'not_analyzed' },
+                type: { type: 'string', index: 'keyword' },
                 userAudit: {
                     lastAccess: { type: 'date' },
-                    lastToken: { type: 'string', index: 'not_analyzed' },
-                    createdBy: { type: 'string', index: 'not_analyzed' },
+                    lastToken: { type: 'string', index: 'keyword' },
+                    createdBy: { type: 'string', index: 'keyword' },
                     createdOn: { 'type': 'date' },
                     createdFrom: { 'type': 'string' },
-                    modifiedBy: { type: 'string', index: 'not_analyzed' },
+                    modifiedBy: { type: 'string', index: 'keyword' },
                     modifiedOn: { type: 'date' },
                     modifiedFrom: { type: 'string' }
                 }

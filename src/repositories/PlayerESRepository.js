@@ -12,8 +12,10 @@ class PlayerESRepository extends ESRepository {
         return new Promise((resolve, reject) => {
             super.get(playerId, 'yojuego', 'player')
                 .then((objRet) => {
-                    var player = new Player(objRet.resp._source.firstName, objRet.resp._source.lastName, objRet.resp._source.nickName, objRet.resp._source.userid);
+                    let source = objRet.resp._source;
+                    let player = new Player(source.firstName, source.lastName, source.nickName, source.userid, source.email, source.photo, source.phone);
                     player._id = objRet.resp._id
+                    player.playerAudit = source.playerAudit;
                     resolve({ code: 200, message: null, resp: player });
                 }, reject);
         });
@@ -42,8 +44,10 @@ class PlayerESRepository extends ESRepository {
                     let player = null;
 
                     for (let i = 0; i < response.hits.hits.length; i++) {
-                        player = new Player(response.hits.hits[i]._source.firstName, response.hits.hits[i]._source.lastName, response.hits.hits[i]._source.nickName, response.hits.hits[i]._source.userid);
+                        let source = response.hits.hits[i]._source;
+                        player = new Player(source.firstName, source.lastName, source.nickName, source.userid, source.email, source.photo, source.phone);
                         player._id = response.hits.hits[i]._id;
+                        player.playerAudit = source.playerAudit;
                         break;
                     }
 
@@ -67,7 +71,18 @@ class PlayerESRepository extends ESRepository {
                 firstName: player.firstName,
                 lastName: player.lastName,
                 nickName: player.nickName,
-                userid: player.userid
+                email: player.email,
+                photo: player.photo,
+                phone: player.phone,
+                userid: player.userid,
+                playerAudit: {
+                    createdBy: player.playerAudit.createdBy,
+                    createdOn: player.playerAudit.createdOn,
+                    createdFrom: player.playerAudit.createdFrom,
+                    modifiedBy: player.playerAudit.modifiedBy,
+                    modifiedOn: player.playerAudit.modifiedOn,
+                    modifiedFrom: player.playerAudit.modifiedFrom
+                }
             };
             return super.update(player._id, document, 'yojuego', 'player');
         } else {

@@ -1,31 +1,42 @@
 let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var Routes = require('./Routes');
-var config = require('config');
-var fetch = require('node-fetch');
+let Routes = require('./Routes');
+let config = require('config');
+let fetch = require('node-fetch');
+let setup = require('../setup/setup');
 
-var jwt = null;
+let _jwt = null;
+let _esClient = null;
 
 class ServerRoute extends Routes {
-    constructor(jwtParam) {
+    constructor(esClient, jwtParam) {
         super();
-        let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(ServerRoute.INVALID_JWT));
-        validator.execute(() => {
-            jwt = jwtParam;
-        }, (err) => { throw err; });
 
         this._checkESStatatus = this._checkESStatatus.bind(this);
         this._authorizeRequest = this._authorizeRequest.bind(this);
         this._verifyClaims = this._verifyClaims.bind(this);
+
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(jwtParam).throw(ServerRoute.INVALID_JWT));
+        validator.execute(() => {
+            _jwt = jwtParam;
+            _esClient = esClient;
+        }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
-        server.get('/status',
-            this._authorizeRequest,
-            this._verifyClaims,
-            this._checkESStatatus
-        );
+        server.get('/status', this._authorizeRequest, this._verifyClaims, this._checkESStatatus);
+        server.get('/setup', (req, res, next) => {
+            setup(_esClient)
+                .then((resp) => {
+                    res.json(200, { 'status': 'ok', 'info': resp });
+                }, (cause) => {
+                    res.json(400, { 'error': cause });
+                })
+                .catch((error) => {
+                    res.json(500, { 'error': error });
+                });
+        });
     }
 
     _checkESStatatus(req, res, next) {
@@ -48,7 +59,7 @@ class ServerRoute extends Routes {
     }
 
     _authorizeRequest(req, res, next) {
-        jwt.verify(req.params.token, config.get('serverConfig').secret, (err, decoded) => {
+        _jwt.verify(req.params.token, config.get('serverConfig').secret, (err, decoded) => {
             if (err) {
                 res.json(401, { code: 401, message: err, resp: null });
             } else {

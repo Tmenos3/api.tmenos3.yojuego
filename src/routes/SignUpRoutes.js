@@ -3,13 +3,9 @@ var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 var Routes = require('./Routes');
 var config = require('config');
 var UserESRepository = require('../repositories/UserESRepository');
-var PlayerESRepository = require('../repositories/PlayerESRepository');
 var YoJuegoUser = require('../models/YoJuegoUser');
-var Player = require('../models/Player');
-var moment = require('moment');
 
 var userRepo = null;
-var playerRepo = null;
 var jwt = null;
 
 class SignUpRoutes extends Routes {
@@ -18,9 +14,6 @@ class SignUpRoutes extends Routes {
 
         this._createUser = this._createUser.bind(this);
         this._deleteUser = this._deleteUser.bind(this);
-        // this._createPlayer = this._createPlayer.bind(this);
-        // this._insertPlayer = this._insertPlayer.bind(this);
-        this._validateRequest = this._validateRequest.bind(this);
         this._validateIfUserExists = this._validateIfUserExists.bind(this);
         this._generateToken = this._generateToken.bind(this);
         this._insertUser = this._insertUser.bind(this);
@@ -32,32 +25,21 @@ class SignUpRoutes extends Routes {
 
         validator.execute(() => {
             userRepo = new UserESRepository(esClient);
-            playerRepo = new PlayerESRepository(esClient);
             jwt = jwtParam;
         }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
         server.post('/signup/yojuego',
-            this._validateRequest,
+            super._bodyIsNotNull,
             this._createUser,
             this._validateIfUserExists,
             this._insertUser,
-            // this._createPlayer,
-            // this._insertPlayer,
             this._generateToken,
             this._auditUser,
             (req, res, next) => {
                 res.json(200, { token: req.token, userid: req.user.id });
             });
-    }
-
-    _validateRequest(req, res, next) {
-        if (req.body == null || req.body == undefined) {
-            res.json(400, { code: 400, message: 'Body must be defined.', resp: null });
-        } else {
-            next();
-        }
     }
 
     _createUser(req, res, next) {
@@ -99,49 +81,6 @@ class SignUpRoutes extends Routes {
         }
     }
 
-    // _createPlayer(req, res, next) {
-    //     try {
-    //         req.player = new Player(req.body.firstName,
-    //             req.body.lastName,
-    //             req.body.nickName,
-    //             req.user._id);
-
-    //         next();
-    //     } catch (error) {
-    //         this._deleteUser(req.user, (err) => {
-    //             if (err) {
-    //                 res.json(500, { code: 500, message: err, resp: null });
-    //             } else {
-    //                 res.json(400, { code: 400, message: error.message, resp: error });
-    //             }
-    //         });
-    //     }
-    // }
-
-    // _insertPlayer(req, res, next) {
-    //     playerRepo.add(req.player)
-    //         .then((playerResp) => {
-    //             next();
-    //         }, (err) => {
-    //             this._deleteUser(req.user, (error) => {
-    //                 if (error) {
-    //                     res.json(500, { code: 500, message: error, resp: null });
-    //                 } else {
-    //                     res.json(400, { code: 400, message: err, resp: null });
-    //                 }
-    //             });
-    //         })
-    //         .catch((err) => {
-    //             this._deleteUser(req.user, (error) => {
-    //                 if (error) {
-    //                     res.json(500, { code: 500, message: error, resp: null });
-    //                 } else {
-    //                     res.json(400, { code: 400, message: err, resp: null });
-    //                 }
-    //             });
-    //         });
-    // }
-
     _generateToken(req, res, next) {
         let claims = {
             email: req.user.email,
@@ -164,9 +103,9 @@ class SignUpRoutes extends Routes {
         req.user.userAudit = {
             lastAccess: new Date(),
             lastToken: req.token,
-            createdBy: req.body.platform, //We should store deviceId here
+            createdBy: req.body.platform || 'MOBILE_APP',
             createdOn: new Date(),
-            createdFrom: req.body.platform,
+            createdFrom: req.body.platform || 'MOBILE_APP',
             modifiedBy: null,
             modifiedOn: null,
             modifiedFrom: null

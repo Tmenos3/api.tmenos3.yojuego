@@ -3,7 +3,7 @@ var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 
 class Player {
-    constructor(firstName, lastName, nickName, userid, email, photo, phone, auditInfo) {
+    constructor(firstName, lastName, nickName, userid, email, photo, phone) {
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(firstName).throw(new Error(Player.INVALID_FIRSTNAME)));
         validator.addCondition(new NotNullOrUndefinedCondition(lastName).throw(new Error(Player.INVALID_LASTNAME)));
@@ -17,7 +17,6 @@ class Player {
             this.photo = photo;
             this.phone = phone;
             this.userid = userid;
-            this.audit = auditInfo;
         }, (err) => { throw err; });
     }
 
