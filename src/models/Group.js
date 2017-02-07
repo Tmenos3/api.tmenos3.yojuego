@@ -3,7 +3,7 @@ let Validator = require('no-if-validator').Validator;
 // let EqualCondition = require('no-if-validator').EqualCondition;
 
 class Group {
-    constructor(players, admins, description, photo, createdBy, createdOn) {
+    constructor(players, admins, description, photo, auditInfo) {
         let validator = new Validator();
 
         this.addPlayer = this.addPlayer.bind(this);
@@ -20,8 +20,7 @@ class Group {
             this.admins = admins;
             this.description = description;
             this.photo = photo;
-            this.createdBy = createdBy;
-            this.createdOn = createdOn;
+            this.audit = auditInfo;
         }, (err) => { throw err; });
     }
 

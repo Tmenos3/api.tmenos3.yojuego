@@ -27,6 +27,7 @@ class UserESRepository extends ESRepository {
                             break;
                     }
                     user._id = objRet.resp._id;
+                    user.userAudit = objRet.resp.source.userAudit;
                     resolve({ code: 200, message: null, resp: user });
                 }, reject);
         });
@@ -73,6 +74,7 @@ class UserESRepository extends ESRepository {
                             }
 
                             user._id = response.hits.hits[i]._id;
+                            user.userAudit = response.hits.hits[i]._source.userAudit;
                             break;
                         }
 
@@ -103,6 +105,7 @@ class UserESRepository extends ESRepository {
                             break;
                     }
                     newUser._id = resp.resp._id;
+                    newUser.userAudit = user.userAudit;
                     resolve({ code: 200, message: UserESRepository.DOCUMENT_INSERTED, resp: newUser });
                 }, reject)
         });
@@ -115,7 +118,8 @@ class UserESRepository extends ESRepository {
             if (user instanceof User) {
                 let document = {
                     type: user.type,
-                    id: user.id
+                    id: user.id,
+                    userAudit: user.userAudit
                 };
 
                 if (user.type == UserType.yoJuego) {
@@ -136,6 +140,7 @@ class UserESRepository extends ESRepository {
                                 break;
                         }
                         user._id = resp._id;
+                        user.userAudit = resp._source.userAudit;
                         resolve({ code: 200, message: UserESRepository.DOCUMENT_UPDATED, resp: user });
                     }, reject);
             } else {

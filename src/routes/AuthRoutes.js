@@ -21,6 +21,7 @@ class AuthRoutes {
         this._generateToken = this._generateToken.bind(this);
         this._configurePassport = this._configurePassport.bind(this);
         this._getNewUser = this._getNewUser.bind(this);
+        this._auditUser = this._auditUser.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(AuthRoutes.INVALID_ES_CLIENT));
@@ -45,10 +46,10 @@ class AuthRoutes {
 
         server.get('/auth/facebook', passport.authenticate('facebook', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
         server.get('/auth/google', passport.authenticate('google', { session: false, scope: ['profile'] }));
-        server.get('/auth/facebook/callback', passport.authenticate('facebook', { session: false }), this._createUser, this._generateToken, (req, res, next) => {
+        server.get('/auth/facebook/callback', passport.authenticate('facebook', { session: false }), this._createUser, this._generateToken, this._auditUser, (req, res, next) => {
             res.redirect('/auth/success?token=' + req.token, next);
         });
-        server.get('/auth/google/callback', passport.authenticate('google', { session: false }), this._createUser, this._generateToken, (req, res, next) => {
+        server.get('/auth/google/callback', passport.authenticate('google', { session: false }), this._createUser, this._generateToken, this._auditUser, (req, res, next) => {
             res.redirect('/auth/success?token=' + req.token, next);
         });
     }
@@ -105,12 +106,14 @@ class AuthRoutes {
 
     _createUser(req, res, next) {
         if (req.exists) {
+            req.isNewUser = false;
             next();
         } else {
             let newUser = this._getNewUser(req.newUser);
             repoUser.add(newUser)
                 .then((resp) => {
                     req.user = newUser;
+                    req.isNewUser = true;
                     next();
                 }, (err) => { res.json(400, err); });
         }
@@ -122,6 +125,39 @@ class AuthRoutes {
         };
         req.token = jwt.sign(claims, config.get('serverConfig').secret);
         next();
+    }
+
+    _auditUser(req, res, next) {
+        if (!req.isNewUser) {
+            req.user.userAudit.lastAccess = new Date();
+            req.user.userAudit.lastToken = req.token;
+            req.user.userAudit.modifiedBy = req.body.platform; //We should store deviceId here
+            req.user.userAudit.modifiedOn = new Date();
+            req.user.userAudit.modifiedFrom = req.body.platform;
+        } else {
+            req.user.userAudit = {
+                lastAccess: new Date(),
+                lastToken: req.token,
+                createdBy: req.body.platform, //We should store deviceId here
+                createdOn: new Date(),
+                createdFrom: req.body.platform,
+                modifiedBy: null,
+                modifiedOn: null,
+                modifiedFrom: null
+            }
+
+        }
+
+        userRepo.update(req.user)
+            .then((resp) => {
+                req.user = resp.resp;
+                next();
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
     }
 
     _configurePassport(server, passport) {

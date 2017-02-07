@@ -3,7 +3,7 @@ var UserType = require('../constants/UserType');
 var User = require('./User');
 
 class FacebookUser extends User {
-    constructor(id) {
+    constructor(id, auditInfo) {
         super(UserType.facebook, id);
     }
 }

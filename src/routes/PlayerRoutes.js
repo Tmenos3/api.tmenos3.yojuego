@@ -38,6 +38,15 @@ class PlayerRoutes extends Routes {
                 } else {
                     try {
                         let player = new Player(req.body.firstName, req.body.lastName, req.body.nickName, req.user.id);
+                        player.playerAudit = {
+                            createdBy: req.body.platform, //We should store deviceId here
+                            createdOn: new Date(),
+                            createdFrom: req.body.platform,
+                            modifiedBy: null,
+                            modifiedOn: null,
+                            modifiedFrom: null
+                        }
+
                         return repo.add(player);
                     } catch (error) {
                         res.json(400, { code: 400, message: error.message, resp: error });
@@ -81,6 +90,9 @@ class PlayerRoutes extends Routes {
                     player.firstName = req.body.firstName;
                     player.lastName = req.body.lastName;
                     player.nickname = req.body.nickname;
+                    player.playerAudit.modifiedBy = req.body.platform;
+                    player.playerAudit.modifiedOn = new Date();
+                    player.playerAudit.modifiedFrom = req.body.platform;
                     return repo.update(player);
                 }
             }, (err) => { res.json(400, { code: 400, message: err, resp: null }); })

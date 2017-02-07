@@ -2,8 +2,9 @@ var es = require('elasticsearch');
 var createUser = require('./createUser');
 var createPlayer = require('./createPlayer');
 var createMatch = require('./createMatch');
-var createInvitation = require('./createInvitation');
+// var createInvitation = require('./createInvitation');
 var createFriendship = require('./createFriendship');
+var createGroup = require('./createGroup');
 var config = require('config');
 var client = new es.Client({
     host: config.dbConfig.database,
@@ -21,11 +22,14 @@ let createSchema = (client) => {
         .then(() => {
             return createMatch(client);
         })
-        .then(() => {
-            return createInvitation(client);
-        })
+        // .then(() => {
+        //     return createInvitation(client);
+        // })
         .then(() => {
             return createFriendship(client);
+        })
+        .then(() => {
+            return createGroup(client);
         })
         .catch((err) => {
             console.log('err: ' + JSON.stringify(err));

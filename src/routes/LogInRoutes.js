@@ -13,6 +13,7 @@ class LogInRoutes {
         this._validateRequest = this._validateRequest.bind(this);
         this._validateLogin = this._validateLogin.bind(this);
         this._generateToken = this._generateToken.bind(this);
+        this._auditUser = this._auditUser.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(LogInRoutes.INVALID_ES_CLIENT));
@@ -36,6 +37,7 @@ class LogInRoutes {
             this._validateRequest,
             this._validateLogin,
             this._generateToken,
+            this._auditUser,
             (req, res, next) => {
                 res.json(200, { token: req.token, userid: req.body.email });
             });
@@ -77,6 +79,25 @@ class LogInRoutes {
         };
         req.token = jwt.sign(claims, config.get('serverConfig').secret);
         next();
+    }
+
+    _auditUser(req, res, next) {
+        req.user.userAudit.lastAccess = new Date();
+        req.user.userAudit.lastToken = req.token;
+        req.user.userAudit.modifiedBy = req.body.platform; //We should store deviceId here
+        req.user.userAudit.modifiedOn = new Date();
+        req.user.userAudit.modifiedFrom = req.body.platform;
+
+        userRepo.update(req.user)
+            .then((resp) => {
+                req.user = resp.resp;
+                next();
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
     }
 
     static get INVALID_SERVER() {
