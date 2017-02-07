@@ -75,7 +75,7 @@ class GroupRoutes extends Routes {
     }
 
     _createGroup(req, res, next) {
-        let group = new Group(req.players, [req.player._id], req.description, req.photo, req.player._id, new Date());
+        let group = new Group(req.body.players, [req.player._id], req.body.description, req.body.photo, req.player._id, new Date());
         repoGroup.add(group)
             .then((resp) => {
                 repoGroup.get(resp.resp._id)
