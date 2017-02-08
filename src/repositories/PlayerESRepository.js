@@ -57,6 +57,42 @@ class PlayerESRepository extends ESRepository {
         });
     }
 
+    getByEmail(email) {
+        //TEST: full test require
+        return new Promise((resolve, reject) => {
+            this.esclient.search({
+                "index": "yojuego",
+                "type": "player",
+                "body": {
+                    "query": {
+                        "bool": {
+                            "filter": [
+                                { "term": { "email": email } }
+                            ]
+                        }
+                    }
+                }
+            }, (error, response) => {
+                if (error) {
+                    reject({ code: error.statusCode, message: error.message, resp: error });
+                }
+                else {
+                    let player = null;
+
+                    for (let i = 0; i < response.hits.hits.length; i++) {
+                        let source = response.hits.hits[i]._source;
+                        player = new Player(source.firstName, source.lastName, source.nickName, source.userid, source.email, source.photo, source.phone);
+                        player._id = response.hits.hits[i]._id;
+                        player.playerAudit = source.playerAudit;
+                        break;
+                    }
+
+                    resolve({ code: 0, message: null, resp: player });
+                }
+            });
+        });
+    }
+
     add(player) {
         if (player instanceof Player) {
             return super.add(player, 'yojuego', 'player');

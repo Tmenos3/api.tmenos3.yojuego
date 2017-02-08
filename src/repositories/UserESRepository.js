@@ -15,19 +15,19 @@ class UserESRepository extends ESRepository {
             super.get(userId, 'yojuego', 'user')
                 .then((objRet) => {
                     let user = null;
-                    switch (objRet.resp.source.type) {
+                    switch (objRet.resp._source.type) {
                         case UserType.facebook:
-                            user = new FacebookUser(objRet.resp.source.id);
+                            user = new FacebookUser(objRet.resp._source.id);
                             break;
                         case UserType.google:
-                            user = new GoogleUser(objRet.resp.source.id);
+                            user = new GoogleUser(objRet.resp._source.id);
                             break;
                         case UserType.yoJuego:
-                            user = new YoJuegoUser(objRet.resp.source.id, objRet.resp.source.password);
+                            user = new YoJuegoUser(objRet.resp._source.id, objRet.resp._source.password);
                             break;
                     }
                     user._id = objRet.resp._id;
-                    user.userAudit = objRet.resp.source.userAudit;
+                    user.userAudit = objRet.resp._source.userAudit;
                     resolve({ code: 200, message: null, resp: user });
                 }, reject);
         });

@@ -24,6 +24,7 @@ class FriendshipRoutes extends Routes {
         this._rejectFriendship = this._rejectFriendship.bind(this);
         this._deleteFriendship = this._deleteFriendship.bind(this);
         this._updateFriendshipsByFriend = this._updateFriendshipsByFriend.bind(this);
+        this._fetchFriendDetails = this._fetchFriendDetails.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(FriendshipRoutes.INVALID_ES_CLIENT));
@@ -63,8 +64,16 @@ class FriendshipRoutes extends Routes {
     _getAllFriendships(req, res, next) {
         repoFriendship.getByPlayerId(req.player._id)
             .then((resp) => {
-                req.friendships = resp.resp;
-                next();
+                this._fetchFriendDetails(resp.resp, 0)
+                    .then((ret) => {
+                        req.friendships = ret;
+                        next();
+                    }, (cause) => {
+                        res.json(404, { code: 404, message: cause, resp: null });
+                    })
+                    .catch((err) => {
+                        res.json(500, { code: 500, message: err, resp: null });
+                    });
             }, (cause) => {
                 res.json(404, { code: 404, message: cause, resp: null });
             })
@@ -73,42 +82,82 @@ class FriendshipRoutes extends Routes {
             });
     }
 
-    _createFriendship(req, res, next) {
-        let info = {
-            email: req.body.email,
-            phone: req.body.phone,
-            photo: null,
-            firstName: null,
-            lastName: null,
-            nickName: null
-        }
+    _fetchFriendDetails(arr, pos) {
+        return new Promise((resolve, reject) => {
+            if (arr.length == pos)
+                resolve(arr);
+            else {
+                if (arr[pos].status == 'ACCEPTED') {
+                    repoPlayer.get(arr[pos].friendId)
+                        .then((response) => {
+                            arr[pos].info = {
+                                firstName: response.resp.firstName,
+                                lastName: response.resp.lastName,
+                                nickName: response.resp.nickName,
+                                photo: response.resp.photo,
+                                email: response.resp.email,
+                                phone: response.resp.phone
+                            };
 
-        let friendship = new Friendship(req.player._id, null, 'CREATED', info);
-        friendship.friendshipAudit = {
-            createdBy: req.player._id, //We should store deviceId here
-            createdOn: new Date(),
-            createdFrom: req.body.platform,
-            modifiedBy: null,
-            modifiedOn: null,
-            modifiedFrom: null
-        }
-        repoFriendship.add(friendship)
+                            return this._fetchFriendDetails(arr, ++pos)
+                                .then((ret) => resolve(ret));
+                        });
+                }
+                else {
+                    arr[pos].info = {
+                        firstName: null,
+                        lastName: null,
+                        nickName: null,
+                        photo: null,
+                        email: arr[pos].email,
+                        phone: null
+                    };
+                    return this._fetchFriendDetails(arr, ++pos)
+                    .then((ret) => resolve(ret));
+                }
+            }
+        });
+    }
+
+    _createFriendship(req, res, next) {
+        repoPlayer.getByEmail(req.body.email)
             .then((resp) => {
-                repoFriendship.get(resp.resp._id)
-                    .then((friendshipResp) => {
-                        req.friendship = friendshipResp.resp;
-                        next();
-                    }, (cause) => {
+                let friendId = null;
+                if (resp.resp)
+                    friendId = resp.resp._id;
+
+                let friendship = new Friendship(req.player._id, friendId, 'CREATED', req.body.email);
+                friendship.friendshipAudit = {
+                    createdBy: req.player._id, //We should store deviceId here
+                    createdOn: new Date(),
+                    createdFrom: req.body.platform || 'MOBILE_APP',
+                    modifiedBy: null,
+                    modifiedOn: null,
+                    modifiedFrom: null
+                }
+                repoFriendship.add(friendship)
+                    .then((resp) => {
+                        repoFriendship.get(resp.resp._id)
+                            .then((friendshipResp) => {
+                                req.friendship = friendshipResp.resp;
+                                next();
+                            }, (cause) => {
+                                res.json(404, { code: 404, message: cause, resp: null });
+                            })
+                            .catch((err) => {
+                                res.json(500, { code: 500, message: err, resp: null });
+                            });
+                    }, (err) => {
                         res.json(404, { code: 404, message: cause, resp: null });
                     })
                     .catch((err) => {
                         res.json(500, { code: 500, message: err, resp: null });
                     });
-            }, (err) => {
-                res.json(404, { code: 404, message: cause, resp: null });
+            }, (cause) => {
+
             })
             .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
+
             });
     }
 

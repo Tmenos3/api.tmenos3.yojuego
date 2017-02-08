@@ -75,11 +75,12 @@ class GroupRoutes extends Routes {
     }
 
     _createGroup(req, res, next) {
+
         let group = new Group(req.body.players, [req.player._id], req.body.description, req.body.photo, req.player._id, new Date());
         group.groupAudit = {
-            createdBy: req.body.platform, //We should store deviceId here
+            createdBy: req.body.platform || 'MOBILE_APP', //We should store deviceId here
             createdOn: new Date(),
-            createdFrom: req.body.platform,
+            createdFrom: req.body.platform || 'MOBILE_APP',
             modifiedBy: null,
             modifiedOn: null,
             modifiedFrom: null
@@ -97,7 +98,7 @@ class GroupRoutes extends Routes {
                     .catch((err) => {
                         res.json(500, { code: 500, message: err, resp: null });
                     });
-            }, (err) => {
+            }, (cause) => {
                 res.json(404, { code: 404, message: cause, resp: null });
             })
             .catch((err) => {

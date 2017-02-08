@@ -1,19 +1,18 @@
-let ret200 = require('./returns/return200');
-let ret400 = require('./returns/return400');
-let ret404 = require('./returns/return404');
-let ret500 = require('./returns/return500');
-var Validator = require('no-if-validator').Validator;
-var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var Routes = require('./Routes');
-var PlayerESRepository = require('../repositories/PlayerESRepository');
-var Player = require('../models/Player');
-var repo = null;
+let Validator = require('no-if-validator').Validator;
+let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+let Routes = require('./Routes');
+let PlayerESRepository = require('../repositories/PlayerESRepository');
+let UserESRepository = require('../repositories/UserESRepository');
+let Player = require('../models/Player');
+let repo = null;
+let repoUser = null;
 
 class PlayerRoutes extends Routes {
     constructor(esClient) {
         super();
 
         this._getPlayer = this._getPlayer.bind(this);
+        this._getUser = this._getUser.bind(this);
         this._update = this._update.bind(this);
         this._create = this._create.bind(this);
 
@@ -21,27 +20,32 @@ class PlayerRoutes extends Routes {
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(PlayerRoutes.INVALID_ES_CLIENT));
         validator.execute(() => {
             repo = new PlayerESRepository(esClient);
+            repoUser = new UserESRepository(esClient);
         }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
         server.get('/player', this._getPlayer); // revisar
-        server.put('/player/create', super._bodyIsNotNull, this._create);
+        server.put('/player/create', super._bodyIsNotNull, this._getUser, this._create);
         server.post('/player/:id/update', super._paramsIsNotNull, super._bodyIsNotNull, this._update);
     }
 
     _create(req, res, next) {
-        repo.getByUserId(req.user.id)
+        repo.getByUserId(req.user._id)
             .then((ret) => {
                 if (ret.resp) {
                     res.json(400, { code: 400, message: 'Player already exists', resp: null });
                 } else {
                     try {
-                        let player = new Player(req.body.firstName, req.body.lastName, req.body.nickName, req.user.id);
+                        let email = null;
+                        if (req.user.type == 'yojuego')
+                            email = req.user.id;
+
+                        let player = new Player(req.body.firstName, req.body.lastName, req.body.nickName, req.user._id, email, 'photo', 'phone');
                         player.playerAudit = {
-                            createdBy: req.body.platform, //We should store deviceId here
+                            createdBy: req.body.platform || 'MOBILE_APP', //We should store deviceId here
                             createdOn: new Date(),
-                            createdFrom: req.body.platform,
+                            createdFrom: req.body.platform || 'MOBILE_APP',
                             modifiedBy: null,
                             modifiedOn: null,
                             modifiedFrom: null
@@ -72,6 +76,19 @@ class PlayerRoutes extends Routes {
                     res.json(404, { code: 404, message: 'Player inexistente', resp: null });
                 } else {
                     res.json(200, { code: 200, message: 'OK', resp: resp.resp });
+                }
+            }, (cause) => { res.json(404, { code: 404, message: cause, resp: null }); })
+            .catch((err) => { res.json(500, { code: 500, message: err, resp: null }); });
+    }
+
+    _getUser(req, res, next) {
+        repoUser.get(req.user.id)
+            .then((resp) => {
+                if (!resp.resp) {
+                    res.json(404, { code: 404, message: 'User inexistente', resp: null });
+                } else {
+                    req.user = resp.resp;
+                    next();
                 }
             }, (cause) => { res.json(404, { code: 404, message: cause, resp: null }); })
             .catch((err) => { res.json(500, { code: 500, message: err, resp: null }); });
