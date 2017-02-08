@@ -20,6 +20,9 @@ class NotificationsRoutes extends Routes {
 
         this._getPlayer = this._getPlayer.bind(this);
         this._getFriendshipRequests = this._getFriendshipRequests.bind(this);
+        this._fetchFriendshipsDetail = this._fetchFriendshipsDetail.bind(this);
+        this._populateFriendships = this._populateFriendships.bind(this);
+        this._populatePlayers = this._populatePlayers.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(FriendshipRoutes.INVALID_ES_CLIENT));
@@ -32,16 +35,16 @@ class NotificationsRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/notifications/frienshipRequest', this._getPlayer, this._getFriendshipRequests, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: 'Friend created' }) });
+        server.get('/notifications/frienshipRequest', this._getPlayer, this._getFriendshipRequests, this._populateFriendships, this._populatePlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.friendshipRequests, message: null }) });
     }
 
-    _getFriendship(req, res, next) {
-        repoFriendship.get(req.params.id)
-            .then((friendshipResp) => {
-                if (!friendshipResp.resp) {
-                    res.json(404, { code: 404, message: 'Friendship inexistente', resp: null });
+    _getPlayer(req, res, next) {
+        repoPlayer.getByUserId(req.user.id)
+            .then((resp) => {
+                if (!resp.resp) {
+                    res.json(404, { code: 404, message: 'Player inexistente', resp: null });
                 } else {
-                    req.friendship = friendshipResp.resp;
+                    req.player = resp.resp;
                     next();
                 }
             }, (cause) => {
@@ -52,28 +55,46 @@ class NotificationsRoutes extends Routes {
             });
     }
 
-    _getAllFriendships(req, res, next) {
-        repoFriendship.getByPlayerId(req.player._id)
+    _getFriendshipRequests(req, res, next) {
+        repoFriendshipRequest.getPendingByPlayerId(req.player._id)
             .then((resp) => {
-                this._fetchFriendDetails(resp.resp, 0)
-                    .then((ret) => {
-                        req.friendships = ret;
-                        next();
-                    }, (cause) => {
-                        res.json(404, { code: 404, message: cause, resp: null });
-                    })
-                    .catch((err) => {
-                        res.json(500, { code: 500, message: err, resp: null });
-                    });
+                req.friendshipRequests = resp.resp;
+                next();
             }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
+                res.json(400, { code: 400, message: cause, resp: null });
             })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
+            .catch((error) => {
+                res.json(500, { code: 500, message: cause, resp: null });
             });
     }
 
-    _fetchFriendDetails(arr, pos) {
+    _populateFriendships(req, res, next) {
+        this._fetchFriendshipsDetail(req.friendshipRequests)
+            .then((ret) => {
+                req.friendshipRequests = ret;
+                next();
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: 500, message: cause, resp: null });
+            });
+    }
+
+    _populatePlayers(req, res, next) {
+        this._fetchPlayersDetail()
+            .then((ret) => {
+                req.friendshipRequests = ret;
+                next();
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: 500, message: cause, resp: null });
+            });
+    }
+
+    _fetchFriendshipsDetail(arr, pos) {
         return new Promise((resolve, reject) => {
             if (arr.length == pos)
                 resolve(arr);
@@ -110,188 +131,41 @@ class NotificationsRoutes extends Routes {
         });
     }
 
-    _createFriendship(req, res, next) {
-        repoPlayer.getByEmail(req.body.email)
-            .then((resp) => {
-                let friendId = null;
-                if (resp.resp)
-                    friendId = resp.resp._id;
+    _fetchPlayersDetail(arr, pos) {
+        return new Promise((resolve, reject) => {
+            if (arr.length == pos)
+                resolve(arr);
+            else {
+                if (arr[pos].status == 'ACCEPTED') {
+                    repoPlayer.get(arr[pos].friendId)
+                        .then((response) => {
+                            arr[pos].info = {
+                                firstName: response.resp.firstName,
+                                lastName: response.resp.lastName,
+                                nickName: response.resp.nickName,
+                                photo: response.resp.photo,
+                                email: response.resp.email,
+                                phone: response.resp.phone
+                            };
 
-                let friendship = new Friendship(req.player._id, friendId, 'CREATED', req.body.email);
-                friendship.friendshipAudit = {
-                    createdBy: req.player._id, //We should store deviceId here
-                    createdOn: new Date(),
-                    createdFrom: req.body.platform || 'MOBILE_APP',
-                    modifiedBy: null,
-                    modifiedOn: null,
-                    modifiedFrom: null
+                            return this._fetchFriendDetails(arr, ++pos)
+                                .then((ret) => resolve(ret));
+                        });
                 }
-                repoFriendship.add(friendship)
-                    .then((resp) => {
-                        repoFriendship.get(resp.resp._id)
-                            .then((friendshipResp) => {
-                                req.friendship = friendshipResp.resp;
-                                next();
-                            }, (cause) => {
-                                res.json(404, { code: 404, message: cause, resp: null });
-                            })
-                            .catch((err) => {
-                                res.json(500, { code: 500, message: err, resp: null });
-                            });
-                    }, (err) => {
-                        res.json(404, { code: 404, message: cause, resp: null });
-                    })
-                    .catch((err) => {
-                        res.json(500, { code: 500, message: err, resp: null });
-                    });
-            }, (cause) => {
-
-            })
-            .catch((err) => {
-
-            });
-    }
-
-    _acceptFriendship(req, res, next) {
-        let friendship = req.friendship;
-        friendship.status = 'ACCEPTED';
-        friendship.info = {
-            photo: 'url_photo',
-            firstName: req.player.firstName,
-            lastName: req.player.lastName,
-            nickName: req.player.nickName,
-            telephone: '12431234'
-        };
-        friendship.friendshipAudit.modifiedBy = req.player._id; //We should store deviceId here
-        friendship.friendshipAudit.modifiedOn = new Date();
-        friendship.friendshipAudit.modifiedFrom = req.body.platform;
-
-
-        repoFriendship.update(friendship)
-            .then((resp) => {
-                req.friendship = resp.resp;
-                next();
-            }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
-            })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
-            });
-    }
-
-    _rejectFriendship(req, res, next) {
-        let friendship = req.friendship;
-        friendship.status = 'REJECTED'
-        friendship.info = null;
-        friendship.friendshipAudit.modifiedBy = req.body.platform; //We should store deviceId here
-        friendship.friendshipAudit.modifiedOn = new Date();
-        friendship.friendshipAudit.modifiedFrom = req.body.platform;
-
-        repoFriendship.update(friendship)
-            .then((resp) => {
-                req.friendship = resp.resp;
-                next();
-            }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
-            })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
-            });
-    }
-
-    _deleteFriendship(req, res, next) {
-        let friendship = req.friendship;
-        repoFriendship.delete(friendship)
-            .then((resp) => {
-                // buscar las amistades donde este player era friend y limpiar la info y el estado
-                next();
-            }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
-            })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
-            });
-    }
-
-    _updateFriendshipsByFriend(req, res, next) {
-        next();
-        //UPDATE BY QUERY
-        // repoFriendship.get(req.friendship.friendId)
-        //     .then((resp) => {
-        //         for (let i = 0; i < resp.resp.length; i++) {
-        //             let toUpdate = resp.resp[i];
-        //             toUpdate.status = 'DELETED';
-        //             toUpdate.info = null;
-
-        //             repoFriendship.update(toUpdate)
-        //                 .then((resp) => {
-
-        //                 }, (cause) => {
-        //                     res.json(404, { code: 404, message: cause, resp: null });
-        //                 })
-        //                 .catch((err) => {
-        //                     res.json(500, { code: 500, message: err, resp: null });
-        //                 });
-        //         }
-        //         next();
-        //     }, (cause) => {
-        //         res.json(404, { code: 404, message: cause, resp: null });
-        //     })
-        //     .catch((err) => {
-        //         res.json(500, { code: 500, message: err, resp: null });
-        //     });
-    }
-
-    _getPlayer(req, res, next) {
-        repoPlayer.getByUserId(req.user.id)
-            .then((resp) => {
-                if (!resp.resp) {
-                    res.json(404, { code: 404, message: 'Player inexistente', resp: null });
-                } else {
-                    req.player = resp.resp;
-                    next();
+                else {
+                    arr[pos].info = {
+                        firstName: null,
+                        lastName: null,
+                        nickName: null,
+                        photo: null,
+                        email: arr[pos].email,
+                        phone: null
+                    };
+                    return this._fetchFriendDetails(arr, ++pos)
+                        .then((ret) => resolve(ret));
                 }
-            }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
-            })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
-            });
-    }
-
-    _checkPlayerFriendship(req, res, next) {
-        if (req.friendship.playerId != req.player._id)
-            res.json(404, { code: 405, message: 'Inconsistencia entre Friendship y Player', resp: null });
-        else
-            next();
-    }
-
-    _checkFriendFriendship(req, res, next) {
-        if (req.friendship.friendId != req.player._id)
-            res.json(404, { code: 405, message: 'Inconsistencia entre Friendship y Friend', resp: null });
-        else
-            next();
-    }
-
-    _sendNotification(req, res, next) {
-        let newNotification = new FriendshipRequest(req.friendship._id, req.player._id, 'PENDING', new Date());
-        newNotification.friendshipRequestAudit = {
-            createdBy: req.player._id, //We should store deviceId here
-            createdOn: new Date(),
-            createdFrom: req.body.platform || 'MOBILE_APP',
-            modifiedBy: null,
-            modifiedOn: null,
-            modifiedFrom: null
-        }
-        repoFriendshipRequest.add(newNotification)
-            .then((resp) => {
-                next();
-            }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
-            })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
-            });
+            }
+        });
     }
 
     static get INVALID_ES_CLIENT() {
