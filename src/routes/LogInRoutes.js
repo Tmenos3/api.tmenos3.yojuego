@@ -1,19 +1,24 @@
-var Validator = require('no-if-validator').Validator;
-var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var config = require('config');
-var UserESRepository = require('../repositories/UserESRepository');
-var User = require('../models/User');
+let Validator = require('no-if-validator').Validator;
+let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+let config = require('config');
+let UserESRepository = require('../repositories/UserESRepository');
+let PlayerESRepository = require('../repositories/PlayerESRepository');
+let User = require('../models/User');
+let Routes = require('./Routes');
 
-var userRepo = null;
-var jwt = null;
+let userRepo = null;
+let playerRepo = null;
+let jwt = null;
 
-class LogInRoutes {
+class LogInRoutes extends Routes {
     constructor(esClient, jwtParam) {
+        super();
+
         this._addAllRoutes = this._addAllRoutes.bind(this);
-        this._validateRequest = this._validateRequest.bind(this);
         this._validateLogin = this._validateLogin.bind(this);
         this._generateToken = this._generateToken.bind(this);
         this._auditUser = this._auditUser.bind(this);
+        this._getPlayer = this._getPlayer.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(LogInRoutes.INVALID_ES_CLIENT));
@@ -21,6 +26,7 @@ class LogInRoutes {
 
         validator.execute(() => {
             userRepo = new UserESRepository(esClient);
+            playerRepo = new PlayerESRepository(esClient);
             jwt = jwtParam;
         }, (err) => { throw err; });
     }
@@ -34,21 +40,19 @@ class LogInRoutes {
 
     _addAllRoutes(server) {
         server.post('/login/yojuego',
-            this._validateRequest,
+            super._bodyIsNotNull,
             this._validateLogin,
+            this._getPlayer,
             this._generateToken,
             this._auditUser,
             (req, res, next) => {
-                res.json(200, { token: req.token, userid: req.body.email });
+                let resp = {
+                    token: req.token,
+                    user: req.user,
+                    player: req.player
+                }
+                res.json(200, resp);
             });
-    }
-
-    _validateRequest(req, res, next) {
-        if (req.body == null || req.body == undefined) {
-            res.json(400, { code: 400, message: 'Body must be defined.', resp: null });
-        } else {
-            next();
-        }
     }
 
     _validateLogin(req, res, next) {
@@ -64,6 +68,19 @@ class LogInRoutes {
                         next();
                     }
                 }
+            }, (err) => {
+                res.json(400, { code: 400, message: err, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
+    }
+
+    _getPlayer(req, res, next) {
+        playerRepo.getByUserId(req.user._id, 'yojuego')
+            .then((response) => {
+                req.player = response.resp;
+                next();
             }, (err) => {
                 res.json(400, { code: 400, message: err, resp: null });
             })

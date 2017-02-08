@@ -2,7 +2,7 @@ var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var Routes = require('./Routes');
 var DeviceESRepository = require('../repositories/DeviceESRepository');
-var NotificationService = require('../helpers/NotificationService/NotificationService');
+var NotificationService = require('../NotificationService/OLD_NotificationService');
 
 var repo = null;
 var ns = null;

@@ -107,9 +107,9 @@ class PlayerRoutes extends Routes {
                     player.firstName = req.body.firstName;
                     player.lastName = req.body.lastName;
                     player.nickname = req.body.nickname;
-                    player.playerAudit.modifiedBy = req.body.platform;
+                    player.playerAudit.modifiedBy = req.body.platform || 'MOBILE_APP';
                     player.playerAudit.modifiedOn = new Date();
-                    player.playerAudit.modifiedFrom = req.body.platform;
+                    player.playerAudit.modifiedFrom = req.body.platform || 'MOBILE_APP';
                     return repo.update(player);
                 }
             }, (err) => { res.json(400, { code: 400, message: err, resp: null }); })

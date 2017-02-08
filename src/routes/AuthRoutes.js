@@ -49,9 +49,25 @@ class AuthRoutes {
         server.get('/auth/facebook', passport.authenticate('facebook', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
         server.get('/auth/google', passport.authenticate('google', { session: false, scope: ['profile', 'email'] }));
         server.get('/auth/facebook/callback', passport.authenticate('facebook', { session: false }), this._createUser, this._createOrUpdatePLayer, this._generateToken, this._auditUser, (req, res, next) => {
+            /*
+                            let resp = {
+                                token: req.token,
+                                user: req.user,
+                                player: req.player
+                            }
+                            res.json(200, resp);
+            */
             res.redirect('/auth/success?token=' + req.token, next);
         });
         server.get('/auth/google/callback', passport.authenticate('google', { session: false }), this._createUser, this._createOrUpdatePLayer, this._generateToken, this._auditUser, (req, res, next) => {
+            /*
+                            let resp = {
+                                token: req.token,
+                                user: req.user,
+                                player: req.player
+                            }
+                            res.json(200, resp);
+            */
             res.redirect('/auth/success?token=' + req.token, next);
         });
     }
@@ -175,6 +191,7 @@ class AuthRoutes {
                 res.json(400, { code: 400, message: err, resp: null });
             })
             .then((resp) => {
+                req.player = resp.resp;
                 next();
             }, (err) => {
                 res.json(400, { code: 400, message: err, resp: null });

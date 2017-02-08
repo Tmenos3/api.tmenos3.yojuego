@@ -4,25 +4,25 @@ PUT yojuego
 http://localhost:9200/yojuego/user/
 PUT _mapping
 {
-   "user": {
-      "properties": {
-         "id": { "type": "string", "index": "not_analyzed" },
-         "password": { "type": "string" },
-         "type": { "type": "string", "index": "not_analyzed" },
-         "userAudit": {
-            "properties": {
-               "lastAccess": { "type": "date" },
-               "lastToken": { "type": "string", "index": "not_analyzed" },
-               "createdBy": { "type": "string", "index": "not_analyzed" },
-               "createdOn": { "type": "date" },
-               "createdFrom": { "type": "string" },
-               "modifiedBy": { "type": "string", "index": "not_analyzed" },
-               "modifiedOn": { "type": "date" },
-               "modifiedFrom": { "type": "string" }
+    "user": {
+        "properties": {
+            "id": { "type": "string", "index": "not_analyzed" },
+            "password": { "type": "string" },
+            "type": { "type": "string", "index": "not_analyzed" },
+            "userAudit": {
+                "properties": {
+                    "lastAccess": { "type": "date" },
+                    "lastToken": { "type": "string", "index": "not_analyzed" },
+                    "createdBy": { "type": "string", "index": "not_analyzed" },
+                    "createdOn": { "type": "date" },
+                    "createdFrom": { "type": "string" },
+                    "modifiedBy": { "type": "string", "index": "not_analyzed" },
+                    "modifiedOn": { "type": "date" },
+                    "modifiedFrom": { "type": "string" }
+                }
             }
-         }
-      }
-   }
+        }
+    }
 }
 
 
@@ -40,12 +40,12 @@ PUT _mapping
             "userid": { "type": "string", "index": "not_analyzed" },
             "playerAudit": {
                 "properties": {
-                "createdBy": { "type": "string", "index": "not_analyzed" },
-                "createdOn": { "type": "date" },
-                "createdFrom": { "type": "string" },
-                "modifiedBy": { "type": "string", "index": "not_analyzed" },
-                "modifiedOn": { "type": "date" },
-                "modifiedFrom": { "type": "string" }
+                    "createdBy": { "type": "string", "index": "not_analyzed" },
+                    "createdOn": { "type": "date" },
+                    "createdFrom": { "type": "string" },
+                    "modifiedBy": { "type": "string", "index": "not_analyzed" },
+                    "modifiedOn": { "type": "date" },
+                    "modifiedFrom": { "type": "string" }
                 }
             }
         }
@@ -55,37 +55,37 @@ PUT _mapping
 http://localhost:9200/yojuego/match/
 PUT _mapping
 {
-   "match": {
-      "properties": {
-         "title": { "type": "string" },
-         "date": { "type": "date" },
-         "fromTime": { "type": "string" },
-         "toTime": { "type": "string" },
-         "location": { "type": "string" },
-         "matchType": { "type": "integer" },
-         "creator": { "type": "string", "index": "not_analyzed" },
-         "confirmedPlayers": { "type": "string", "index": "not_analyzed" },
-         "pendingPlayers": { "type": "string", "index": "not_analyzed" },
-         "comments": {
-            "properties": {
-               "id": { "type": "integer" },
-               "owner": { "type": "string" },
-               "text": { "type": "string" },
-               "writtenOn": { "type": "date" }
+    "match": {
+        "properties": {
+            "title": { "type": "string" },
+            "date": { "type": "date" },
+            "fromTime": { "type": "string" },
+            "toTime": { "type": "string" },
+            "location": { "type": "string" },
+            "matchType": { "type": "integer" },
+            "creator": { "type": "string", "index": "not_analyzed" },
+            "confirmedPlayers": { "type": "string", "index": "not_analyzed" },
+            "pendingPlayers": { "type": "string", "index": "not_analyzed" },
+            "comments": {
+                "properties": {
+                    "id": { "type": "integer" },
+                    "owner": { "type": "string" },
+                    "text": { "type": "string" },
+                    "writtenOn": { "type": "date" }
+                }
+            },
+            "matchAudit": {
+                "properties": {
+                    "createdBy": { "type": "string", "index": "not_analyzed" },
+                    "createdOn": { "type": "date" },
+                    "createdFrom": { "type": "string" },
+                    "modifiedBy": { "type": "string", "index": "not_analyzed" },
+                    "modifiedOn": { "type": "date" },
+                    "modifiedFrom": { "type": "string" }
+                }
             }
-         },
-         "matchAudit": {
-            "properties": {
-               "createdBy": { "type": "string", "index": "not_analyzed" },
-               "createdOn": { "type": "date" },
-               "createdFrom": { "type": "string" },
-               "modifiedBy": { "type": "string", "index": "not_analyzed" },
-               "modifiedOn": { "type": "date" },
-               "modifiedFrom": { "type": "string" }
-            }
-         }
-      }
-   }
+        }
+    }
 }
 
 http://localhost:9200/yojuego/friendship/
@@ -121,6 +121,30 @@ PUT _mapping
             "players" : { "type": "string", "index": "not_analyzed" },
             "admins" : { "type": "string", "index": "not_analyzed" },
             "groupAudit": {
+                "properties": {
+                    "createdBy": { "type": "string", "index": "not_analyzed" },
+                    "createdOn": { "type": "date" },
+                    "createdFrom": { "type": "string" },
+                    "modifiedBy": { "type": "string", "index": "not_analyzed" },
+                    "modifiedOn": { "type": "date" },
+                    "modifiedFrom": { "type": "string" }
+                }
+            }
+        }
+    }
+}
+
+http://localhost:9200/yojuego/friendshipRequest/
+PUT _mapping
+{
+    "friendshipRequest": {
+        "properties": {
+            "friendshipId": { "type": "string", "index": "not_analyzed" },
+            "playerId": { "type": "string", "index": "not_analyzed" },
+            "status": { "type": "string", "index": "not_analyzed" },
+            "sendedOn": { "type": "date" },
+            "receivedOn": { "type": "date" },
+            "friendshipRequestAudit": {
                 "properties": {
                     "createdBy": { "type": "string", "index": "not_analyzed" },
                     "createdOn": { "type": "date" },

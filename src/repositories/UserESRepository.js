@@ -1,33 +1,24 @@
-var ESRepository = require('./ESRepository');
-var User = require('../models/User');
-var FacebookUser = require('../models/FacebookUser');
-var GoogleUser = require('../models/GoogleUser');
-var YoJuegoUser = require('../models/YoJuegoUser');
-var UserType = require('../constants/UserType');
+let ESRepository = require('./ESRepository');
+let User = require('../models/User');
+let FacebookUser = require('../models/FacebookUser');
+let GoogleUser = require('../models/GoogleUser');
+let YoJuegoUser = require('../models/YoJuegoUser');
+let UserType = require('../constants/UserType');
 
 class UserESRepository extends ESRepository {
     constructor(client) {
         super(client);
+
+        this._mapUser = this._mapUser.bind(this);
+        this._getDocument = this._getDocument.bind(this);
+        this._getQueryByIdAndType = this._getQueryByIdAndType.bind(this);
     }
 
     get(userId) {
         return new Promise((resolve, reject) => {
             super.get(userId, 'yojuego', 'user')
                 .then((objRet) => {
-                    let user = null;
-                    switch (objRet.resp._source.type) {
-                        case UserType.facebook:
-                            user = new FacebookUser(objRet.resp._source.id);
-                            break;
-                        case UserType.google:
-                            user = new GoogleUser(objRet.resp._source.id);
-                            break;
-                        case UserType.yoJuego:
-                            user = new YoJuegoUser(objRet.resp._source.id, objRet.resp._source.password);
-                            break;
-                    }
-                    user._id = objRet.resp._id;
-                    user.userAudit = objRet.resp._source.userAudit;
+                    let user = this._mapUser(objRet.resp._id, objRet.resp._source);
                     resolve({ code: 200, message: null, resp: user });
                 }, reject);
         });
@@ -37,51 +28,15 @@ class UserESRepository extends ESRepository {
         //TEST: not null, not undefined
         //TEST: instance of string both
         return new Promise((resolve, reject) => {
-            this.esclient.search({
-                "index": "yojuego",
-                "type": "user",
-                "body": {
-                    "query": {
-                        "bool": {
-                            "filter": [
-                                { "term": { "type": type } },
-                                { "term": { "id": id } }
-                            ]
-                        }
-                    }
-                }
-            }, (error, response) => {
-                if (error) {
-                    reject({ code: error.statusCode, message: error.message, resp: error });
-                }
-                else {
-                    if (response.hits.hits.length < 1) {
+            super.getBy(this._getQueryByIdAndType(id, type), 'yojuego', 'user')
+                .then((objRet) => {
+                    if (objRet.resp.length < 1) {
                         resolve({ code: 404, message: 'No users were found.', resp: null });
                     } else {
-                        let user = null;
-
-                        for (let i = 0; i < response.hits.hits.length; i++) {
-                            switch (response.hits.hits[i]._source.type) {
-                                case UserType.facebook:
-                                    user = new FacebookUser(response.hits.hits[i]._source.id);
-                                    break;
-                                case UserType.google:
-                                    user = new GoogleUser(response.hits.hits[i]._source.id);
-                                    break;
-                                case UserType.yoJuego:
-                                    user = new YoJuegoUser(response.hits.hits[i]._source.id, response.hits.hits[i]._source.password);
-                                    break;
-                            }
-
-                            user._id = response.hits.hits[i]._id;
-                            user.userAudit = response.hits.hits[i]._source.userAudit;
-                            break;
-                        }
-
+                        let user = this._mapUser(objRet.resp[0]._id, objRet.resp[0]._source);
                         resolve({ code: 200, message: null, resp: user });
                     }
-                }
-            });
+                }, reject);
         });
     }
 
@@ -92,20 +47,7 @@ class UserESRepository extends ESRepository {
         return new Promise((resolve, reject) => {
             super.add(user, 'yojuego', 'user')
                 .then((resp) => {
-                    let newUser = null;
-                    switch (user.type) {
-                        case UserType.facebook:
-                            newUser = new FacebookUser(user.id);
-                            break;
-                        case UserType.google:
-                            newUser = new GoogleUser(user.id);
-                            break;
-                        case UserType.yoJuego:
-                            newUser = new YoJuegoUser(user.id, user.password);
-                            break;
-                    }
-                    newUser._id = resp.resp._id;
-                    newUser.userAudit = user.userAudit;
+                    let newUser = this._mapUser(resp.resp._id, user);
                     resolve({ code: 200, message: UserESRepository.DOCUMENT_INSERTED, resp: newUser });
                 }, reject)
         });
@@ -116,24 +58,7 @@ class UserESRepository extends ESRepository {
         //TEST: instance of User
         return new Promise((resolve, reject) => {
             if (user instanceof User) {
-                let document = {
-                    type: user.type,
-                    id: user.id,
-                    userAudit: {
-                        lastAccess: user.userAudit.lastAccess,
-                        lastToken: user.userAudit.lastToken,
-                        createdBy: user.userAudit.createdBy,
-                        createdOn: user.userAudit.createdOn,
-                        createdFrom: user.userAudit.createdFrom,
-                        modifiedBy: user.userAudit.modifiedBy,
-                        modifiedOn: user.userAudit.modifiedOn,
-                        modifiedFrom: user.userAudit.modifiedFrom
-                    }
-                };
-
-                if (user.type == UserType.yoJuego) {
-                    document.password = user.password;
-                }
+                let document = this._getDocument(user);
                 super.update(user._id, document, 'yojuego', 'user')
                     .then((resp) => {
                         resolve({ code: 200, message: UserESRepository.DOCUMENT_UPDATED, resp: user });
@@ -154,6 +79,61 @@ class UserESRepository extends ESRepository {
                 reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER, resp: null });
             }
         });
+    }
+
+    _mapUser(id, source) {
+        let user = null;
+
+        switch (source.type) {
+            case UserType.facebook:
+                user = new FacebookUser(source.id);
+                break;
+            case UserType.google:
+                user = new GoogleUser(source.id);
+                break;
+            case UserType.yoJuego:
+                user = new YoJuegoUser(source.id, source.password);
+                break;
+        }
+
+        user._id = id;
+        user.userAudit = source.userAudit;
+
+        return user;
+    }
+
+    _getDocument(user) {
+        let document = {
+            type: user.type,
+            id: user.id,
+            userAudit: {
+                lastAccess: user.userAudit.lastAccess,
+                lastToken: user.userAudit.lastToken,
+                createdBy: user.userAudit.createdBy,
+                createdOn: user.userAudit.createdOn,
+                createdFrom: user.userAudit.createdFrom,
+                modifiedBy: user.userAudit.modifiedBy,
+                modifiedOn: user.userAudit.modifiedOn,
+                modifiedFrom: user.userAudit.modifiedFrom
+            }
+        };
+
+        if (user.type == UserType.yoJuego) {
+            document.password = user.password;
+        }
+
+        return document;
+    }
+
+    _getQueryByIdAndType(id, type) {
+        return {
+            "bool": {
+                "filter": [
+                    { "term": { "type": type } },
+                    { "term": { "id": id } }
+                ]
+            }
+        };
     }
 
     static get INVALID_USER() {

@@ -38,7 +38,12 @@ class SignUpRoutes extends Routes {
             this._generateToken,
             this._auditUser,
             (req, res, next) => {
-                res.json(200, { token: req.token, userid: req.user.id });
+                let resp = {
+                    token: req.token,
+                    user: req.user,
+                    player: null
+                }
+                res.json(200, resp);
             });
     }
 

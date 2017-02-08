@@ -20,14 +20,14 @@ class ESRepository {
 
             validator.execute(() => {
                 this.esclient.search({
-                "index": index,
-                "type": type,
-                "body": {
-                    "query": {
-                        "match_all": {}
+                    "index": index,
+                    "type": type,
+                    "body": {
+                        "query": {
+                            "match_all": {}
+                        }
                     }
-                }
-            }, (error, response, status) => {
+                }, (error, response, status) => {
                     if (error) {
                         if (error.status == 404) {
                             resolve({ code: 200, message: null, resp: [] });
@@ -102,7 +102,7 @@ class ESRepository {
             validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.INVALID_ID)));
             validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
             validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
-            
+
             this.esclient.delete({
                 index: index,
                 type: type,
@@ -115,9 +115,6 @@ class ESRepository {
                 }
             });
         }, (err) => { throw err; });
-
-
-        // throw new Error('must be implemented');
     }
 
     update(id, document, index, type) {
@@ -147,6 +144,29 @@ class ESRepository {
         });
     }
 
+    getBy(query, index, type) {
+        //TEST: not null, not undefined
+        return new Promise((resolve, reject) => {
+            this.esclient.search({
+                "index": index,
+                "type": type,
+                "body": {
+                    "query": query
+                }
+            }, (error, response) => {
+                if (error) {
+                    reject({ code: error.statusCode, message: error.message, resp: error });
+                }
+                else {
+                    if (response.hits.hits.length < 1)
+                        resolve({ code: 200, message: null, resp: [] });
+                    else
+                        resolve({ code: 200, message: null, resp: response.hits.hits });
+                }
+            });
+        });
+    }
+
     static get INVALID_CLIENT() {
         return "Invalid Client";
     }
@@ -155,8 +175,8 @@ class ESRepository {
         return "Invalid id";
     }
 
-    static get INVALID_CRITERIA() {
-        return "Invalid criteria";
+    static get INVALID_QUERY() {
+        return "Invalid query";
     }
 
     static get INVALID_DOCUMENT() {

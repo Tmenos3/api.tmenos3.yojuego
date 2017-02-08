@@ -6,90 +6,49 @@ var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
 class PlayerESRepository extends ESRepository {
     constructor(client) {
         super(client);
+
+        this._mapPlayer = this._mapPlayer.bind(this);
+        this._getDocument = this._getDocument.bind(this);
+        this._getQueryByUserId = this._getQueryByUserId.bind(this);
+        this._getQueryByEmail = this._getQueryByEmail.bind(this);
     }
 
     get(playerId) {
         return new Promise((resolve, reject) => {
             super.get(playerId, 'yojuego', 'player')
                 .then((objRet) => {
-                    let source = objRet.resp._source;
-                    let player = new Player(source.firstName, source.lastName, source.nickName, source.userid, source.email, source.photo, source.phone);
-                    player._id = objRet.resp._id
-                    player.playerAudit = source.playerAudit;
+                    let player = this._mapPlayer(objRet.resp._id, objRet.resp._source);
                     resolve({ code: 200, message: null, resp: player });
                 }, reject);
         });
     }
 
     getByUserId(userid) {
-        //TEST: full test require
         return new Promise((resolve, reject) => {
-            this.esclient.search({
-                "index": "yojuego",
-                "type": "player",
-                "body": {
-                    "query": {
-                        "bool": {
-                            "filter": [
-                                { "term": { "userid": userid } }
-                            ]
-                        }
+            super.getBy(this._getQueryByUserId(userid), 'yojuego', 'player')
+                .then((objRet) => {
+                    if (objRet.resp.length < 1) {
+                        resolve({ code: 404, message: null, resp: [] });
+                    } else {
+                        let player = this._mapPlayer(objRet.resp[0]._id, objRet.resp[0]._source);
+                        resolve({ code: 200, message: null, resp: player });
                     }
-                }
-            }, (error, response) => {
-                if (error) {
-                    reject({ code: error.statusCode, message: error.message, resp: error });
-                }
-                else {
-                    let player = null;
-
-                    for (let i = 0; i < response.hits.hits.length; i++) {
-                        let source = response.hits.hits[i]._source;
-                        player = new Player(source.firstName, source.lastName, source.nickName, source.userid, source.email, source.photo, source.phone);
-                        player._id = response.hits.hits[i]._id;
-                        player.playerAudit = source.playerAudit;
-                        break;
-                    }
-
-                    resolve({ code: 0, message: null, resp: player });
-                }
-            });
+                }, reject);
         });
     }
 
     getByEmail(email) {
         //TEST: full test require
         return new Promise((resolve, reject) => {
-            this.esclient.search({
-                "index": "yojuego",
-                "type": "player",
-                "body": {
-                    "query": {
-                        "bool": {
-                            "filter": [
-                                { "term": { "email": email } }
-                            ]
-                        }
+            super.getBy(this._getQueryByEmail(email), 'yojuego', 'player')
+                .then((objRet) => {
+                    if (objRet.resp.length < 1) {
+                        resolve({ code: 404, message: null, resp: [] });
+                    } else {
+                        let player = this._mapPlayer(objRet.resp[0]._id, objRet.resp[0]._source);
+                        resolve({ code: 200, message: null, resp: player });
                     }
-                }
-            }, (error, response) => {
-                if (error) {
-                    reject({ code: error.statusCode, message: error.message, resp: error });
-                }
-                else {
-                    let player = null;
-
-                    for (let i = 0; i < response.hits.hits.length; i++) {
-                        let source = response.hits.hits[i]._source;
-                        player = new Player(source.firstName, source.lastName, source.nickName, source.userid, source.email, source.photo, source.phone);
-                        player._id = response.hits.hits[i]._id;
-                        player.playerAudit = source.playerAudit;
-                        break;
-                    }
-
-                    resolve({ code: 0, message: null, resp: player });
-                }
-            });
+                }, reject);
         });
     }
 
@@ -103,27 +62,60 @@ class PlayerESRepository extends ESRepository {
 
     update(player) {
         if (player instanceof Player) {
-            let document = {
-                firstName: player.firstName,
-                lastName: player.lastName,
-                nickName: player.nickName,
-                email: player.email,
-                photo: player.photo,
-                phone: player.phone,
-                userid: player.userid,
-                playerAudit: {
-                    createdBy: player.playerAudit.createdBy,
-                    createdOn: player.playerAudit.createdOn,
-                    createdFrom: player.playerAudit.createdFrom,
-                    modifiedBy: player.playerAudit.modifiedBy,
-                    modifiedOn: player.playerAudit.modifiedOn,
-                    modifiedFrom: player.playerAudit.modifiedFrom
-                }
-            };
-            return super.update(player._id, document, 'yojuego', 'player');
+            return super.update(player._id, this._getDocument(player), 'yojuego', 'player');
         } else {
             return Promise.reject({ code: 410, message: PlayerESRepository.INVALID_INSTANCE_PLAYER });
         }
+    }
+
+    _mapPlayer(id, source) {
+        let player = new Player(source.firstName, source.lastName, source.nickName, source.userid, source.email, source.photo, source.phone);
+        player._id = id
+        player.playerAudit = source.playerAudit;
+
+        return player;
+    }
+
+    _getDocument(player) {
+        let document = {
+            firstName: player.firstName,
+            lastName: player.lastName,
+            nickName: player.nickName,
+            email: player.email,
+            photo: player.photo,
+            phone: player.phone,
+            userid: player.userid,
+            playerAudit: {
+                createdBy: player.playerAudit.createdBy,
+                createdOn: player.playerAudit.createdOn,
+                createdFrom: player.playerAudit.createdFrom,
+                modifiedBy: player.playerAudit.modifiedBy,
+                modifiedOn: player.playerAudit.modifiedOn,
+                modifiedFrom: player.playerAudit.modifiedFrom
+            }
+        };
+
+        return document;
+    }
+
+    _getQueryByEmail(email) {
+        return {
+            "bool": {
+                "filter": [
+                    { "term": { "email": email } }
+                ]
+            }
+        };
+    }
+
+    _getQueryByUserId(userid) {
+        return {
+            "bool": {
+                "filter": [
+                    { "term": { "userid": userid } }
+                ]
+            }
+        };
     }
 
     static get INVALID_INSTANCE_PLAYER() {

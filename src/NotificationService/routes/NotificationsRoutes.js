@@ -14,22 +14,12 @@ let repoPlayer = null;
 let repoFriendship = null;
 let repoFriendshipRequest = null;
 
-class FriendshipRoutes extends Routes {
+class NotificationsRoutes extends Routes {
     constructor(esClient) {
         super();
 
         this._getPlayer = this._getPlayer.bind(this);
-        this._checkPlayerFriendship = this._checkPlayerFriendship.bind(this);
-        this._checkFriendFriendship = this._checkFriendFriendship.bind(this);
-        this._getFriendship = this._getFriendship.bind(this);
-        this._getAllFriendships = this._getAllFriendships.bind(this);
-        this._createFriendship = this._createFriendship.bind(this);
-        this._acceptFriendship = this._acceptFriendship.bind(this);
-        this._rejectFriendship = this._rejectFriendship.bind(this);
-        this._deleteFriendship = this._deleteFriendship.bind(this);
-        this._updateFriendshipsByFriend = this._updateFriendshipsByFriend.bind(this);
-        this._fetchFriendDetails = this._fetchFriendDetails.bind(this);
-        this._sendNotification = this._sendNotification.bind(this);
+        this._getFriendshipRequests = this._getFriendshipRequests.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(FriendshipRoutes.INVALID_ES_CLIENT));
@@ -42,12 +32,7 @@ class FriendshipRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/friendship/:id', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkPlayerFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: 'Friend created' }) });
-        server.get('/friendship', this._getPlayer, this._getAllFriendships, (req, res, next) => { res.json(200, { code: 200, resp: req.friendships, message: null }) });
-        server.post('/friendship/create', super._bodyIsNotNull, this._getPlayer, this._createFriendship, this._sendNotification, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
-        server.post('/friendship/:id/accetp', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkFriendFriendship, this._acceptFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
-        server.post('/friendship/:id/reject', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkFriendFriendship, this._rejectFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
-        server.del('/friendship/:id', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkPlayerFriendship, this._deleteFriendship, this._updateFriendshipsByFriend, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
+        server.get('/notifications/frienshipRequest', this._getPlayer, this._getFriendshipRequests, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: 'Friend created' }) });
     }
 
     _getFriendship(req, res, next) {
@@ -289,7 +274,7 @@ class FriendshipRoutes extends Routes {
     }
 
     _sendNotification(req, res, next) {
-        let newNotification = new FriendshipRequest(req.friendship._id, req.friendship.friendId, 'PENDING', new Date());
+        let newNotification = new FriendshipRequest(req.friendship._id, req.player._id, 'PENDING', new Date());
         newNotification.friendshipRequestAudit = {
             createdBy: req.player._id, //We should store deviceId here
             createdOn: new Date(),
