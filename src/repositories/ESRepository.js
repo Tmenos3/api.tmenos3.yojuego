@@ -145,25 +145,31 @@ class ESRepository {
     }
 
     getBy(query, index, type) {
-        //TEST: not null, not undefined
         return new Promise((resolve, reject) => {
-            this.esclient.search({
-                "index": index,
-                "type": type,
-                "body": {
-                    "query": query
-                }
-            }, (error, response) => {
-                if (error) {
-                    reject({ code: error.statusCode, message: error.message, resp: error });
-                }
-                else {
-                    if (response.hits.hits.length < 1)
-                        resolve({ code: 200, message: null, resp: [] });
-                    else
-                        resolve({ code: 200, message: null, resp: response.hits.hits });
-                }
-            });
+            let validator = new Validator();
+            validator.addCondition(new NotNullOrUndefinedCondition(query).throw(new Error(ESRepository.INVALID_QUERY)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+
+            validator.execute(() => {
+                this.esclient.search({
+                    "index": index,
+                    "type": type,
+                    "body": {
+                        "query": query
+                    }
+                }, (error, response) => {
+                    if (error) {
+                        reject({ code: error.statusCode, message: error.message, resp: error });
+                    }
+                    else {
+                        if (response.hits.hits.length < 1)
+                            resolve({ code: 200, message: null, resp: [] });
+                        else
+                            resolve({ code: 200, message: null, resp: response.hits.hits });
+                    }
+                });
+            }, (err) => reject({ code: 400, message: err.message, resp: err }));
         });
     }
 

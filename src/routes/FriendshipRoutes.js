@@ -30,6 +30,9 @@ class FriendshipRoutes extends Routes {
         this._updateFriendshipsByFriend = this._updateFriendshipsByFriend.bind(this);
         this._fetchFriendDetails = this._fetchFriendDetails.bind(this);
         this._sendNotification = this._sendNotification.bind(this);
+        this._addNewFriend = this._addNewFriend.bind(this);
+        this._checkPending = this._checkPending.bind(this);
+        this._returnFriendship = this._returnFriendship.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(FriendshipRoutes.INVALID_ES_CLIENT));
@@ -42,16 +45,27 @@ class FriendshipRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/friendship/:id', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkPlayerFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: 'Friend created' }) });
+        server.get('/friendship/:id', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkPlayerFriendship, this._returnFriendship);
         server.get('/friendship', this._getPlayer, this._getAllFriendships, (req, res, next) => { res.json(200, { code: 200, resp: req.friendships, message: null }) });
-        server.post('/friendship/create', super._bodyIsNotNull, this._getPlayer, this._createFriendship, this._sendNotification, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
-        server.post('/friendship/:id/accetp', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkFriendFriendship, this._acceptFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
-        server.post('/friendship/:id/reject', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkFriendFriendship, this._rejectFriendship, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
-        server.del('/friendship/:id', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkPlayerFriendship, this._deleteFriendship, this._updateFriendshipsByFriend, (req, res, next) => { res.json(200, { code: 200, resp: req.friendship, message: null }) });
+        server.post('/friendship/create', super._bodyIsNotNull, this._getPlayer, this._createFriendship, this._sendNotification, this._returnFriendship);
+        server.post('/friendship/accetp', super._bodyIsNotNull, this._getPlayer, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._acceptFriendship, this._addNewFriend, this._returnFriendship);
+        server.post('/friendship/reject', super._bodyIsNotNull, this._getPlayer, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._rejectFriendship, this._returnFriendship);
+        server.del('/friendship', super._bodyIsNotNull, this._getPlayer, this._getFriendship, this._checkPlayerFriendship, this._deleteFriendship, this._updateFriendshipsByFriend, this._returnFriendship);
+    }
+
+    _returnFriendship(req, res, next) {
+        req.friendship.friendshipAudit = undefined;
+        res.json(200, { code: 200, resp: req.friendship, message: null })
     }
 
     _getFriendship(req, res, next) {
-        repoFriendship.get(req.params.id)
+        let id = null;
+        if (req.params && req.params.id)
+            id = req.params.id;
+        else
+            id = req.body.id;
+
+        repoFriendship.get(id)
             .then((friendshipResp) => {
                 if (!friendshipResp.resp) {
                     res.json(404, { code: 404, message: 'Friendship inexistente', resp: null });
@@ -60,10 +74,10 @@ class FriendshipRoutes extends Routes {
                     next();
                 }
             }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
+                res.json(404, { code: 404, message: cause.message, resp: null });
             })
             .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
+                res.json(500, { code: 500, message: err.message, resp: null });
             });
     }
 
@@ -75,16 +89,16 @@ class FriendshipRoutes extends Routes {
                         req.friendships = ret;
                         next();
                     }, (cause) => {
-                        res.json(404, { code: 404, message: cause, resp: null });
+                        res.json(404, { code: 404, message: cause.message, resp: null });
                     })
                     .catch((err) => {
-                        res.json(500, { code: 500, message: err, resp: null });
+                        res.json(500, { code: 500, message: err.message, resp: null });
                     });
             }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
+                res.json(404, { code: 404, message: cause.message, resp: null });
             })
             .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
+                res.json(500, { code: 500, message: err.message, resp: null });
             });
     }
 
@@ -170,34 +184,24 @@ class FriendshipRoutes extends Routes {
     _acceptFriendship(req, res, next) {
         let friendship = req.friendship;
         friendship.status = 'ACCEPTED';
-        friendship.info = {
-            photo: 'url_photo',
-            firstName: req.player.firstName,
-            lastName: req.player.lastName,
-            nickName: req.player.nickName,
-            telephone: '12431234'
-        };
         friendship.friendshipAudit.modifiedBy = req.player._id; //We should store deviceId here
         friendship.friendshipAudit.modifiedOn = new Date();
-        friendship.friendshipAudit.modifiedFrom = req.body.platform;
-
+        friendship.friendshipAudit.modifiedFrom = req.body.platform || 'MOBILE_APP';
 
         repoFriendship.update(friendship)
             .then((resp) => {
-                req.friendship = resp.resp;
                 next();
             }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
+                res.json(404, { code: 404, message: cause.message, resp: null });
             })
             .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
+                res.json(500, { code: 500, message: err.message, resp: null });
             });
     }
 
     _rejectFriendship(req, res, next) {
         let friendship = req.friendship;
         friendship.status = 'REJECTED'
-        friendship.info = null;
         friendship.friendshipAudit.modifiedBy = req.body.platform; //We should store deviceId here
         friendship.friendshipAudit.modifiedOn = new Date();
         friendship.friendshipAudit.modifiedFrom = req.body.platform;
@@ -267,10 +271,10 @@ class FriendshipRoutes extends Routes {
                     next();
                 }
             }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
+                res.json(404, { code: 404, message: cause.message, resp: null });
             })
             .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
+                res.json(500, { code: 500, message: err.message, resp: null });
             });
     }
 
@@ -302,11 +306,60 @@ class FriendshipRoutes extends Routes {
             .then((resp) => {
                 next();
             }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
+                res.json(404, { code: 404, message: cause.message, resp: null });
             })
             .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
+                res.json(500, { code: 500, message: err.message, resp: null });
             });
+    }
+
+    _addNewFriend(req, res, next) {
+        repoPlayer.get(req.friendship.playerId)
+            .then((playerResp) => {
+                if (!playerResp.resp) {
+                    res.json(404, { code: 404, message: 'Player inexistente', resp: null });
+                } else {
+                    let friendship = new Friendship(req.player._id, playerResp.resp._id, 'ACCEPTED', playerResp.resp.email);
+                    friendship.friendshipAudit = {
+                        createdBy: req.player._id, //We should store deviceId here
+                        createdOn: new Date(),
+                        createdFrom: req.body.platform || 'MOBILE_APP',
+                        modifiedBy: null,
+                        modifiedOn: null,
+                        modifiedFrom: null
+                    }
+                    repoFriendship.add(friendship)
+                        .then((resp) => {
+                            repoFriendship.get(resp.resp._id)
+                                .then((friendshipResp) => {
+                                    req.newFriendship = friendshipResp.resp;
+                                    next();
+                                }, (cause) => {
+                                    res.json(404, { code: 404, message: cause.message, resp: null });
+                                })
+                                .catch((err) => {
+                                    res.json(500, { code: 500, message: err.message, resp: null });
+                                });
+                        }, (err) => {
+                            res.json(404, { code: 404, message: cause.message, resp: null });
+                        })
+                        .catch((err) => {
+                            res.json(500, { code: 500, message: err.message, resp: null });
+                        });
+                }
+            }, (cause) => {
+                res.json(404, { code: 404, message: cause.message, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err.message, resp: null });
+            });
+    }
+
+    _checkPending(req, res, next) {
+        if (req.friendship.status != 'CREATED')
+            res.json(404, { code: 405, message: 'This frienship cannot be accepted.', resp: null });
+        else
+            next();
     }
 
     static get INVALID_ES_CLIENT() {

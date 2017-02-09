@@ -14,8 +14,12 @@ class FriendshipRequestESRepository extends ESRepository {
         return new Promise((resolve, reject) => {
             super.get(friendshipRequestId, 'yojuego', 'friendshipRequest')
                 .then((objRet) => {
-                    let user = this._map(objRet.resp._id, objRet.resp._source);
-                    resolve({ code: 200, message: null, resp: user });
+                    if (objRet.code == 404) {
+                        resolve({ code: 404, message: 'FriendshipRequest does not exist', resp: null });
+                    } else {
+                        let user = this._map(objRet.resp._id, objRet.resp._source);
+                        resolve({ code: 200, message: null, resp: user });
+                    }
                 }, reject);
         });
     }

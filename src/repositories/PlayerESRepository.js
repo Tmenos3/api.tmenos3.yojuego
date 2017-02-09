@@ -17,8 +17,12 @@ class PlayerESRepository extends ESRepository {
         return new Promise((resolve, reject) => {
             super.get(playerId, 'yojuego', 'player')
                 .then((objRet) => {
-                    let player = this._mapPlayer(objRet.resp._id, objRet.resp._source);
-                    resolve({ code: 200, message: null, resp: player });
+                    if (objRet.code == 404) {
+                        resolve({ code: 404, message: 'Player does not exist', resp: null });
+                    } else {
+                        let player = this._mapPlayer(objRet.resp._id, objRet.resp._source);
+                        resolve({ code: 200, message: null, resp: player });
+                    }
                 }, reject);
         });
     }

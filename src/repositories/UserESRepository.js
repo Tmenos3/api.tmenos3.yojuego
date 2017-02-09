@@ -18,8 +18,12 @@ class UserESRepository extends ESRepository {
         return new Promise((resolve, reject) => {
             super.get(userId, 'yojuego', 'user')
                 .then((objRet) => {
-                    let user = this._mapUser(objRet.resp._id, objRet.resp._source);
-                    resolve({ code: 200, message: null, resp: user });
+                    if (objRet.code == 404) {
+                        resolve({ code: 404, message: 'User does not exist', resp: null });
+                    } else {
+                        let user = this._mapUser(objRet.resp._id, objRet.resp._source);
+                        resolve({ code: 200, message: null, resp: user });
+                    }
                 }, reject);
         });
     }
