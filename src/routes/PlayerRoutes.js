@@ -33,7 +33,7 @@ class PlayerRoutes extends Routes {
     _create(req, res, next) {
         repo.getByUserId(req.user._id)
             .then((ret) => {
-                if (ret.resp) {
+                if (ret.resp.length) {
                     res.json(400, { code: 400, message: 'Player already exists', resp: null });
                 } else {
                     try {

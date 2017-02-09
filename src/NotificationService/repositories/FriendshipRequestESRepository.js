@@ -32,7 +32,7 @@ class FriendshipRequestESRepository extends ESRepository {
                         ret.push(elem);
                     }
 
-                    return resolve(ret);
+                    resolve({ code: 200, message: null, resp: ret });
                 }, reject);
         });
     }

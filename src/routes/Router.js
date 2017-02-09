@@ -1,16 +1,17 @@
-var InvitationRoutes = require('./InvitationRoutes');
-var FriendshipRoutes = require('./FriendshipRoutes');
-var GroupRoutes = require('./GroupRoutes');
-var LogInRoutes = require('./LogInRoutes');
-var MatchRoutes = require('./MatchRoutes');
-var PlayerRoutes = require('./PlayerRoutes');
-var SignUpRoutes = require('./SignUpRoutes');
-var AuthRoutes = require('./AuthRoutes');
-var ResetPasswordRoutes = require('./ResetPasswordRoutes');
-var UserRoute = require('./UserRoute');
-var ServerRoute = require('./ServerRoute');
-var ClubRoutes = require('./ClubRoutes');
-var DeviceRegistrationRoutes = require('./DeviceRegistrationRoutes');
+let InvitationRoutes = require('./InvitationRoutes');
+let FriendshipRoutes = require('./FriendshipRoutes');
+let GroupRoutes = require('./GroupRoutes');
+let LogInRoutes = require('./LogInRoutes');
+let MatchRoutes = require('./MatchRoutes');
+let PlayerRoutes = require('./PlayerRoutes');
+let SignUpRoutes = require('./SignUpRoutes');
+let AuthRoutes = require('./AuthRoutes');
+let ResetPasswordRoutes = require('./ResetPasswordRoutes');
+let UserRoute = require('./UserRoute');
+let ServerRoute = require('./ServerRoute');
+let ClubRoutes = require('./ClubRoutes');
+let DeviceRegistrationRoutes = require('./DeviceRegistrationRoutes');
+let NotificationsRoutes = require('../NotificationService/routes/NotificationsRoutes');
 
 class Router {
     constructor() { }
@@ -29,6 +30,7 @@ class Router {
         new ResetPasswordRoutes(esClient, jwt).add(server);
         new UserRoute(esClient).add(server);
         new ServerRoute(esClient, jwt).add(server);
+        new NotificationsRoutes(esClient).add(server);
     }
 }
 

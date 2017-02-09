@@ -1,12 +1,12 @@
 let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-let Routes = require('./Routes');
-let Friendship = require('../models/Friendship');
-let Player = require('../models/Player');
-let FriendshipRepository = require('../repositories/FriendshipESRepository');
-let PlayerRepository = require('../repositories/PlayerESRepository');
-let FriendshipRequestRepository = require('../NotificationService/repositories/FriendshipRequestESRepository');
-let FriendshipRequest = require('../NotificationService/models/FriendshipRequest');
+let Routes = require('../../routes/Routes');
+let Friendship = require('../../models/Friendship');
+let Player = require('../../models/Player');
+let FriendshipRepository = require('../../repositories/FriendshipESRepository');
+let PlayerRepository = require('../../repositories/PlayerESRepository');
+let FriendshipRequestRepository = require('../repositories/FriendshipRequestESRepository');
+let FriendshipRequest = require('../models/FriendshipRequest');
 
 let moment = require('moment');
 
@@ -25,7 +25,7 @@ class NotificationsRoutes extends Routes {
         this._populatePlayers = this._populatePlayers.bind(this);
 
         let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(FriendshipRoutes.INVALID_ES_CLIENT));
+        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(NotificationsRoutes.INVALID_ES_CLIENT));
 
         validator.execute(() => {
             repoFriendship = new FriendshipRepository(esClient);
@@ -69,7 +69,7 @@ class NotificationsRoutes extends Routes {
     }
 
     _populateFriendships(req, res, next) {
-        this._fetchFriendshipsDetail(req.friendshipRequests)
+        this._fetchFriendshipsDetail(req.friendshipRequests, 0)
             .then((ret) => {
                 req.friendshipRequests = ret;
                 next();
@@ -82,7 +82,7 @@ class NotificationsRoutes extends Routes {
     }
 
     _populatePlayers(req, res, next) {
-        this._fetchPlayersDetail()
+        this._fetchPlayersDetail(req.friendshipRequests, 0)
             .then((ret) => {
                 req.friendshipRequests = ret;
                 next();
@@ -99,34 +99,14 @@ class NotificationsRoutes extends Routes {
             if (arr.length == pos)
                 resolve(arr);
             else {
-                if (arr[pos].status == 'ACCEPTED') {
-                    repoPlayer.get(arr[pos].friendId)
-                        .then((response) => {
-                            arr[pos].info = {
-                                firstName: response.resp.firstName,
-                                lastName: response.resp.lastName,
-                                nickName: response.resp.nickName,
-                                photo: response.resp.photo,
-                                email: response.resp.email,
-                                phone: response.resp.phone
-                            };
+                repoFriendship.get(arr[pos].friendshipId)
+                    .then((response) => {
+                        arr[pos].friendship = response.resp;
+                        arr[pos].friendship.friendshipAudit = undefined;
 
-                            return this._fetchFriendDetails(arr, ++pos)
-                                .then((ret) => resolve(ret));
-                        });
-                }
-                else {
-                    arr[pos].info = {
-                        firstName: null,
-                        lastName: null,
-                        nickName: null,
-                        photo: null,
-                        email: arr[pos].email,
-                        phone: null
-                    };
-                    return this._fetchFriendDetails(arr, ++pos)
-                        .then((ret) => resolve(ret));
-                }
+                        return this._fetchFriendshipsDetail(arr, ++pos)
+                            .then((ret) => resolve(ret));
+                    });
             }
         });
     }
@@ -136,34 +116,14 @@ class NotificationsRoutes extends Routes {
             if (arr.length == pos)
                 resolve(arr);
             else {
-                if (arr[pos].status == 'ACCEPTED') {
-                    repoPlayer.get(arr[pos].friendId)
-                        .then((response) => {
-                            arr[pos].info = {
-                                firstName: response.resp.firstName,
-                                lastName: response.resp.lastName,
-                                nickName: response.resp.nickName,
-                                photo: response.resp.photo,
-                                email: response.resp.email,
-                                phone: response.resp.phone
-                            };
+                repoPlayer.get(arr[pos].friendship.playerId)
+                    .then((response) => {
+                        arr[pos].sender = response.resp;
+                        arr[pos].sender.playerAudit = undefined;
 
-                            return this._fetchFriendDetails(arr, ++pos)
-                                .then((ret) => resolve(ret));
-                        });
-                }
-                else {
-                    arr[pos].info = {
-                        firstName: null,
-                        lastName: null,
-                        nickName: null,
-                        photo: null,
-                        email: arr[pos].email,
-                        phone: null
-                    };
-                    return this._fetchFriendDetails(arr, ++pos)
-                        .then((ret) => resolve(ret));
-                }
+                        return this._fetchPlayersDetail(arr, ++pos)
+                            .then((ret) => resolve(ret));
+                    });
             }
         });
     }
@@ -173,4 +133,4 @@ class NotificationsRoutes extends Routes {
     }
 }
 
-module.exports = FriendshipRoutes;
+module.exports = NotificationsRoutes;
