@@ -48,7 +48,7 @@ class FriendshipRoutes extends Routes {
         server.get('/friendship/:id', super._paramsIsNotNull, this._getPlayer, this._getFriendship, this._checkPlayerFriendship, this._returnFriendship);
         server.get('/friendship', this._getPlayer, this._getAllFriendships, (req, res, next) => { res.json(200, { code: 200, resp: req.friendships, message: null }) });
         server.post('/friendship/create', super._bodyIsNotNull, this._getPlayer, this._createFriendship, this._sendNotification, this._returnFriendship);
-        server.post('/friendship/accetp', super._bodyIsNotNull, this._getPlayer, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._acceptFriendship, this._addNewFriend, this._returnFriendship);
+        server.post('/friendship/accept', super._bodyIsNotNull, this._getPlayer, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._acceptFriendship, this._addNewFriend, this._returnFriendship);
         server.post('/friendship/reject', super._bodyIsNotNull, this._getPlayer, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._rejectFriendship, this._returnFriendship);
         server.del('/friendship', super._bodyIsNotNull, this._getPlayer, this._getFriendship, this._checkPlayerFriendship, this._deleteFriendship, this._updateFriendshipsByFriend, this._returnFriendship);
     }
