@@ -14,46 +14,42 @@ class PlayerESRepository extends ESRepository {
     }
 
     get(playerId) {
-        return new Promise((resolve, reject) => {
-            super.get(playerId, 'yojuego', 'player')
-                .then((objRet) => {
-                    if (objRet.code == 404) {
-                        resolve({ code: 404, message: 'Player does not exist', resp: null });
-                    } else {
-                        let player = this._mapPlayer(objRet.resp._id, objRet.resp._source);
-                        resolve({ code: 200, message: null, resp: player });
-                    }
-                }, reject);
-        });
+        return super.get(playerId, 'yojuego', 'player')
+            .then((objRet) => {
+                if (objRet.code == 404) {
+                    return { code: 404, message: 'Player does not exist', resp: null };
+                } else {
+                    let player = this._mapPlayer(objRet.resp._id, objRet.resp._source);
+                    return { code: 200, message: null, resp: player };
+                }
+            }, (error) => { return Promise.reject(error); });
     }
 
     getByUserId(userid) {
-        return new Promise((resolve, reject) => {
-            super.getBy(this._getQueryByUserId(userid), 'yojuego', 'player')
-                .then((objRet) => {
-                    if (objRet.resp.length < 1) {
-                        resolve({ code: 404, message: null, resp: null });
-                    } else {
-                        let player = this._mapPlayer(objRet.resp[0]._id, objRet.resp[0]._source);
-                        resolve({ code: 200, message: null, resp: player });
-                    }
-                }, reject);
-        });
+        return super.getBy(this._getQueryByUserId(userid), 'yojuego', 'player')
+            .then((objRet) => {
+                if (objRet.resp.length < 1) {
+                    return { code: 404, message: null, resp: null };
+                } else {
+                    let player = this._mapPlayer(objRet.resp[0]._id, objRet.resp[0]._source);
+                    return { code: 200, message: null, resp: player };
+                }
+            }, (error) => {
+                return Promise.reject(error);
+            });
     }
 
     getByEmail(email) {
         //TEST: full test require
-        return new Promise((resolve, reject) => {
-            super.getBy(this._getQueryByEmail(email), 'yojuego', 'player')
-                .then((objRet) => {
-                    if (objRet.resp.length < 1) {
-                        resolve({ code: 404, message: null, resp: [] });
-                    } else {
-                        let player = this._mapPlayer(objRet.resp[0]._id, objRet.resp[0]._source);
-                        resolve({ code: 200, message: null, resp: player });
-                    }
-                }, reject);
-        });
+        return super.getBy(this._getQueryByEmail(email), 'yojuego', 'player')
+            .then((objRet) => {
+                if (objRet.resp.length < 1) {
+                    return { code: 404, message: null, resp: null };
+                } else {
+                    let player = this._mapPlayer(objRet.resp[0]._id, objRet.resp[0]._source);
+                    return { code: 200, message: null, resp: player };
+                }
+            }, (error) => { return Promise.reject(error); });
     }
 
     add(player) {

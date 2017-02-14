@@ -20,7 +20,7 @@ let configureServer = (server, restify) => {
     server.use(passport.initialize());
     server.use(getUser(client, config.serverConfig.pathsWithoutAuthentication));
     server.use(checkUserToken(config.serverConfig.pathsWithoutAuthentication));
-    server.use(getPlayerByUserId(client, config.serverConfig.pathsWithoutAuthentication.concat(['/player/create'])));
+    server.use(getPlayerByUserId(client, config.serverConfig.pathsWithoutAuthentication.concat(['/player/create', '/logout'])));
 
     passport.serializeUser((player, done) => {
         done(null, player);

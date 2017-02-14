@@ -15,74 +15,63 @@ class UserESRepository extends ESRepository {
     }
 
     get(userId) {
-        return new Promise((resolve, reject) => {
-            super.get(userId, 'yojuego', 'user')
-                .then((objRet) => {
-                    if (objRet.code == 404) {
-                        resolve({ code: 404, message: 'User does not exist', resp: null });
-                    } else {
-                        let user = this._mapUser(objRet.resp._id, objRet.resp._source);
-                        resolve({ code: 200, message: null, resp: user });
-                    }
-                }, reject);
-        });
+        return super.get(userId, 'yojuego', 'user')
+            .then((objRet) => {
+                if (objRet.code == 404) {
+                    return { code: 404, message: 'User does not exist', resp: null };
+                } else {
+                    let user = this._mapUser(objRet.resp._id, objRet.resp._source);
+                    return { code: 200, message: null, resp: user };
+                }
+            }, (error) => { return Promise.reject(error); });
     }
 
     getByIdAndType(id, type) {
         //TEST: not null, not undefined
         //TEST: instance of string both
-        return new Promise((resolve, reject) => {
-            super.getBy(this._getQueryByIdAndType(id, type), 'yojuego', 'user')
-                .then((objRet) => {
-                    if (objRet.resp.length < 1) {
-                        resolve({ code: 404, message: 'No users were found.', resp: null });
-                    } else {
-                        let user = this._mapUser(objRet.resp[0]._id, objRet.resp[0]._source);
-                        resolve({ code: 200, message: null, resp: user });
-                    }
-                }, reject);
-        });
+        return super.getBy(this._getQueryByIdAndType(id, type), 'yojuego', 'user')
+            .then((objRet) => {
+                if (objRet.resp.length < 1)
+                    return { code: 404, message: 'No users were found.', resp: null };
+
+                let user = this._mapUser(objRet.resp[0]._id, objRet.resp[0]._source);
+                return { code: 200, message: null, resp: user };
+            }, (error) => { return Promise.reject(error); });
     }
 
     add(user) {
         //TEST: not null, not undefined
         //TEST: instance of User
         //TEST: return a user
-        return new Promise((resolve, reject) => {
-            super.add(user, 'yojuego', 'user')
-                .then((resp) => {
-                    let newUser = this._mapUser(resp.resp._id, user);
-                    resolve({ code: 200, message: UserESRepository.DOCUMENT_INSERTED, resp: newUser });
-                }, reject)
-        });
+        return super.add(user, 'yojuego', 'user')
+            .then((resp) => {
+                let newUser = this._mapUser(resp.resp._id, user);
+                return { code: 200, message: UserESRepository.DOCUMENT_INSERTED, resp: newUser };
+            }, (error) => { return Promise.reject(error); });
     }
 
     update(user) {
         //TEST: not null, not undefined
         //TEST: instance of User
-        return new Promise((resolve, reject) => {
-            if (user instanceof User) {
-                let document = this._getDocument(user);
-                super.update(user._id, document, 'yojuego', 'user')
-                    .then((resp) => {
-                        resolve({ code: 200, message: UserESRepository.DOCUMENT_UPDATED, resp: user });
-                    }, reject);
-            } else {
-                reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER, resp: null });
-            }
-        });
+        if (user instanceof User) {
+            let document = this._getDocument(user);
+            return super.update(user._id, document, 'yojuego', 'user')
+                .then((resp) => {
+                    return { code: 200, message: UserESRepository.DOCUMENT_UPDATED, resp: user };
+                }, (error) => { return Promise.reject(error); });
+        } else {
+            return Promise.reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER, resp: null });
+        }
     }
 
     delete(user) {
         //TEST: not null, not undefined
         //TEST: instance of User
-        return new Promise((resolve, reject) => {
-            if (user instanceof User) {
-                super.delete(user._id, 'yojuego', 'user').then(resolve, reject);
-            } else {
-                reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER, resp: null });
-            }
-        });
+        if (user instanceof User) {
+            return super.delete(user._id, 'yojuego', 'user');
+        } else {
+            return Promise.reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER, resp: null });
+        }
     }
 
     _mapUser(id, source) {

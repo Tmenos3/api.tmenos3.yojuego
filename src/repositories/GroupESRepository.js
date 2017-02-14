@@ -4,94 +4,36 @@ let Group = require('../models/Group');
 class GroupESRepository extends ESRepository {
     constructor(client) {
         super(client);
+
+        this._mapGroup = this._mapGroup.bind(this);
+        this._getQueryByPlayerId = this._getQueryByPlayerId.bind(this);
     }
 
     get(groupId) {
-        return new Promise((resolve, reject) => {
-            super.get(groupId, 'yojuego', 'group')
-                .then((objRet) => {
-                    if (objRet.code == 404) {
-                        resolve({ code: 404, message: 'Group does not exist', resp: null });
-                    } else {
-                        let source = objRet.resp._source;
-                        let group = new Group(source.players, source.admins, source.description, source.photo, source.createdBy, source.createdOn);
-                        group._id = objRet.resp._id;
-                        resolve({ code: 200, message: null, resp: group });
-                    }
-                }, reject);
-        });
+        return super.get(groupId, 'yojuego', 'group')
+            .then((objRet) => {
+                if (objRet.code == 404) {
+                    return { code: 404, message: 'Group does not exist', resp: null };
+                } else {
+                    let group = this._mapGroup(objRet.resp._id, objRet.resp._source);
+                    return { code: 200, message: null, resp: group };
+                }
+            }, (error) => { return Promise.reject(error); });
     }
 
     getByPlayerId(playerId) {
-        return new Promise((resolve, reject) => {
-            this.esclient.search({
-                "index": "yojuego",
-                "type": "group",
-                "body": {
-                    "query": {
-                        "bool": {
-                            "should": [
-                                { "term": { "players": { "value": playerId } } },
-                                { "term": { "admins": { "value": playerId } } }
-                            ]
-                        }
-                    }
-                }
-            }, (error, response) => {
-                if (error) {
-                    reject({ code: error.statusCode, message: error.message, resp: error });
-                }
-                else {
-                    let groups = [];
+        return super.getBy(this._getQueryByPlayerId(playerId), 'yojuego', 'group')
+            .then((objRet) => {
+                let groups = [];
 
-                    for (let i = 0; i < response.hits.hits.length; i++) {
-                        let source = response.hits.hits[i]._source;
-                        let group = new Group(source.players, source.admins, source.description, source.photo, source.createdBy, source.createdOn);
-                        group._id = response.hits.hits[i]._id;
-
-                        groups.push(group);
-                    }
-
-                    resolve({ code: 200, message: null, resp: groups });
+                for (let i = 0; i < objRet.resp.length; i++) {
+                    let group = this._mapGroup(objRet.resp[i]._id, objRet.resp[i]._source);
+                    groups.push(group);
                 }
-            });
-        });
+
+                return { code: 200, message: null, resp: groups };
+            }, (error) => { return Promise.reject(error); });
     }
-
-    // getByFriendId(friendId) {
-    //     return new Promise((resolve, reject) => {
-    //         this.esclient.search({
-    //             "index": "yojuego",
-    //             "type": "friendship",
-    //             "body": {
-    //                 "query": {
-    //                     "bool": {
-    //                         "filter": [
-    //                             { "term": { "friendId": friendId } }
-    //                         ]
-    //                     }
-    //                 }
-    //             }
-    //         }, (error, response) => {
-    //             if (error) {
-    //                 reject({ code: error.statusCode, message: error.message, resp: error });
-    //             }
-    //             else {
-    //                 let friendships = [];
-
-    //                 for (let i = 0; i < response.hits.hits.length; i++) {
-    //                     let source = response.hits.hits[i]._source;
-    //                     let friendship = new Friendship(source.playerId, source.friendId, source.status, source.info);
-    //                     friendship._id = response.hits.hits[i]._id;
-
-    //                     friendships.push(friendship);
-    //                 }
-
-    //                 resolve({ code: 200, message: null, resp: friendships });
-    //             }
-    //         });
-    //     });
-    // }
 
     add(group) {
         if (group instanceof Group) {
@@ -123,6 +65,24 @@ class GroupESRepository extends ESRepository {
         } else {
             return Promise.reject({ code: 410, message: GroupESRepository.INVALID_INSTANCE_GROUP });
         }
+    }
+
+    _mapGroup(id, source) {
+        let group = new Group(source.players, source.admins, source.description, source.photo, source.createdBy, source.createdOn);
+        group._id = objRet.resp._id;
+
+        return group;
+    }
+
+    _getQueryByPlayerId(playerId) {
+        return {
+            "bool": {
+                "should": [
+                    { "term": { "players": { "value": playerId } } },
+                    { "term": { "admins": { "value": playerId } } }
+                ]
+            }
+        };
     }
 
     static get INVALID_INSTANCE_GROUP() {
