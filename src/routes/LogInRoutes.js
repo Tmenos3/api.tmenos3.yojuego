@@ -18,7 +18,6 @@ class LogInRoutes extends Routes {
         this._validateLogin = this._validateLogin.bind(this);
         this._generateToken = this._generateToken.bind(this);
         this._auditUser = this._auditUser.bind(this);
-        // this._getPlayer = this._getPlayer.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(LogInRoutes.INVALID_ES_CLIENT));
@@ -42,7 +41,6 @@ class LogInRoutes extends Routes {
         server.post('/login/yojuego',
             super._bodyIsNotNull,
             this._validateLogin,
-            // this._getPlayer,
             this._generateToken,
             this._auditUser,
             (req, res, next) => {
@@ -75,19 +73,6 @@ class LogInRoutes extends Routes {
                 res.json(500, { code: 500, message: err, resp: null });
             });
     }
-
-    // _getPlayer(req, res, next) {
-    //     playerRepo.getByUserId(req.user._id, 'yojuego')
-    //         .then((response) => {
-    //             req.player = response.resp;
-    //             next();
-    //         }, (err) => {
-    //             res.json(400, { code: 400, message: err, resp: null });
-    //         })
-    //         .catch((err) => {
-    //             res.json(500, { code: 500, message: err, resp: null });
-    //         });
-    // }
 
     _generateToken(req, res, next) {
         let claims = {
