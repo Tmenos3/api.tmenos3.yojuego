@@ -3,18 +3,15 @@ let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 let Routes = require('./Routes');
 let Match = require('../models/Match');
 let MatchRepository = require('../repositories/MatchESRepository');
-let PlayerRepository = require('../repositories/PlayerESRepository');
 let moment = require('moment');
 
 let repoMatch = null;
-let repoPlayer = null;
 
 class MatchRoutes extends Routes {
     constructor(esClient) {
         super();
 
         this._createMatch = this._createMatch.bind(this);
-        // this._searchByPlayer = this._searchByPlayer.bind(this);
         this._getArrayFromString = this._getArrayFromString.bind(this);
         this._searchByUpcoming = this._searchByUpcoming.bind(this);
 
@@ -23,79 +20,42 @@ class MatchRoutes extends Routes {
 
         validator.execute(() => {
             repoMatch = new MatchRepository(esClient);
-            repoPlayer = new PlayerRepository(esClient);
         }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
         server.post('/match', super._bodyIsNotNull, this._createMatch, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Match created' }) });
-        // server.post('/match/searchbyplayer', super._bodyIsNotNull, this._searchByPlayer, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
         server.get('/match/upcoming', this._searchByUpcoming, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
-        server.post('/match/:id/player', super._bodyIsNotNull, (req, res, next) => { res.json(200, { resp: 'ok', message: 'Done' }) });
-        server.del('/match/:id/player', super._bodyIsNotNull, (req, res, next) => { res.json(200, { resp: 'ok', message: 'Done' }) });
     }
 
     _createMatch(req, res, next) {
-        repoPlayer.getByUserId(req.user.id)
-            .then((resp) => {
-                try {
-                    var match = new Match(req.body.title, new Date(req.body.date), req.body.fromTime, req.body.toTime, req.body.location, resp.resp._id, req.body.matchType);
-                    match.pendingPlayers = this._getArrayFromString(req.body.pendingPlayers);
+        try {
+            var match = new Match(req.body.title, new Date(req.body.date), req.body.fromTime, req.body.toTime, req.body.location, req.player._id, req.body.matchType);
+            match.pendingPlayers = this._getArrayFromString(req.body.pendingPlayers);
 
-                    repoMatch.add(match)
-                        .then((respMatch) => {
-                            req.match = respMatch.resp;
-                            next();
-                        }, (cause) => {
-                            res.json(400, { code: 400, message: cause, resp: null });
-                        });
-                } catch (error) {
-                    res.json(400, { code: 400, message: error.message, resp: error });
-                }
+            repoMatch.add(match)
+                .then((respMatch) => {
+                    req.match = respMatch.resp;
+                    next();
+                }, (cause) => {
+                    res.json(400, { code: 400, message: cause, resp: null });
+                });
+        } catch (error) {
+            res.json(400, { code: 400, message: error.message, resp: error });
+        }
+    }
+
+    _searchByUpcoming(req, res, next) {
+        let formatDate = moment(new Date()).format('DD/MM/YYYY');
+        repoMatch.getByPlayerIdAndDate(req.player._id, formatDate)
+            .then((resp) => {
+                req.matches = resp.resp;
+                next();
             }, (cause) => {
                 res.json(400, { code: 400, message: cause, resp: null });
             })
-            .catch(() => {
+            .catch((err) => {
                 res.json(500, { code: 500, message: err, resp: null });
-            });
-    }
-
-    // _searchByPlayer(req, res, next) {
-    //     repoMatch.getByPlayerId(req.body.playerId)
-    //         .then((resp) => {
-    //             req.matches = resp.resp;
-    //             next();
-    //         }, (cause) => {
-    //             res.json(400, { code: 400, message: cause, resp: null });
-    //         })
-    //         .catch((err) => {
-    //             res.json(500, { code: 500, message: err, resp: null });
-    //         });
-    // }
-
-    _searchByUpcoming(req, res, next) {
-        repoPlayer.getByUserId(req.user.id)
-            .then((resp) => {
-                if (!resp.resp) {
-                    res.json(404, { code: 404, message: 'Player inexistente', resp: null });
-                } else {
-                    let formatDate = moment(new Date()).format('DD/MM/YYYY');
-                    repoMatch.getByPlayerIdAndDate(resp.resp._id, formatDate)
-                        .then((resp) => {
-                            req.matches = resp.resp;
-                            next();
-                        }, (cause) => {
-                            res.json(400, { code: 400, message: cause, resp: null });
-                        })
-                        .catch((err) => {
-                            res.json(500, { code: 500, message: err, resp: null });
-                        });
-                }
-            }, (cause) => { 
-                res.json(404, { code: 404, message: cause, resp: null }); 
-            })
-            .catch((err) => { 
-                res.json(500, { code: 500, message: err, resp: null }); 
             });
     }
 

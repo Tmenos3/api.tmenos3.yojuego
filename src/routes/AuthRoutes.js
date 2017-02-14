@@ -206,13 +206,14 @@ class AuthRoutes {
             id: req.user._id
         };
         req.token = jwt.sign(claims, config.get('serverConfig').secret);
+        req.user.token = req.token;
+        req.user.idLogged = true;
         next();
     }
 
     _auditUser(req, res, next) {
         if (!req.isNewUser) {
             req.user.userAudit.lastAccess = new Date();
-            req.user.userAudit.lastToken = req.token;
             req.user.userAudit.modifiedBy = 'MOBILE_APP';
             req.user.userAudit.modifiedOn = new Date();
             req.user.userAudit.modifiedFrom = 'MOBILE_APP';

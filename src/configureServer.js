@@ -1,20 +1,26 @@
-var jwtRestify = require('restify-jwt');
-var jwt = require('jsonwebtoken');
-var config = require('config');
-var passport = require('passport-restify');
-var Router = require('./routes/Router');
-var router = new Router();
-var es = require('elasticsearch');
-var client = new es.Client({
+let jwtRestify = require('restify-jwt');
+let jwt = require('jsonwebtoken');
+let config = require('config');
+let passport = require('passport-restify');
+let Router = require('./routes/Router');
+let router = new Router();
+let es = require('elasticsearch');
+let client = new es.Client({
     host: config.get('dbConfig').database,
     log: 'info'
 });
+let getUser = require('./serverMiddlewares/getUser');
+let checkUserToken = require('./serverMiddlewares/checkUserToken');
+let getPlayerByUserId = require('./serverMiddlewares/getPlayerByUserId');
 
-var configureServer = (server, restify) => {
+let configureServer = (server, restify) => {
     server.use(restify.bodyParser());
     server.use(restify.queryParser());
     server.use(jwtRestify({ secret: config.serverConfig.secret }).unless({ path: config.serverConfig.pathsWithoutAuthentication }));
     server.use(passport.initialize());
+    server.use(getUser(client, config.serverConfig.pathsWithoutAuthentication));
+    server.use(checkUserToken(config.serverConfig.pathsWithoutAuthentication));
+    server.use(getPlayerByUserId(client, config.serverConfig.pathsWithoutAuthentication.concat(['/player/create'])));
 
     passport.serializeUser((player, done) => {
         done(null, player);

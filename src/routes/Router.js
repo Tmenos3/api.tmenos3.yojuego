@@ -2,6 +2,7 @@ let InvitationRoutes = require('./InvitationRoutes');
 let FriendshipRoutes = require('./FriendshipRoutes');
 let GroupRoutes = require('./GroupRoutes');
 let LogInRoutes = require('./LogInRoutes');
+let LogOutRoutes = require('./LogOutRoutes');
 let MatchRoutes = require('./MatchRoutes');
 let PlayerRoutes = require('./PlayerRoutes');
 let SignUpRoutes = require('./SignUpRoutes');
@@ -22,6 +23,7 @@ class Router {
         new FriendshipRoutes(esClient).add(server);
         new GroupRoutes(esClient).add(server);
         new LogInRoutes(esClient, jwt).add(server);
+        new LogOutRoutes(esClient).add(server);
         new ClubRoutes(esClient).add(server);
         new MatchRoutes(esClient).add(server);
         new PlayerRoutes(esClient).add(server);

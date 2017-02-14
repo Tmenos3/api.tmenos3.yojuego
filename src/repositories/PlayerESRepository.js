@@ -32,7 +32,7 @@ class PlayerESRepository extends ESRepository {
             super.getBy(this._getQueryByUserId(userid), 'yojuego', 'player')
                 .then((objRet) => {
                     if (objRet.resp.length < 1) {
-                        resolve({ code: 404, message: null, resp: [] });
+                        resolve({ code: 404, message: null, resp: null });
                     } else {
                         let player = this._mapPlayer(objRet.resp[0]._id, objRet.resp[0]._source);
                         resolve({ code: 200, message: null, resp: player });

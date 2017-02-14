@@ -3,7 +3,7 @@ let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 let CustomCondition = require('no-if-validator').CustomCondition;
 
 class User {
-    constructor(userType, id) {
+    constructor(userType, id, isLogged, token) {
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(userType).throw(new Error(User.INVALID_USER)));
         validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(User.INVALID_ID)));
@@ -13,6 +13,8 @@ class User {
         validator.execute(() => {
             this.type = userType;
             this.id = id;
+            this.isLogged = isLogged || false;
+            this.token = token;
         }, (err) => { throw err; });
     }
 

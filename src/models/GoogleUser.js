@@ -3,8 +3,8 @@ var UserType = require('../constants/UserType');
 var User = require('./User');
 
 class GoogleUser extends User {
-    constructor(id, auditInfo) {
-        super(UserType.google, id);
+    constructor(id, isLogged, token) {
+        super(UserType.google, id, isLogged, token);
     }
 }
 

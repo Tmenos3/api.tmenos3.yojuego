@@ -49,7 +49,7 @@ class SignUpRoutes extends Routes {
 
     _createUser(req, res, next) {
         try {
-            req.newUser = new YoJuegoUser(req.body.email, req.body.password);
+            req.newUser = new YoJuegoUser(req.body.email, req.body.password, false, null);
             next();
         } catch (error) {
             res.json(400, { code: 400, message: error.message, resp: null });
@@ -92,6 +92,8 @@ class SignUpRoutes extends Routes {
             id: req.user._id
         };
         req.token = jwt.sign(claims, config.get('serverConfig').secret);
+        req.user.token = req.token;
+        req.user.isLogged = true;
         next();
     }
 
@@ -107,7 +109,6 @@ class SignUpRoutes extends Routes {
     _auditUser(req, res, next) {
         req.user.userAudit = {
             lastAccess: new Date(),
-            lastToken: req.token,
             createdBy: req.body.platform || 'MOBILE_APP',
             createdOn: new Date(),
             createdFrom: req.body.platform || 'MOBILE_APP',

@@ -6,8 +6,8 @@ let CustomCondition = require('no-if-validator').CustomCondition;
 let ValidMailCondition = require('no-if-validator').ValidMailCondition;
 
 class YoJuegoUser extends User {
-    constructor(id, password) {
-        super(UserType.yoJuego, id);
+    constructor(id, password, isLogged, token) {
+        super(UserType.yoJuego, id, isLogged, token);
 
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(password).throw(new Error(YoJuegoUser.INVALID_PASSWORD)));

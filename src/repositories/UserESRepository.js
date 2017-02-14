@@ -90,13 +90,13 @@ class UserESRepository extends ESRepository {
 
         switch (source.type) {
             case UserType.facebook:
-                user = new FacebookUser(source.id);
+                user = new FacebookUser(source.id, source.isLogged, source.token);
                 break;
             case UserType.google:
-                user = new GoogleUser(source.id);
+                user = new GoogleUser(source.id, source.isLogged, source.token);
                 break;
             case UserType.yoJuego:
-                user = new YoJuegoUser(source.id, source.password);
+                user = new YoJuegoUser(source.id, source.password, source.isLogged, source.token);
                 break;
         }
 
@@ -110,9 +110,10 @@ class UserESRepository extends ESRepository {
         let document = {
             type: user.type,
             id: user.id,
+            isLogged: user.isLogged,
+            token: user.token,
             userAudit: {
                 lastAccess: user.userAudit.lastAccess,
-                lastToken: user.userAudit.lastToken,
                 createdBy: user.userAudit.createdBy,
                 createdOn: user.userAudit.createdOn,
                 createdFrom: user.userAudit.createdFrom,
