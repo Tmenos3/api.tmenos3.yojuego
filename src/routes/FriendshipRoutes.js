@@ -18,7 +18,6 @@ class FriendshipRoutes extends Routes {
     constructor(esClient) {
         super();
 
-        // this._getPlayer = this._getPlayer.bind(this);
         this._checkPlayerFriendship = this._checkPlayerFriendship.bind(this);
         this._checkFriendFriendship = this._checkFriendFriendship.bind(this);
         this._getFriendship = this._getFriendship.bind(this);
@@ -45,12 +44,12 @@ class FriendshipRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/friendship/:id', super._paramsIsNotNull/*, this._getPlayer*/, this._getFriendship, this._checkPlayerFriendship, this._returnFriendship);
-        server.get('/friendship'/*, this._getPlayer*/, this._getAllFriendships, (req, res, next) => { res.json(200, { code: 200, resp: req.friendships, message: null }) });
-        server.post('/friendship/create', super._bodyIsNotNull/*, this._getPlayer*/, this._createFriendship, this._sendNotification, this._returnFriendship);
-        server.post('/friendship/accetp', super._bodyIsNotNull/*, this._getPlayer*/, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._acceptFriendship, this._addNewFriend, this._returnFriendship);
-        server.post('/friendship/reject', super._bodyIsNotNull/*, this._getPlayer*/, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._rejectFriendship, this._returnFriendship);
-        server.del('/friendship', super._bodyIsNotNull/*, this._getPlayer*/, this._getFriendship, this._checkPlayerFriendship, this._deleteFriendship, this._updateFriendshipsByFriend, this._returnFriendship);
+        server.get('/friendship/:id', super._paramsIsNotNull, this._getFriendship, this._checkPlayerFriendship, this._returnFriendship);
+        server.get('/friendship', this._getAllFriendships, (req, res, next) => { res.json(200, { code: 200, resp: req.friendships, message: null }) });
+        server.post('/friendship/create', super._bodyIsNotNull, this._createFriendship, this._sendNotification, this._returnFriendship);
+        server.post('/friendship/accept', super._bodyIsNotNull, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._acceptFriendship, this._addNewFriend, this._returnFriendship);
+        server.post('/friendship/reject', super._bodyIsNotNull, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._rejectFriendship, this._returnFriendship);
+        server.del('/friendship', super._bodyIsNotNull, this._getFriendship, this._checkPlayerFriendship, this._deleteFriendship, this._updateFriendshipsByFriend, this._returnFriendship);
     }
 
     _returnFriendship(req, res, next) {
@@ -260,23 +259,6 @@ class FriendshipRoutes extends Routes {
         //         res.json(500, { code: 500, message: err, resp: null });
         //     });
     }
-
-    // _getPlayer(req, res, next) {
-    //     repoPlayer.getByUserId(req.user.id)
-    //         .then((resp) => {
-    //             if (!resp.resp) {
-    //                 res.json(404, { code: 404, message: 'Player inexistente', resp: null });
-    //             } else {
-    //                 req.player = resp.resp;
-    //                 next();
-    //             }
-    //         }, (cause) => {
-    //             res.json(404, { code: 404, message: cause.message, resp: null });
-    //         })
-    //         .catch((err) => {
-    //             res.json(500, { code: 500, message: err.message, resp: null });
-    //         });
-    // }
 
     _checkPlayerFriendship(req, res, next) {
         if (req.friendship.playerId != req.player._id)

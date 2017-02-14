@@ -39,9 +39,9 @@ class NotificationsRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/notifications/frienshiprequest', this._getPlayer, this._getPendingFriendshipRequests, this._populateFriendships, this._populatePlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.friendshipRequests, message: null }) });
-        server.post('/notifications/frienshiprequest/markasread', super._paramsIsNotNull, this._getPlayer, this._getFriendshipRequest, this._checkPlayer, this._markAsRead, this._returnFriendshipRequest);
-        server.del('/notifications/frienshiprequest/delete', super._paramsIsNotNull, this._getPlayer, this._getFriendshipRequest, this._checkPlayer, this._delete, this._returnFriendshipRequest);
+        server.get('/notifications/friendshiprequest', this._getPlayer, this._getPendingFriendshipRequests, this._populateFriendships, this._populatePlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.friendshipRequests, message: null }) });
+        server.post('/notifications/friendshiprequest/markasread', super._bodyIsNotNull, this._getPlayer, this._getFriendshipRequest, this._checkPlayer, this._markAsRead, this._returnFriendshipRequest);
+        server.del('/notifications/friendshiprequest/delete', super._bodyIsNotNull, this._getPlayer, this._getFriendshipRequest, this._checkPlayer, this._delete, this._returnFriendshipRequest);
     }
 
     _returnFriendshipRequest(req, res, next) {

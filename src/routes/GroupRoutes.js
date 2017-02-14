@@ -14,7 +14,6 @@ class GroupRoutes extends Routes {
     constructor(esClient) {
         super();
 
-        // this._getPlayer = this._getPlayer.bind(this);
         this._addPlayer = this._addPlayer.bind(this);
         this._removePlayer = this._removePlayer.bind(this);
         this._updateGroup = this._updateGroup.bind(this);
@@ -35,13 +34,13 @@ class GroupRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/group/:id', super._paramsIsNotNull/*, this._getPlayer*/, this._getGroup, this._checkPlayerMember, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
-        server.get('/group'/*, this._getPlayer*/, this._getAllGroups, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: null }) });
-        server.post('/group/create', super._bodyIsNotNull/*, this._getPlayer*/, this._createGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/addPlayer', super._paramsIsNotNull/*, this._getPlayer*/, this._getGroup, this._addPlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/removePlayer', super._paramsIsNotNull/*, this._getPlayer*/, this._getGroup, this._removePlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/makeAdminPlayer', super._paramsIsNotNull/*, this._getPlayer*/, this._getGroup, this._makeAdminPlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.del('/group/:id', super._paramsIsNotNull/*, this._getPlayer*/, this._getGroup, this._deleteGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.get('/group/:id', super._paramsIsNotNull, this._getGroup, this._checkPlayerMember, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
+        server.get('/group', this._getAllGroups, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: null }) });
+        server.post('/group/create', super._bodyIsNotNull, this._createGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/addPlayer', super._paramsIsNotNull, this._getGroup, this._addPlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/removePlayer', super._paramsIsNotNull, this._getGroup, this._removePlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/makeAdminPlayer', super._paramsIsNotNull, this._getGroup, this._makeAdminPlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.del('/group/:id', super._paramsIsNotNull, this._getGroup, this._deleteGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
     }
 
     _getGroup(req, res, next) {
@@ -174,23 +173,6 @@ class GroupRoutes extends Routes {
         //         res.json(500, { code: 500, message: err, resp: null });
         //     });
     }
-
-    // _getPlayer(req, res, next) {
-    //     repoPlayer.getByUserId(req.user.id)
-    //         .then((resp) => {
-    //             if (!resp.resp) {
-    //                 res.json(404, { code: 404, message: 'Player inexistente', resp: null });
-    //             } else {
-    //                 req.player = resp.resp;
-    //                 next();
-    //             }
-    //         }, (cause) => {
-    //             res.json(404, { code: 404, message: cause, resp: null });
-    //         })
-    //         .catch((err) => {
-    //             res.json(500, { code: 500, message: err, resp: null });
-    //         });
-    // }
 
     _checkPlayerMember(req, res, next) {
         if (req.group.isMember(req.player._id))
