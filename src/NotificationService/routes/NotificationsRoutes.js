@@ -18,7 +18,6 @@ class NotificationsRoutes extends Routes {
     constructor(esClient) {
         super();
 
-        this._getPlayer = this._getPlayer.bind(this);
         this._getPendingFriendshipRequests = this._getPendingFriendshipRequests.bind(this);
         this._fetchFriendshipsDetail = this._fetchFriendshipsDetail.bind(this);
         this._populateFriendships = this._populateFriendships.bind(this);
@@ -39,9 +38,9 @@ class NotificationsRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/notifications/friendshiprequest', this._getPlayer, this._getPendingFriendshipRequests, this._populateFriendships, this._populatePlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.friendshipRequests, message: null }) });
-        server.post('/notifications/friendshiprequest/markasread', super._bodyIsNotNull, this._getPlayer, this._getFriendshipRequest, this._checkPlayer, this._markAsRead, this._returnFriendshipRequest);
-        server.del('/notifications/friendshiprequest/delete', super._bodyIsNotNull, this._getPlayer, this._getFriendshipRequest, this._checkPlayer, this._delete, this._returnFriendshipRequest);
+        server.get('/notifications/friendshiprequest', this._getPendingFriendshipRequests, this._populateFriendships, this._populatePlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.friendshipRequests, message: null }) });
+        server.post('/notifications/friendshiprequest/markasread', super._bodyIsNotNull, this._getFriendshipRequest, this._checkPlayer, this._markAsRead, this._returnFriendshipRequest);
+        server.del('/notifications/friendshiprequest/delete', super._bodyIsNotNull, this._getFriendshipRequest, this._checkPlayer, this._delete, this._returnFriendshipRequest);
     }
 
     _returnFriendshipRequest(req, res, next) {
@@ -58,23 +57,6 @@ class NotificationsRoutes extends Routes {
 
     _delete(req, res, next) {
         next();
-    }
-
-    _getPlayer(req, res, next) {
-        repoPlayer.getByUserId(req.user.id)
-            .then((resp) => {
-                if (!resp.resp) {
-                    res.json(404, { code: 404, message: 'Player inexistente', resp: null });
-                } else {
-                    req.player = resp.resp;
-                    next();
-                }
-            }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
-            })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
-            });
     }
 
     _getPendingFriendshipRequests(req, res, next) {

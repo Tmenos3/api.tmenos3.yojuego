@@ -142,41 +142,42 @@ class FriendshipRoutes extends Routes {
         repoPlayer.getByEmail(req.body.email)
             .then((resp) => {
                 let friendId = null;
-                if (resp.resp)
-                    friendId = resp.resp._id;
-
-                let friendship = new Friendship(req.player._id, friendId, 'CREATED', req.body.email);
-                friendship.friendshipAudit = {
-                    createdBy: req.player._id, //We should store deviceId here
-                    createdOn: new Date(),
-                    createdFrom: req.body.platform || 'MOBILE_APP',
-                    modifiedBy: null,
-                    modifiedOn: null,
-                    modifiedFrom: null
+                if (!resp.resp) {
+                    res.json(404, { code: 404, message: "Tu amigo todavia no se registro.", resp: null });
+                } else {
+                    let friendship = new Friendship(req.player._id, resp.resp._id, 'CREATED', req.body.email);
+                    friendship.friendshipAudit = {
+                        createdBy: req.player._id, //We should store deviceId here
+                        createdOn: new Date(),
+                        createdFrom: req.body.platform || 'MOBILE_APP',
+                        modifiedBy: null,
+                        modifiedOn: null,
+                        modifiedFrom: null
+                    }
+                    repoFriendship.add(friendship)
+                        .then((resp) => {
+                            repoFriendship.get(resp.resp._id)
+                                .then((friendshipResp) => {
+                                    req.friendship = friendshipResp.resp;
+                                    next();
+                                }, (cause) => {
+                                    res.json(404, { code: 404, message: cause, resp: null });
+                                })
+                                .catch((err) => {
+                                    res.json(500, { code: 500, message: err, resp: null });
+                                });
+                        }, (err) => {
+                            res.json(404, { code: 404, message: cause, resp: null });
+                        })
+                        .catch((err) => {
+                            res.json(500, { code: 500, message: err, resp: null });
+                        });
                 }
-                repoFriendship.add(friendship)
-                    .then((resp) => {
-                        repoFriendship.get(resp.resp._id)
-                            .then((friendshipResp) => {
-                                req.friendship = friendshipResp.resp;
-                                next();
-                            }, (cause) => {
-                                res.json(404, { code: 404, message: cause, resp: null });
-                            })
-                            .catch((err) => {
-                                res.json(500, { code: 500, message: err, resp: null });
-                            });
-                    }, (err) => {
-                        res.json(404, { code: 404, message: cause, resp: null });
-                    })
-                    .catch((err) => {
-                        res.json(500, { code: 500, message: err, resp: null });
-                    });
             }, (cause) => {
-
+                res.json(404, { code: 404, message: cause, resp: null });
             })
             .catch((err) => {
-
+                res.json(500, { code: 500, message: err, resp: null });
             });
     }
 
@@ -201,9 +202,9 @@ class FriendshipRoutes extends Routes {
     _rejectFriendship(req, res, next) {
         let friendship = req.friendship;
         friendship.status = 'REJECTED'
-        friendship.friendshipAudit.modifiedBy = req.body.platform; //We should store deviceId here
+        friendship.friendshipAudit.modifiedBy = req.player._id; //We should store deviceId here
         friendship.friendshipAudit.modifiedOn = new Date();
-        friendship.friendshipAudit.modifiedFrom = req.body.platform;
+        friendship.friendshipAudit.modifiedFrom = req.body.platform || 'MOBILE_APP';
 
         repoFriendship.update(friendship)
             .then((resp) => {
