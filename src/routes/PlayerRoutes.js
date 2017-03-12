@@ -56,9 +56,10 @@ class PlayerRoutes extends Routes {
                 res.json(400, { code: 400, message: err, resp: null });
             })
             .then((resp) => {
-                res.json(200, { code: 200, message: 'Player created.', resp: resp.resp });
-            }, (err) => {
-                res.json(400, { code: 400, message: err, resp: null });
+                return repo.get(resp.resp._id);
+            })
+            .then((resp) => {
+                res.json(200, { code: 200, message: null, resp: resp.resp });
             })
             .catch((err) => {
                 res.json(500, { code: 500, message: err, resp: null });
