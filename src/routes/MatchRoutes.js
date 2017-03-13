@@ -24,14 +24,14 @@ class MatchRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.post('/match', super._bodyIsNotNull, this._createMatch, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Match created' }) });
+        server.put('/match', super._bodyIsNotNull, this._createMatch, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Match created' }) });
         server.get('/match/upcoming', this._searchByUpcoming, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
     }
 
     _createMatch(req, res, next) {
         try {
             var match = new Match(req.body.title, new Date(req.body.date), req.body.fromTime, req.body.toTime, req.body.location, req.player._id, req.body.matchType);
-            match.pendingPlayers = this._getArrayFromString(req.body.pendingPlayers);
+            match.pendingPlayers = req.body.pendingPlayers.concat([req.player._id]);
 
             repoMatch.add(match)
                 .then((respMatch) => {
