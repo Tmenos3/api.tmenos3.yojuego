@@ -7,6 +7,7 @@ class MatchESRepository extends ESRepository {
 
         this._getQueryByPlayerIdAndDate = this._getQueryByPlayerIdAndDate.bind(this);
         this._mapMatch = this._mapMatch.bind(this);
+        this._getDocument = this._getDocument.bind(this);
     }
 
     get(matchId) {
@@ -47,22 +48,36 @@ class MatchESRepository extends ESRepository {
 
     update(match) {
         if (match instanceof Match) {
-            let document = {
-                title: match.title,
-                date: match.date,
-                fromTime: match.fromTime,
-                toTime: match.toTime,
-                location: match.location,
-                creator: match.creator,
-                matchType: match.matchType,
-                pendingPlayers: match.pendingPlayers,
-                confirmedPlayers: match.confirmedPlayers,
-                comments: match.comments
-            };
+            let document = this._getDocument(match);
             return super.update(match._id, document, 'yojuego', 'match');
         } else {
             return Promise.reject({ code: 410, message: MatchESRepository.INVALID_INSTANCE_PLAYER });
         }
+    }
+
+    _getDocument(match) {
+        let document = {
+            title: match.title,
+            date: match.date,
+            fromTime: match.fromTime,
+            toTime: match.toTime,
+            location: match.location,
+            creator: match.creator,
+            matchType: match.matchType,
+            pendingPlayers: match.pendingPlayers,
+            confirmedPlayers: match.confirmedPlayers,
+            comments: match.comments,
+            matchAudit: {
+                createdBy: match.matchAudit.createdBy,
+                createdOn: match.matchAudit.createdOn,
+                createdFrom: match.matchAudit.createdFrom,
+                modifiedBy: match.matchAudit.modifiedBy,
+                modifiedOn: match.matchAudit.modifiedOn,
+                modifiedFrom: match.matchAudit.modifiedFrom
+            }
+        };
+
+        return document;
     }
 
     _getQueryByPlayerIdAndDate(playerId, date) {

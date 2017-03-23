@@ -159,6 +159,31 @@ PUT _mapping
     }
 }
 
+http://localhost:9200/yojuego/matchInvitation/
+PUT _mapping
+{
+    "matchInvitation": {
+        "properties": {
+            "matchId": { "type": "string", "index": "not_analyzed" },
+            "playerId": { "type": "string", "index": "not_analyzed" },
+            "senderId": { "type": "string", "index": "not_analyzed" },
+            "status": { "type": "string", "index": "not_analyzed" },
+            "sendedOn": { "type": "date" },
+            "receivedOn": { "type": "date" },
+            "matchInvitationAudit": {
+                "properties": {
+                    "createdBy": { "type": "string", "index": "not_analyzed" },
+                    "createdOn": { "type": "date" },
+                    "createdFrom": { "type": "string" },
+                    "modifiedBy": { "type": "string", "index": "not_analyzed" },
+                    "modifiedOn": { "type": "date" },
+                    "modifiedFrom": { "type": "string" }
+                }
+            }
+        }
+    }
+}
+
 http://localhost:9200/yojuego/club/
 PUT _mapping
 {

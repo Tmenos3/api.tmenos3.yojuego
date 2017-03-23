@@ -92,7 +92,7 @@ class FriendshipRequestESRepository extends ESRepository {
 
     _getDocument(friendshipRequest) {
         let document = {
-            friendshipId: friendshipRequest.type,
+            friendshipId: friendshipRequest.friendshipId,
             playerId: friendshipRequest.playerId,
             status: friendshipRequest.status,
             sendedOn: friendshipRequest.sendedOn,

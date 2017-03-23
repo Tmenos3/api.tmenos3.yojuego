@@ -6,8 +6,8 @@ class FriendshipRequest {
     var validator = new Validator();
     validator.addCondition(new NotNullOrUndefinedCondition(friendshipId).throw(new Error(FriendshipRequest.INVALID_FRIENDSHIP)));
     validator.addCondition(new NotNullOrUndefinedCondition(playerId).throw(new Error(FriendshipRequest.INVALID_PLAYER)));
-    validator.addCondition(new NotNullOrUndefinedCondition(sendedOn).throw(new Error(FriendshipRequest.INVALID_STATUS)));
-    validator.addCondition(new NotNullOrUndefinedCondition(status).throw(new Error(FriendshipRequest.INVALID_SENDEDON)));
+    validator.addCondition(new NotNullOrUndefinedCondition(status).throw(new Error(FriendshipRequest.INVALID_STATUS)));
+    validator.addCondition(new NotNullOrUndefinedCondition(sendedOn).throw(new Error(FriendshipRequest.INVALID_SENDEDON)));
 
     validator.execute(() => {
       this.friendshipId = friendshipId;
