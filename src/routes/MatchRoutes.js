@@ -4,11 +4,13 @@ let Routes = require('./Routes');
 let Match = require('../models/Match');
 let MatchInvitation = require('../NotificationService/models/MatchInvitation');
 let MatchRepository = require('../repositories/MatchESRepository');
+let PlayerRepository = require('../repositories/PlayerESRepository');
 let MatchInvitationRepository = require('../NotificationService/repositories/MatchInvitationESRepository');
 let moment = require('moment');
 
 let repoMatch = null;
 let repoMatchInvitation = null;
+let repoPlayer = null;
 
 class MatchRoutes extends Routes {
     constructor(esClient) {
@@ -23,6 +25,10 @@ class MatchRoutes extends Routes {
         this._removePlayer = this._removePlayer.bind(this);
         this._confirmPlayer = this._confirmPlayer.bind(this);
         this._updateMatch = this._updateMatch.bind(this);
+        this._populatePendingPlayers = this._populatePendingPlayers.bind(this);
+        this._populateConfirmedPlayers = this._populateConfirmedPlayers.bind(this);
+        this._fetchMatchesDetailConfirmedPlayers = this._fetchMatchesDetailConfirmedPlayers.bind(this);
+        this._fetchPlayersDetail = this._fetchPlayersDetail.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(MatchRoutes.INVALID_ES_CLIENT));
@@ -30,6 +36,7 @@ class MatchRoutes extends Routes {
         validator.execute(() => {
             repoMatch = new MatchRepository(esClient);
             repoMatchInvitation = new MatchInvitationRepository(esClient);
+            repoPlayer = new PlayerRepository(esClient);
         }, (err) => { throw err; });
     }
 
@@ -37,7 +44,7 @@ class MatchRoutes extends Routes {
         server.put('/match', super._bodyIsNotNull, this._createMatch, this._sendNotifications, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Match created' }) });
         server.post('/match/rejectPlayer', super._bodyIsNotNull, this._getMatch, this._removePlayer, this._updateMatch, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Player Removed' }) });
         server.post('/match/confirmPlayer', super._bodyIsNotNull, this._getMatch, this._confirmPlayer, this._updateMatch, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Player Confirmed' }) });
-        server.get('/match/upcoming', this._searchByUpcoming, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
+        server.get('/match/upcoming', this._searchByUpcoming, this._populateConfirmedPlayers, this._populatePendingPlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
     }
 
     _createMatch(req, res, next) {
@@ -165,6 +172,79 @@ class MatchRoutes extends Routes {
         }
 
         return notifications;
+    }
+
+    _populatePendingPlayers(req, res, next) {
+        this._fetchMatchesDetailPendingPlayers(req.matches, 0)
+            .then((ret) => {
+                req.matches = ret;
+                next();
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: 500, message: cause, resp: null });
+            });
+    }
+
+    _populateConfirmedPlayers(req, res, next) {
+        this._fetchMatchesDetailConfirmedPlayers(req.matches, 0)
+            .then((ret) => {
+                req.matches = ret;
+                next();
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: 500, message: error, resp: null });
+            });
+    }
+
+    _fetchMatchesDetailConfirmedPlayers(arr, pos) {
+        return new Promise((resolve, reject) => {
+            if (arr.length == pos)
+                resolve(arr);
+            else {
+                return this._fetchPlayersDetail(arr[pos].confirmedPlayers, 0)
+                    .then((retPlayers) => {
+                        arr[pos].confirmedPlayers = retPlayers;
+                        return this._fetchMatchesDetailConfirmedPlayers(arr, ++pos)
+                            .then((retMatch) => resolve(retMatch))
+                    });
+            }
+        });
+    }
+
+    _fetchMatchesDetailPendingPlayers(arr, pos) {
+        return new Promise((resolve, reject) => {
+            if (arr.length == pos)
+                resolve(arr);
+            else {
+                return this._fetchPlayersDetail(arr[pos].pendingPlayers, 0)
+                    .then((retPlayers) => {
+                        arr[pos].pendingPlayers = retPlayers;
+                        return this._fetchMatchesDetailPendingPlayers(arr, ++pos)
+                            .then((retMatch) => resolve(retMatch))
+                    });
+            }
+        });
+    }
+
+    _fetchPlayersDetail(arr, pos) {
+        return new Promise((resolve, reject) => {
+            if (arr.length == pos)
+                resolve(arr);
+            else {
+                repoPlayer.get(arr[pos])
+                    .then((response) => {
+                        arr[pos] = response.resp;
+                        arr[pos].playerAudit = undefined;
+
+                        return this._fetchPlayersDetail(arr, ++pos)
+                            .then((ret) => resolve(ret));
+                    });
+            }
+        });
     }
 
     static get INVALID_ES_CLIENT() {
