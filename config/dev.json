@@ -28,6 +28,7 @@
             "/setup",
             "/signup/yojuego",
             "/login/yojuego",
+            "/login/renewtoken",
             "/auth/facebook/callback",
             "/auth/google/callback",
             "/auth/facebook",
