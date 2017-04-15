@@ -11,6 +11,13 @@ PUT _mapping
             "type": { "type": "string", "index": "not_analyzed" },
             "isLogged": { "type": "boolean" },
             "token": { "type": "string", "index": "not_analyzed" },
+            "oauth": {
+                "properties": {
+                    "authToken": { "type": "string", "index": "not_analyzed" },
+                    "refreshToken": { "type": "string", "index": "not_analyzed" }
+                    "xxx": { "type": "string", "index": "not_analyzed" }
+                }
+            }
             "userAudit": {
                 "properties": {
                     "lastAccess": { "type": "date" },
