@@ -1,111 +1,119 @@
-var ESRepository = require('./ESRepository');
-var Device = require('../models/Device');
+let ESRepository = require('./ESRepository');
+let Device = require('../models/Device');
 
 class DeviceESRepository extends ESRepository {
     constructor(client) {
         super(client);
+
+        this._mapUser = this._mapUser.bind(this);
+        this._getDocument = this._getDocument.bind(this);
+        this._getQueryByUserIdDeviceIdAndPlatform = this._getQueryByUserIdDeviceIdAndPlatform.bind(this);
     }
 
     get(id) {
-        return new Promise((resolve, reject) => {
-            super.get(id, 'yojuego', 'device')
-                .then((objRet) => {
-                    var device = new Device(objRet.resp.source.deviceId, objRet.resp.source.platform, objRet.resp.source.userId, objRet.resp.source.createdOn);
-                    device._id = objRet.resp._id;
-                    resolve({ code: 200, message: null, resp: device });
-                }, reject);
-        });
+        return super.get(id, 'yojuego', 'device')
+            .then((objRet) => {
+                if (objRet.code == 404) {
+                    return { code: 404, message: 'Device does not exist', resp: null };
+                } else {
+                    let device = this._mapDevice(objRet.resp._id, objRet.resp._source)
+                    return { code: 200, message: null, resp: device };
+                }
+            }, , (error) => { return Promise.reject(error); });
     }
 
-    getByUserDevicePlaytform(userId, deviceId, platform) {
+    getByUserIdDeviceIdAndPlatform(userId, deviceId, platform) {
         //TEST: not null, not undefined
-        return new Promise((resolve, reject) => {
-            this.esclient.search({
-                "index": "yojuego",
-                "type": "device",
-                "body": {
-                    "query": {
-                        "bool": {
-                            "filter": [
-                                { "term": { "userId": userId } },
-                                { "term": { "deviceId": deviceId } },
-                                { "term": { "platform": platform } },
-                                { "term": { "createdOn": createdOn } }
-                            ]
-                        }
-                    }
-                }
-            }, (error, response) => {
-                if (error) {
-                    reject({ code: error.statusCode, message: error.message, resp: error });
-                }
-                else {
-                    if (response.hits.hits.length < 1) {
-                        resolve({ code: 404, message: 'No devices were found.', resp: null });
-                    } else {
-                        var device = null;
+        return super.getBy(this._getQueryByUserIdDeviceIdAndPlatform(userId, deviceId, platform), 'yojuego', 'device')
+            .then((objRet) => {
+                let devices = [];
 
-                        for (let i = 0; i < response.hits.hits.length; i++) {
-                            device = new Device(response.hits.hits[i]._source.deviceId, response.hits.hits[i]._source.platform, response.hits.hits[i]._source.userId, response.hits.hits[i]._source.createdOn);
-                            device._id = response.hits.hits[i]._id;
-                            break;
-                        }
-
-                        resolve({ code: 200, message: null, resp: device });
-                    }
+                for (let i = 0; i < objRet.resp.length; i++) {
+                    let device = this._mapDevice(objRet.resp[i]._id, objRet.resp[i]._source);
+                    devices.push(device);
                 }
-            });
-        });
+
+                return { code: 200, message: null, resp: devices };
+            }, (error) => { return Promise.reject(error); });
     }
 
     add(device) {
         //TEST: not null, not undefined
         //TEST: instance of Device
         //TEST: return a device
-        return new Promise((resolve, reject) => {
-            super.add(device, 'yojuego', 'device')
-                .then((resp) => {
-                    var newDevice = new Device(device.deviceId, device.platform, device.userId, device.createdOn);
-                    newDevice._id = resp.resp._id;
-                    resolve({ code: 200, message: DeviceESRepository.DOCUMENT_INSERTED, resp: newDevice });
-                }, reject)
-        });
+        return super.add(device, 'yojuego', 'device')
+            .then((resp) => {
+                let newDevice = this._mapDevice(resp.resp._id, resp.resp._source);
+                return { code: 200, message: DeviceESRepository.DOCUMENT_INSERTED, resp: newDevice };
+            }, (error) => { return Promise.reject(error); })
     }
 
     update(device) {
         //TEST: not null, not undefined
         //TEST: instance of Device
-        return new Promise((resolve, reject) => {
-            if (device instanceof Device) {
-                let document = {
-                    deviceId: device.deviceId,
-                    platform: device.platform,
-                    userId: device.userId,
-                    createdOn: device.createdOn
-                };
+        if (device instanceof Device) {
+            let document = {
+                deviceId: device.deviceId,
+                platform: device.platform,
+                userId: device.userId,
+                deviceAudit: device.deviceAudit
+            };
 
-                super.update(device._id, document, 'yojuego', 'device')
-                    .then((resp) => {
-                        var device = new Device(resp._source.deviceId, resp._source.platform, resp._source.userId, resp._source.createdOn);
-                        device._id = resp._id;
-                        resolve({ code: 200, message: DeviceESRepository.DOCUMENT_UPDATED, resp: device });
-                    }, reject);
-            } else {
-                reject({ code: 410, message: DeviceESRepository.INVALID_INSTANCE_DEVICE, resp: null });
-            }
-        });
+            return super.update(device._id, document, 'yojuego', 'device')
+                .then((resp) => {
+                    let device = this._mapDevice(resp._id, resp._source);
+                    return { code: 200, message: DeviceESRepository.DOCUMENT_UPDATED, resp: device };
+                }, reject);
+        } else {
+            return { code: 410, message: DeviceESRepository.INVALID_INSTANCE_DEVICE, resp: null };
+        }
     }
 
     delete(device) {
         //TEST: not null, not undefined
         //TEST: instance of Device
-        return new Promise((resolve, reject) => {
-            if (device instanceof Device) {
-                super.delete(device._id, 'yojuego', 'device').then(resolve, reject);
-            } else {
-                reject({ code: 410, message: DeviceESRepository.INVALID_INSTANCE_DEVICE, resp: null });
+        if (device instanceof Device) {
+            return super.delete(device._id, 'yojuego', 'device');
+        } else {
+            return { code: 410, message: DeviceESRepository.INVALID_INSTANCE_DEVICE, resp: null };
+        }
+    }
+
+    _mapDevice(id, source) {
+        let device = new Device(source.deviceId, source.platform, source.userId, source.deviceAudit);
+        device._id = id;
+
+        return device;
+    }
+
+    _getDocument(device) {
+        let document = {
+            deviceId: device.deviceId,
+            platform: device.platform,
+            userId: device.userId,
+            deviceAudit: {
+                createdBy: device.deviceAudit.createdBy,
+                createdOn: device.deviceAudit.createdOn,
+                createdFrom: device.deviceAudit.createdFrom,
+                modifiedBy: device.deviceAudit.modifiedBy,
+                modifiedOn: device.deviceAudit.modifiedOn,
+                modifiedFrom: device.deviceAudit.modifiedFrom
             }
-        });
+        };
+
+        return document;
+    }
+
+    _getQueryByUserIdDeviceIdAndPlatform(userId, deviceId, platform) {
+        return {
+            "bool": {
+                "filter": [
+                    { "term": { "userId": userId } },
+                    { "term": { "deviceId": deviceId } },
+                    { "term": { "platform": platform } }
+                ]
+            }
+        }
     }
 
     static get INVALID_DEVICE() {

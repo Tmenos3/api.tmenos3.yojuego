@@ -3,9 +3,9 @@ var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 var CustomCondition = require('no-if-validator').CustomCondition;
 
 class Device {
-    constructor(deviceId, platform, userId, createdOn) {
+    constructor(deviceId, platform, userId, deviceAudit) {
         var validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(deviceId).throw(new Error(Device.INVALID_DEVIDE_ID)));
+        validator.addCondition(new NotNullOrUndefinedCondition(deviceId).throw(new Error(Device.INVALID_DEVICE_ID)));
         validator.addCondition(new NotNullOrUndefinedCondition(platform).throw(new Error(Device.INVALID_PLATFORM)));
         validator.addCondition(new NotNullOrUndefinedCondition(userId).throw(new Error(Device.INVALID_USERID)));
         validator.addCondition(new CustomCondition(() => {
@@ -16,13 +16,14 @@ class Device {
             this.deviceId = deviceId;
             this.platform = platform;
             this.userId = userId;
-            this.createdOn = createdOn;
+            this.deviceAudit = deviceAudit;
         }, (err) => { throw err; });
     }
 
-    static get INVALID_DEVIDE_ID() {
+    static get INVALID_DEVICE_ID() {
         return 'Devide Id must be defined and can not be null.';
     }
+
     static get INVALID_PLATFORM() {
         return 'Platform must be defined and can not be null.';
     }

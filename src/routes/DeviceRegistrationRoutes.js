@@ -2,7 +2,7 @@ var Validator = require('no-if-validator').Validator;
 var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 var Routes = require('./Routes');
 var DeviceESRepository = require('../repositories/DeviceESRepository');
-var NotificationService = require('../NotificationService/OLD_NotificationService');
+var NotificationService = require('../NotificationService/NotificationService');
 
 var repo = null;
 var ns = null;
@@ -14,6 +14,9 @@ class DeviceRegistrationRoutes extends Routes {
         this._checkDeviceAndPlatform = this._checkDeviceAndPlatform.bind(this);
         this._registerDevice = this._registerDevice.bind(this);
         this._checkIfDeviceExists = this._checkIfDeviceExists.bind(this);
+        this._verifyDeviceExists = this._verifyDeviceExists.bind(this);
+        this._checkUser = this._checkUser.bind(this);
+        this._deleteDevice = this._deleteDevice.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(DeviceRegistrationRoutes.INVALID_ES_CLIENT));
@@ -26,15 +29,16 @@ class DeviceRegistrationRoutes extends Routes {
 
     _addAllRoutes(server) {
         server.post('/device/register', super._bodyIsNotNull, this._checkDeviceAndPlatform, this._checkIfDeviceExists, this._registerDevice);
+        server.del('/device/:id', super._paramsIsNotNull, this._verifyDeviceExists, this._checkUser, this._deleteDevice);
         server.post('/device/sendTest', (req, res, next) => {
-            ns.send(null);
+            ns.notify(null);
             res.json(200, { id: 1 });
         });
     }
 
     _checkDeviceAndPlatform(req, res, next) {
         try {
-            req.device = new Device(req.body.deviceId, req.body.platform, req.body.userId, new Date());
+            req.device = new Device(req.user.id, req.body.deviceId, req.body.platform);
             next();
         } catch (error) {
             req.json(400, { code: 400, message: error.message, resp: null });
@@ -58,13 +62,52 @@ class DeviceRegistrationRoutes extends Routes {
     }
 
     _registerDevice(req, res, next) {
+        req.device.deviceAudit = {
+            createdBy: req.user.id,
+            createdOn: new Date(),
+            createdFrom: 'MOBILE' /* This should be added to the token */,
+            modifiedBy: null,
+            modifiedOn: null,
+            modifiedFrom: null
+        }
         repo.add(req.device)
             .then((response) => {
+                res.json(200, { code: 200, message: 'The device has been registered.', resp: null });
+            }, (cause) => {
+                res.json(400, { code: cause.code, message: cause.message, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: error.code, message: error.message, resp: null });
+            });
+    }
+
+    _verifyDeviceExists(req, res, next) {
+        repo.get(req.params.id)
+            .then((response) => {
                 if (response.resp) {
-                    res.json(200, { code: 200, message: 'The device has been registered.', resp: null });
+                    res.json(400, { code: 400, message: 'Invalid device.', resp: null });
                 } else {
-                    res.json(500, { code: 500, message: 'Unexpedted error while registering device', resp: null });
+                    next();
                 }
+            }, (cause) => {
+                res.json(400, { code: cause.code, message: cause.message, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: error.code, message: error.message, resp: null });
+            });
+    }
+
+    _checkUser(req, res, next) {
+        if (req.user.id != req.device.userId)
+            res.json(404, { code: 404, message: 'Invalid device.', resp: null });
+        else
+            next();
+    }
+
+    _deleteDevice(req, res, next) {
+        repo.delete(req.device)
+            .then((response) => {
+                next();
             }, (cause) => {
                 res.json(400, { code: cause.code, message: cause.message, resp: null });
             })
