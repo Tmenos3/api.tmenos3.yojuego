@@ -88,9 +88,10 @@ class DeviceRegistrationRoutes extends Routes {
     _verifyDeviceExists(req, res, next) {
         repo.get(req.params.id)
             .then((response) => {
-                if (response.resp) {
+                if (!response.resp) {
                     res.json(400, { code: 400, message: 'Invalid device.', resp: null });
                 } else {
+                    req.device = response.resp;
                     next();
                 }
             }, (cause) => {
@@ -102,7 +103,7 @@ class DeviceRegistrationRoutes extends Routes {
     }
 
     _checkUser(req, res, next) {
-        if (req.user.id != req.device.userId)
+        if (req.user._id != req.device.userId)
             res.json(404, { code: 404, message: 'Invalid device.', resp: null });
         else
             next();
@@ -121,24 +122,29 @@ class DeviceRegistrationRoutes extends Routes {
     }
 
     _updateDevice(req, res, next) {
-        req.device.deviceId = req.body.deviceId;
-        req.device.deviceAudit = {
-            createdBy: req.device.deviceAudit.createdBy,
-            createdOn: req.device.deviceAudit.createdOn,
-            createdFrom: req.device.createdFrom.createdBy /* This should be added to the token */,
-            modifiedBy: req.user.id,
-            modifiedOn: new Date(),
-            modifiedFrom: 'MOBILE' /* This should be added to the token */
+        if (!req.body.deviceId) {
+            res.json(400, { code: 400, message: 'Invalid deviceId', resp: null });
+        } else {
+            req.device.deviceId = req.body.deviceId;
+            req.device.deviceAudit = {
+                createdBy: req.device.deviceAudit.createdBy,
+                createdOn: req.device.deviceAudit.createdOn,
+                createdFrom: req.device.deviceAudit.createdFrom,
+                modifiedBy: req.user._id,
+                modifiedOn: new Date(),
+                modifiedFrom: 'MOBILE' /* This should be added to the token */
+            }
+            repo.update(req.device)
+                .then((response) => {
+                    response.resp.deviceAudit = undefined;
+                    res.json(200, { code: 200, message: 'Device updated.', resp: response.resp });
+                }, (cause) => {
+                    res.json(400, { code: cause.code, message: cause.message, resp: null });
+                })
+                .catch((error) => {
+                    res.json(500, { code: error.code, message: error.message, resp: null });
+                });
         }
-        repo.update(req.device)
-            .then((response) => {
-                res.json(200, { code: 200, message: 'Device updated.', resp: null });
-            }, (cause) => {
-                res.json(400, { code: cause.code, message: cause.message, resp: null });
-            })
-            .catch((error) => {
-                res.json(500, { code: error.code, message: error.message, resp: null });
-            });
     }
 
     static get INVALID_ES_CLIENT() {

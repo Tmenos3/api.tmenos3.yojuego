@@ -60,9 +60,8 @@ class DeviceESRepository extends ESRepository {
 
             return super.update(device._id, document, 'yojuego', 'device')
                 .then((resp) => {
-                    let device = this._mapDevice(resp._id, resp._source);
-                    return { code: 200, message: DeviceESRepository.DOCUMENT_UPDATED, resp: device };
-                }, reject);
+                    return this.get(resp.resp._id);
+                }, (error) => { return Promise.reject(error); });
         } else {
             return { code: 410, message: DeviceESRepository.INVALID_INSTANCE_DEVICE, resp: null };
         }
