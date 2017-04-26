@@ -305,7 +305,7 @@ PUT _mapping
 http://localhost:9200/yojuego/device/
 PUT _mapping
 {
-    "invitation": {
+    "device": {
         "properties": {
             "deviceId": {
                 "type": "string",
@@ -319,7 +319,16 @@ PUT _mapping
                 "type": "string",
                     "index": "not_analyzed"
             },
-            "createdOn": { "type": "date" }
+            "deviceAudit": {
+                "properties": {
+                    "createdBy": { "type": "string", "index": "not_analyzed" },
+                    "createdOn": { "type": "date" },
+                    "createdFrom": { "type": "string" },
+                    "modifiedBy": { "type": "string", "index": "not_analyzed" },
+                    "modifiedOn": { "type": "date" },
+                    "modifiedFrom": { "type": "string" }
+                }
+            }
         }
     }
 }

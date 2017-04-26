@@ -1,11 +1,12 @@
-var Validator = require('no-if-validator').Validator;
-var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var Routes = require('./Routes');
-var DeviceESRepository = require('../repositories/DeviceESRepository');
-var NotificationService = require('../NotificationService/NotificationService');
+let Validator = require('no-if-validator').Validator;
+let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+let Routes = require('./Routes');
+let DeviceESRepository = require('../repositories/DeviceESRepository');
+let NotificationService = require('../NotificationService/NotificationService');
+let Device = require('../models/Device');
 
-var repo = null;
-var ns = null;
+let repo = null;
+let ns = null;
 
 class DeviceRegistrationRoutes extends Routes {
     constructor(esClient) {
@@ -40,17 +41,17 @@ class DeviceRegistrationRoutes extends Routes {
 
     _checkDeviceAndPlatform(req, res, next) {
         try {
-            req.device = new Device(req.user.id, req.body.deviceId, req.body.platform);
+            req.device = new Device(req.body.deviceId, req.body.platform, req.user._id);
             next();
         } catch (error) {
-            req.json(400, { code: 400, message: error.message, resp: null });
+            res.json(400, { code: 400, message: error.message, resp: null });
         }
     }
 
     _checkIfDeviceExists(req, res, next) {
-        repo.getByUserDevicePlaytform(req.user.id, req.device.deviceId, req.device.platform)
+        repo.getByUserIdDeviceIdAndPlatform(req.user._id, req.device.deviceId, req.device.platform)
             .then((response) => {
-                if (response.resp) {
+                if (response.resp.length) {
                     res.json(400, { code: 400, message: 'The device has already registered.', resp: null });
                 } else {
                     next();
@@ -65,7 +66,7 @@ class DeviceRegistrationRoutes extends Routes {
 
     _registerDevice(req, res, next) {
         req.device.deviceAudit = {
-            createdBy: req.user.id,
+            createdBy: req.user._id,
             createdOn: new Date(),
             createdFrom: 'MOBILE' /* This should be added to the token */,
             modifiedBy: null,
@@ -74,7 +75,8 @@ class DeviceRegistrationRoutes extends Routes {
         }
         repo.add(req.device)
             .then((response) => {
-                res.json(200, { code: 200, message: 'The device has been registered.', resp: null });
+                response.resp.deviceAudit = undefined;
+                res.json(200, { code: 200, message: 'The device has been registered.', resp: response.resp });
             }, (cause) => {
                 res.json(400, { code: cause.code, message: cause.message, resp: null });
             })

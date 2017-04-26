@@ -5,7 +5,7 @@ class DeviceESRepository extends ESRepository {
     constructor(client) {
         super(client);
 
-        this._mapUser = this._mapUser.bind(this);
+        this._mapDevice = this._mapDevice.bind(this);
         this._getDocument = this._getDocument.bind(this);
         this._getQueryByUserIdDeviceIdAndPlatform = this._getQueryByUserIdDeviceIdAndPlatform.bind(this);
     }
@@ -19,7 +19,7 @@ class DeviceESRepository extends ESRepository {
                     let device = this._mapDevice(objRet.resp._id, objRet.resp._source)
                     return { code: 200, message: null, resp: device };
                 }
-            }, , (error) => { return Promise.reject(error); });
+            }, (error) => { return Promise.reject(error); });
     }
 
     getByUserIdDeviceIdAndPlatform(userId, deviceId, platform) {
@@ -43,8 +43,7 @@ class DeviceESRepository extends ESRepository {
         //TEST: return a device
         return super.add(device, 'yojuego', 'device')
             .then((resp) => {
-                let newDevice = this._mapDevice(resp.resp._id, resp.resp._source);
-                return { code: 200, message: DeviceESRepository.DOCUMENT_INSERTED, resp: newDevice };
+                return this.get(resp.resp._id);
             }, (error) => { return Promise.reject(error); })
     }
 
