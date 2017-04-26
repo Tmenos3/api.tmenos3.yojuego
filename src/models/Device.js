@@ -1,10 +1,10 @@
-var Validator = require('no-if-validator').Validator;
-var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var CustomCondition = require('no-if-validator').CustomCondition;
+let Validator = require('no-if-validator').Validator;
+let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+let CustomCondition = require('no-if-validator').CustomCondition;
 
 class Device {
     constructor(deviceId, platform, userId, deviceAudit) {
-        var validator = new Validator();
+        let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(deviceId).throw(new Error(Device.INVALID_DEVICE_ID)));
         validator.addCondition(new NotNullOrUndefinedCondition(platform).throw(new Error(Device.INVALID_PLATFORM)));
         validator.addCondition(new NotNullOrUndefinedCondition(userId).throw(new Error(Device.INVALID_USERID)));

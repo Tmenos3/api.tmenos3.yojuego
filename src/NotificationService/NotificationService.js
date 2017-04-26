@@ -2,22 +2,20 @@ let gcm = require('android-gcm');
 let gcmObject = new gcm.AndroidGcm('API_KEY');
 
 class NotificationService {
-    constructor() {
-        this.notify = this.notify.bind(this);
-    }
-
-    notify(notification) {
+    push(devices, notification) {
         let message = new gcm.Message({
-            registration_ids: ['DEVICE_ID'],
-            data: {
-                key1: 'key 1',
-                key2: 'key 2'
-            }
+            registration_ids: devices,
+            data: notification
         });
 
-        gcmObject.send(message, function (err, response) { 
-            console.log(err);
-            console.log(response);
+        return new Promise((resolve, reject) => {
+            gcmObject.send(message, (err, response) => {
+                if (err) {
+                    return reject({ code: 500, message: 'Unexpected error.', resp: err });
+                } else {
+                    return resolve({ code: 200, message: 'Notification sent', resp: response });
+                }
+            });
         });
     }
 }

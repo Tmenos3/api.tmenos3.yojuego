@@ -6,11 +6,15 @@ let MatchInvitation = require('../NotificationService/models/MatchInvitation');
 let MatchRepository = require('../repositories/MatchESRepository');
 let PlayerRepository = require('../repositories/PlayerESRepository');
 let MatchInvitationRepository = require('../NotificationService/repositories/MatchInvitationESRepository');
+let DeviceESRepository = require('../repositories/DeviceESRepository');
 let moment = require('moment');
+let NotificationService = require('../NotificationService/NotificationService');
 
 let repoMatch = null;
 let repoMatchInvitation = null;
 let repoPlayer = null;
+let repoDevices = null;
+let notificationService = null;
 
 class MatchRoutes extends Routes {
     constructor(esClient) {
@@ -29,6 +33,8 @@ class MatchRoutes extends Routes {
         this._populateConfirmedPlayers = this._populateConfirmedPlayers.bind(this);
         this._fetchMatchesDetailConfirmedPlayers = this._fetchMatchesDetailConfirmedPlayers.bind(this);
         this._fetchPlayersDetail = this._fetchPlayersDetail.bind(this);
+        this._sendPushNotifications = this._sendPushNotifications.bind(this);
+        this._getDevices = this._getDevices.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(MatchRoutes.INVALID_ES_CLIENT));
@@ -37,6 +43,8 @@ class MatchRoutes extends Routes {
             repoMatch = new MatchRepository(esClient);
             repoMatchInvitation = new MatchInvitationRepository(esClient);
             repoPlayer = new PlayerRepository(esClient);
+            repoDevices = new DeviceESRepository(esClient);
+            notificationService = new NotificationService();
         }, (err) => { throw err; });
     }
 
@@ -92,6 +100,7 @@ class MatchRoutes extends Routes {
         let notifications = this._getMatchInvitations(req.match.pendingPlayers, req.match._id, req.player._id, req.body.platform || 'MOBILE_APP');
         repoMatchInvitation.addBulk(notifications)
             .then((resp) => {
+                this._sendPushNotifications(notifications);
                 next();
             }, (cause) => {
                 res.json(404, { code: 404, message: cause.message, resp: null });
@@ -241,6 +250,53 @@ class MatchRoutes extends Routes {
                         arr[pos].playerAudit = undefined;
 
                         return this._fetchPlayersDetail(arr, ++pos)
+                            .then((ret) => resolve(ret));
+                    });
+            }
+        });
+    }
+
+    _sendPushNotifications(notifications) {
+        if (notifications.length) {
+            let players = [];
+            for (let i = 0; i < notifications.length; i++) {
+                players.push(notifications[i].playerId);
+            }
+
+            try {
+                this._fetchPlayersDetail(players, 0)
+                    .then((retPlayers) => {
+                        let users = [];
+                        for (let i = 0; i < retPlayers.length; i++) {
+                            users.push(retPlayers[i].userId);
+                        }
+
+                        return this._getDevices(users)
+                            .then((devices) => {
+                                let message = {
+                                    matchId: notifications[0].matchId,
+                                    date: new Date
+                                }
+                                notificationService.push(devices, message);
+                            });
+                    });
+            } catch (error) {
+
+            }
+        }
+    }
+
+    _getDevices(arr, pos) {
+        return new Promise((resolve, reject) => {
+            if (arr.length == pos)
+                resolve(arr);
+            else {
+                repoDevices.getByUserId(arr[pos])
+                    .then((response) => {
+                        arr[pos] = response.resp;
+                        arr[pos].deviceAudit = undefined;
+
+                        return this._getDevices(arr, ++pos)
                             .then((ret) => resolve(ret));
                     });
             }

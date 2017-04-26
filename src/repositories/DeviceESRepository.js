@@ -8,6 +8,7 @@ class DeviceESRepository extends ESRepository {
         this._mapDevice = this._mapDevice.bind(this);
         this._getDocument = this._getDocument.bind(this);
         this._getQueryByUserIdDeviceIdAndPlatform = this._getQueryByUserIdDeviceIdAndPlatform.bind(this);
+        this._getQueryByUserId = this._getQueryByUserId.bind(this);
     }
 
     get(id) {
@@ -19,6 +20,21 @@ class DeviceESRepository extends ESRepository {
                     let device = this._mapDevice(objRet.resp._id, objRet.resp._source)
                     return { code: 200, message: null, resp: device };
                 }
+            }, (error) => { return Promise.reject(error); });
+    }
+
+    getByUserId(userId) {
+        //TEST: not null, not undefined
+        return super.getBy(this._getQueryByUserId(userId), 'yojuego', 'device')
+            .then((objRet) => {
+                let devices = [];
+
+                for (let i = 0; i < objRet.resp.length; i++) {
+                    let device = this._mapDevice(objRet.resp[i]._id, objRet.resp[i]._source);
+                    devices.push(device);
+                }
+
+                return { code: 200, message: null, resp: devices };
             }, (error) => { return Promise.reject(error); });
     }
 
@@ -100,6 +116,16 @@ class DeviceESRepository extends ESRepository {
         };
 
         return document;
+    }
+
+    _getQueryByUserId(userId) {
+        return {
+            "bool": {
+                "filter": [
+                    { "term": { "userId": userId } }
+                ]
+            }
+        }
     }
 
     _getQueryByUserIdDeviceIdAndPlatform(userId, deviceId, platform) {
