@@ -2,6 +2,8 @@ let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 let Routes = require('./Routes');
 let Match = require('../models/Match');
+let PushNotification = require('../models/PushNotification');
+let PushNotificationType = require('../constants/PushNotificationType');
 let MatchInvitation = require('../NotificationService/models/MatchInvitation');
 let MatchRepository = require('../repositories/MatchESRepository');
 let PlayerRepository = require('../repositories/PlayerESRepository');
@@ -268,16 +270,13 @@ class MatchRoutes extends Routes {
                     .then((retPlayers) => {
                         let users = [];
                         for (let i = 0; i < retPlayers.length; i++) {
-                            users.push(retPlayers[i].userId);
+                            users.push(retPlayers[i].userid);
                         }
 
-                        return this._getDevices(users)
+                        return this._getDevices(users, 0)
                             .then((devices) => {
-                                let message = {
-                                    matchId: notifications[0].matchId,
-                                    date: new Date
-                                }
-                                notificationService.push(devices, message);
+                                let pushNotification = new PushNotification(PushNotificationType.INVITED_TO_MATCH, notifications[0].matchId);
+                                notificationService.push(devices, pushNotification);
                             });
                     });
             } catch (error) {
