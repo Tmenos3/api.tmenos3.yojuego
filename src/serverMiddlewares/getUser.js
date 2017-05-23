@@ -4,7 +4,7 @@ let userRepo = null;
 let getUser = (esClient, unless) => {
     userRepo = new UserESRepository(esClient);
     return (req, res, next) => {
-        if (unless.indexOf(req.url) > -1)
+        if (unless.indexOf(req.url.split('?')[0]) > -1)
             return next();
 
         userRepo.get(req.user.id)
