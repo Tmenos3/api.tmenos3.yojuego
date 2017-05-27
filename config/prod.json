@@ -22,6 +22,9 @@
         "expiresIn": null, //Time in seconds
         "secret": "tmenos3-revolutioningtheinovation",
         "port": 8081,
+        "ports": {
+            "databaseBootstrap": 8090
+        },
         "pathsWithoutAuthentication": [
             "/",
             "/status",

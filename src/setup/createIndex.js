@@ -191,6 +191,28 @@ PUT _mapping
     }
 }
 
+http://localhost:9200/yojuego/notification/
+PUT _mapping
+{
+    "notification": {
+        "properties": {
+            "senderId": { "type": "string", "index": "not_analyzed" },
+            "recipientId": { "type": "string", "index": "not_analyzed" },
+            "type": { "type": "string", "index": "not_analyzed" },
+            "data": { "type": "string", "index": "not_analyzed" },
+            "read": { "type": "boolean" },
+            "notificationAudit": {
+                "properties": {
+                    "createdOn": { "type": "date" },
+                    "readOn": { "type": "date" }
+                }
+            }
+        }
+    }
+}
+
+
+
 http://localhost:9200/yojuego/club/
 PUT _mapping
 {

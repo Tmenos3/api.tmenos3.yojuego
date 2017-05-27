@@ -1,6 +1,6 @@
 {
     "gcmService": {
-        "serverApiKey":"AIzaSyBXezGJFU1Q7GlHm-8neIZc8dCkawHgsaQ",
+        "serverApiKey": "AIzaSyBXezGJFU1Q7GlHm-8neIZc8dCkawHgsaQ",
         "senderID": "854114285051"
     },
     "auth": {
@@ -22,6 +22,9 @@
         "expiresIn": null, //Time in seconds
         "secret": "tmenos3-revolutioningtheinovation",
         "port": 8089,
+        "ports": {
+            "databaseBootstrap": 8090
+        },
         "pathsWithoutAuthentication": [
             "/",
             "/status",

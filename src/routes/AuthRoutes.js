@@ -136,11 +136,15 @@ class AuthRoutes {
                         type: 'google'
                     };
                 }
-                let email = profile.emails[0].value;
-                let photo = profile.photos[0].value;
-                let nickName = profile.displayName;
-                let firstName = profile.name.givenName;
-                let lastName = profile.name.familyName;
+
+                req.providerInfo = {
+                    email: profile.emails[0].value,
+                    photo: profile.photos[0].value,
+                    nickName: profile.displayName,
+                    firstName: profile.name.givenName,
+                    lastName: profile.name.familyName
+                }
+
                 return done(null, profile);
             }, (err) => {
                 req.statusCode = 400;
@@ -223,7 +227,7 @@ class AuthRoutes {
         };
         req.token = jwt.sign(claims, config.get('serverConfig').secret);
         req.user.token = req.token;
-        req.user.idLogged = true;
+        req.user.isLogged = true;
         next();
     }
 

@@ -28,7 +28,7 @@ class FriendshipRoutes extends Routes {
         this._deleteFriendship = this._deleteFriendship.bind(this);
         this._updateFriendshipsByFriend = this._updateFriendshipsByFriend.bind(this);
         this._fetchFriendDetails = this._fetchFriendDetails.bind(this);
-        this._sendNotification = this._sendNotification.bind(this);
+        this._createFriendshipRequest = this._createFriendshipRequest.bind(this);
         this._addNewFriend = this._addNewFriend.bind(this);
         this._checkPending = this._checkPending.bind(this);
         this._returnFriendship = this._returnFriendship.bind(this);
@@ -46,7 +46,7 @@ class FriendshipRoutes extends Routes {
     _addAllRoutes(server) {
         server.get('/friendship/:id', super._paramsIsNotNull, this._getFriendship, this._checkPlayerFriendship, this._returnFriendship);
         server.get('/friendship', this._getAllFriendships, (req, res, next) => { res.json(200, { code: 200, resp: req.friendships, message: null }) });
-        server.post('/friendship/create', super._bodyIsNotNull, this._createFriendship, this._sendNotification, this._returnFriendship);
+        server.post('/friendship/create', super._bodyIsNotNull, this._createFriendship, this._createFriendshipRequest, this._returnFriendship);
         server.post('/friendship/accept', super._bodyIsNotNull, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._acceptFriendship, this._addNewFriend, this._returnFriendship);
         server.post('/friendship/reject', super._bodyIsNotNull, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._rejectFriendship, this._returnFriendship);
         server.del('/friendship', super._bodyIsNotNull, this._getFriendship, this._checkPlayerFriendship, this._deleteFriendship, this._updateFriendshipsByFriend, this._returnFriendship);
@@ -275,7 +275,7 @@ class FriendshipRoutes extends Routes {
             next();
     }
 
-    _sendNotification(req, res, next) {
+    _createFriendshipRequest(req, res, next) {
         let newNotification = new FriendshipRequest(req.friendship._id, req.friendship.friendId, 'PENDING', new Date());
         newNotification.friendshipRequestAudit = {
             createdBy: req.player._id, //We should store deviceId here
