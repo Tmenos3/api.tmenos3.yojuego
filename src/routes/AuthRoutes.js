@@ -24,6 +24,7 @@ class AuthRoutes {
         this._configurePassport = this._configurePassport.bind(this);
         this._getNewUser = this._getNewUser.bind(this);
         this._auditUser = this._auditUser.bind(this);
+        this._getUserAndPlayer = this._getUserAndPlayer.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(AuthRoutes.INVALID_ES_CLIENT));
@@ -46,6 +47,7 @@ class AuthRoutes {
     _addAllRoutes(server, passport) {
         this._configurePassport(server, passport);
 
+        server.get('/auth/info', this._getUserAndPlayer);
         server.get('/auth/facebook', passport.authenticate('facebook', { session: false, scope: ['public_profile', 'user_birthday', 'email'] }));
         server.get('/auth/google', passport.authenticate('google', { session: false, scope: ['profile', 'email'] }));
         server.get('/auth/facebook/callback', passport.authenticate('facebook', { session: false }), this._createUser, this._createOrUpdatePLayer, this._generateToken, this._auditUser, (req, res, next) => {
@@ -70,6 +72,20 @@ class AuthRoutes {
             */
             res.redirect('/auth/success?token=' + req.token, next);
         });
+    }
+
+    _getUserAndPlayer(req, res, next){
+        req.user.userAudit = undefined;
+        req.user.password = undefined;
+        req.user.token = undefined;
+        req.player.playerAudit = undefined;
+
+        let resp = {
+            token: req.token,
+            user: req.user,
+            player: req.player
+        }
+        res.json(200, resp);
     }
 
     _authFacebook(req, token, refreshToken, profile, done) {
@@ -120,11 +136,15 @@ class AuthRoutes {
                         type: 'google'
                     };
                 }
-                let email = profile.emails[0].value;
-                let photo = profile.photos[0].value;
-                let nickName = profile.displayName;
-                let firstName = profile.name.givenName;
-                let lastName = profile.name.familyName;
+
+                req.providerInfo = {
+                    email: profile.emails[0].value,
+                    photo: profile.photos[0].value,
+                    nickName: profile.displayName,
+                    firstName: profile.name.givenName,
+                    lastName: profile.name.familyName
+                }
+
                 return done(null, profile);
             }, (err) => {
                 req.statusCode = 400;
@@ -207,7 +227,7 @@ class AuthRoutes {
         };
         req.token = jwt.sign(claims, config.get('serverConfig').secret);
         req.user.token = req.token;
-        req.user.idLogged = true;
+        req.user.isLogged = true;
         next();
     }
 

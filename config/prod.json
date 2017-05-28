@@ -7,7 +7,7 @@
         "facebook": {
             "appId": "289976541370822",
             "appSecret": "c619851f38a6d9bfb1d6d2a208ee6bc0",
-            "callback": "http://ec2-54-174-177-82.compute-1.amazonaws.com:8081/auth/facebook/callback"
+            "callback": "http://192.168.0.4:8089/auth/facebook/callback"
         },
         "google": {
             "appId": "854114285051-7pi1os5u7bifv8i8ed5vbfjlpkg9ulea.apps.googleusercontent.com",
@@ -22,6 +22,10 @@
         "expiresIn": null, //Time in seconds
         "secret": "tmenos3-revolutioningtheinovation",
         "port": 8081,
+        "ports": {
+            "databaseBootstrap": 8090,
+            "loginAdmin": 8091
+        },
         "pathsWithoutAuthentication": [
             "/",
             "/status",
@@ -35,5 +39,11 @@
             "/resetPassword",
             "/setNewPassword/:token"
         ]
-    }
+    },
+    "adminCredentials": [
+        {
+            "username": "",
+            "password": ""
+        }
+    ]
 }

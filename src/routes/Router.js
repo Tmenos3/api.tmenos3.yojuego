@@ -9,7 +9,7 @@ let SignUpRoutes = require('./SignUpRoutes');
 let AuthRoutes = require('./AuthRoutes');
 let ResetPasswordRoutes = require('./ResetPasswordRoutes');
 let UserRoute = require('./UserRoute');
-let ServerRoute = require('./ServerRoute');
+// let ServerRoute = require('./ServerRoute');
 let ClubRoutes = require('./ClubRoutes');
 let DeviceRegistrationRoutes = require('./DeviceRegistrationRoutes');
 let NotificationsRoutes = require('../NotificationService/routes/NotificationsRoutes');
@@ -31,7 +31,7 @@ class Router {
         new AuthRoutes(esClient, jwt).add(server, passport);
         new ResetPasswordRoutes(esClient, jwt).add(server);
         new UserRoute(esClient).add(server);
-        new ServerRoute(esClient, jwt).add(server);
+        //new ServerRoute(esClient, jwt).add(server);
         new NotificationsRoutes(esClient).add(server);
     }
 }

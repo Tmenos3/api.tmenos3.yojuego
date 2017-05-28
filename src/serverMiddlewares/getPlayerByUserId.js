@@ -4,7 +4,7 @@ let playerRepo = null;
 let getPlayerByUserId = (esClient, unless) => {
     playerRepo = new PlayerESRepository(esClient);
     return (req, res, next) => {
-        if (unless.indexOf(req.url) > -1)
+        if (unless.indexOf(req.url.split('?')[0]) > -1)
             return next();
 
         playerRepo.getByUserId(req.user._id)
