@@ -7,7 +7,6 @@ let checkIndexName = (req, res, next) => {
   else next()
 }
 
-//Add here middlewere to check tokens and claims
 module.exports = (server, esClient) => {
   server.get('/database/health', (req, res, next) => {
     esClient.cluster.health({ requestTimeout: 5000 }, (error, response) => {
@@ -15,6 +14,7 @@ module.exports = (server, esClient) => {
       else res.json(200, { resp: response })
     });
   });
+  
   server.get('/database/status', (req, res, next) => {
     esClient.ping({
       requestTimeout: 5000,
@@ -23,6 +23,7 @@ module.exports = (server, esClient) => {
       else res.json(200, { resp: 'Running...' })
     });
   });
+
   server.put('/database/:index',
     checkIndexName,
     (req, res, next) => {

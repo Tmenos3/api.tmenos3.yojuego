@@ -23,7 +23,8 @@
         "secret": "tmenos3-revolutioningtheinovation",
         "port": 8081,
         "ports": {
-            "databaseBootstrap": 8090
+            "databaseBootstrap": 8090,
+            "loginAdmin": 8091
         },
         "pathsWithoutAuthentication": [
             "/",
@@ -38,5 +39,11 @@
             "/resetPassword",
             "/setNewPassword/:token"
         ]
-    }
+    },
+    "adminCredentials": [
+        {
+            "username": "",
+            "password": ""
+        }
+    ]
 }

@@ -2,6 +2,7 @@
 process.env.NODE_ENV = 'dev';
 
 let databaseBootstrap = require('./src/services/databaseBootstrap/index');
+let loginAdmin = require('./src/services/loginAdmin/index');
 let restify = require('restify');
 let configureServer = require('./src/configureServer');
 let config = require('config');
@@ -12,3 +13,4 @@ let esClient = new es.Client({
 });
 
 databaseBootstrap(restify, config, esClient)
+loginAdmin(restify, config, esClient)
