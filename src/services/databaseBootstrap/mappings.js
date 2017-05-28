@@ -56,7 +56,7 @@ let match = {
     match: {
         properties: {
             title: { type: "string" },
-            "date": { type: "date" },
+            date: { type: "date" },
             fromTime: { type: "string" },
             toTime: { type: "string" },
             location: { type: "string" },

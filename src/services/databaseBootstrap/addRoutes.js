@@ -1,5 +1,6 @@
 let createIndex = require('./createIndex');
 let deleteIndex = require('./deleteIndex');
+let bootstrapIndex = require('./bootstrapIndex');
 let createMappings = require('./createMappings');
 
 let checkIndexName = (req, res, next) => {
@@ -14,7 +15,7 @@ module.exports = (server, esClient) => {
       else res.json(200, { resp: response })
     });
   });
-  
+
   server.get('/database/status', (req, res, next) => {
     esClient.ping({
       requestTimeout: 5000,
@@ -37,6 +38,14 @@ module.exports = (server, esClient) => {
     checkIndexName,
     (req, res, next) => {
       deleteIndex(esClient, req.params.index)
+        .then((resp) => { res.json(200, { resp }) })
+        .catch((error) => res.json(500, { error }));
+    });
+
+  server.post('/database/:index/bootstrap',
+    checkIndexName,
+    (req, res, next) => {
+      bootstrapIndex(esClient, req.params.index)
         .then((resp) => { res.json(200, { resp }) })
         .catch((error) => res.json(500, { error }));
     });
