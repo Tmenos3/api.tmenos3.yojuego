@@ -4,10 +4,12 @@ let Routes = require('./Routes');
 let Group = require('../models/Group');
 let GroupRepository = require('../repositories/GroupESRepository');
 let FriendshipRepository = require('../repositories/FriendshipESRepository');
+let PlayerRepository = require('../repositories/PlayerESRepository');
 let moment = require('moment');
 
 let repoFriendship = null;
 let repoGroup = null;
+let repoPlayer = null;
 
 class GroupRoutes extends Routes {
     constructor(esClient) {
@@ -23,6 +25,7 @@ class GroupRoutes extends Routes {
         this._makeAdminPlayer = this._makeAdminPlayer.bind(this);
         this._checkPlayerMember = this._checkPlayerMember.bind(this);
         this._checkPlayerFriends = this._checkPlayerFriends.bind(this);
+        this._fillGroupsInfo = this._fillGroupsInfo.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(GroupRoutes.INVALID_ES_CLIENT));
@@ -30,12 +33,13 @@ class GroupRoutes extends Routes {
         validator.execute(() => {
             repoGroup = new GroupRepository(esClient);
             repoFriendship = new FriendshipRepository(esClient);
+            repoPlayer = new PlayerRepository(esClient);
         }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
         server.get('/group/:id', super._paramsIsNotNull, this._getGroup, this._checkPlayerMember, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
-        server.get('/group', this._getAllGroups, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: null }) });
+        server.get('/group', this._getAllGroups, this._fillGroupsInfo, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: null }) });
         server.post('/group/create', super._bodyIsNotNull, this._checkPlayerFriends, this._createGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.post('/group/:id/addPlayer', super._paramsIsNotNull, this._getGroup, this._addPlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.post('/group/:id/removePlayer', super._paramsIsNotNull, this._getGroup, this._removePlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
@@ -64,6 +68,9 @@ class GroupRoutes extends Routes {
         repoGroup.getByPlayerId(req.player._id)
             .then((resp) => {
                 req.groups = resp.resp;
+
+
+
                 next();
             }, (cause) => {
                 res.json(404, { code: 404, message: cause, resp: null });
@@ -217,6 +224,44 @@ class GroupRoutes extends Routes {
             .catch((err) => {
                 res.json(500, { code: 500, message: err, resp: null });
             });
+    }
+
+    _fillGroupsInfo(req, res, next) {
+        let promises = [];
+        for (let i = 0; i < req.groups.length; i++) {
+            promises.push(this._fillGroupInfo(req.groups[i]));
+        }
+
+        Promise.all(promises)
+            .then((groups) => {
+                req.groups = groups;
+                next();
+            });
+    }
+
+    _fillGroupInfo(group) {
+        return new Promise((resolve, reject) => {
+            let promises = [];
+
+            group.players.forEach((p) => {
+                promises.push(repoPlayer.get(p).then((resp) => { return resp.resp; }));
+            });
+
+            Promise.all(promises)
+                .then((allPlayers) => {
+                    for (let i = 0; i < group.players.length; i++) {
+                        let fullPlayer = allPlayers.find((p) => { return p._id === group.players[i] });
+                        group.players[i] = fullPlayer;
+                    }
+
+                    for (let i = 0; i < group.admins.length; i++) {
+                        let fullPlayer = allPlayers.find((p) => { return p._id === group.admins[i] });
+                        group.admins[i] = fullPlayer;
+                    }
+
+                    resolve(group);
+                });
+        });
     }
 
     _isFriend(id, friends) {
