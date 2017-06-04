@@ -74,8 +74,7 @@ class GroupRoutes extends Routes {
     }
 
     _createGroup(req, res, next) {
-
-        let group = new Group(req.body.players, [req.player._id], req.body.description, req.body.photo, req.player._id, new Date());
+        let group = new Group(req.body.players.concat([req.player._id]), [req.player._id], req.body.description, req.body.photo, req.player._id, new Date());
         group.groupAudit = {
             createdBy: req.body.platform || 'MOBILE_APP', //We should store deviceId here
             createdOn: new Date(),
