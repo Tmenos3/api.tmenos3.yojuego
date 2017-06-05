@@ -2,13 +2,15 @@ import Club from '../../../src/models/Club/Club';
 
 describe('Club', () => {
   it('Cant create a valid Club', () => {
-    let aName = "unClub";
-    let aDescription = "unaDescipcion";
-    let aClub = new Club(aName, aDescription);
+    let aName = 'unClub';
+    let aDescription = 'unaDescipcion';
+    let aClub = new Club(aName, aDescription, [Club.FACILITY_MEN_SHOWERS, Club.FACILITY_MEN_LOCKER_ROOM]);
 
     expect(aClub).toBeDefined();
     expect(aClub.name).toBe(aName);
     expect(aClub.description).toBe(aDescription);
+    expect(aClub.facilities).toContain(Club.FACILITY_MEN_SHOWERS);
+    expect(aClub.facilities).toContain(Club.FACILITY_MEN_LOCKER_ROOM);    
   });
 
   it('Cannot create with an undefined name', () => {
@@ -32,19 +34,31 @@ describe('Club', () => {
   it('Cannot create with an undefined description', () => {
     let undefinedDescription;
 
-    expect(() => new Club("name", undefinedDescription)).toThrowError(Club.INVALID_DESCRIPTION);
+    expect(() => new Club('name', undefinedDescription)).toThrowError(Club.INVALID_DESCRIPTION);
   });
 
   it('Cannot create with an null description', () => {
     let nullDescription = null;
 
-    expect(() => new Club("name", nullDescription)).toThrowError(Club.INVALID_DESCRIPTION);
+    expect(() => new Club('name', nullDescription)).toThrowError(Club.INVALID_DESCRIPTION);
   });
 
   it('Cannot create with an invalid description', () => {
     let invalidDescription = '    ';
 
-    expect(() => new Club("name", invalidDescription)).toThrowError(Club.INVALID_DESCRIPTION);
+    expect(() => new Club('name', invalidDescription)).toThrowError(Club.INVALID_DESCRIPTION);
+  });
+
+  it('Cannot create with invalid facilities', () => {
+    let invalidFacilities = ' ';
+
+    expect(() => new Club('name', 'description', invalidFacilities)).toThrowError(Club.INVALID_FACILITIES);
+  });
+
+  it('Cannot create with invalid facilities', () => {
+    let invalidFacilities = [Club.FACILITY_MEN_LOCKER_ROOM, 'nkjbkj'];
+
+    expect(() => new Club('name', 'description', invalidFacilities)).toThrowError(Club.INVALID_FACILITIES);
   });
 
   // it('Cannot create with a undefined Date', () => {
