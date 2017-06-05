@@ -17,6 +17,7 @@ class GroupRoutes extends Routes {
 
         this._addPlayer = this._addPlayer.bind(this);
         this._removePlayer = this._removePlayer.bind(this);
+        this._auditGroup = this._auditGroup.bind(this);
         this._updateGroup = this._updateGroup.bind(this);
         this._getGroup = this._getGroup.bind(this);
         this._getAllGroups = this._getAllGroups.bind(this);
@@ -39,11 +40,12 @@ class GroupRoutes extends Routes {
 
     _addAllRoutes(server) {
         server.get('/group/:id', super._paramsIsNotNull, this._getGroup, this._checkPlayerMember, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
+        server.post('/group/:id', super._paramsIsNotNull, super._bodyIsNotNull, this._getGroup, this._checkPlayerMember, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group updated' }) });
         server.get('/group', this._getAllGroups, this._fillGroupsInfo, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: null }) });
-        server.post('/group/create', super._bodyIsNotNull, this._checkPlayerFriends, this._createGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/addPlayer', super._paramsIsNotNull, this._getGroup, this._addPlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/removePlayer', super._paramsIsNotNull, this._getGroup, this._removePlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/makeAdminPlayer', super._paramsIsNotNull, this._getGroup, this._makeAdminPlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.put('/group', super._bodyIsNotNull, this._checkPlayerFriends, this._createGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/addPlayer', super._paramsIsNotNull, this._getGroup, this._addPlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/removePlayer', super._paramsIsNotNull, this._getGroup, this._removePlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/makeAdminPlayer', super._paramsIsNotNull, this._getGroup, this._makeAdminPlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.del('/group/:id', super._paramsIsNotNull, this._getGroup, this._deleteGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
     }
 
@@ -68,9 +70,6 @@ class GroupRoutes extends Routes {
         repoGroup.getByPlayerId(req.player._id)
             .then((resp) => {
                 req.groups = resp.resp;
-
-
-
                 next();
             }, (cause) => {
                 res.json(404, { code: 404, message: cause, resp: null });
@@ -210,6 +209,28 @@ class GroupRoutes extends Routes {
     }
 
     _updateGroup(req, res, next) {
+        req.group.description = req.body.description;
+        req.group.photo = req.body.photo;
+        req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
+        req.group.groupAudit.modifiedOn = new Date();
+        req.group.groupAudit.modifiedFrom = req.body.platform;
+
+        repoGroup.update(req.group)
+            .then((resp) => {
+                return repoGroup.get(resp.resp._id);
+            })
+            .then((resp) => {
+                req.group = resp.resp;
+                next();
+            }, (cause) => {
+                res.json(404, { code: 404, message: cause, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
+    }
+
+    _auditGroup(req, res, next) {
         req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
         req.group.groupAudit.modifiedOn = new Date();
         req.group.groupAudit.modifiedFrom = req.body.platform;
