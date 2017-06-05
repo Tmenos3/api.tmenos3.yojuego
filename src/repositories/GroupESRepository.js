@@ -68,8 +68,9 @@ class GroupESRepository extends ESRepository {
     }
 
     _mapGroup(id, source) {
-        let group = new Group(source.players, source.admins, source.description, source.photo, source.createdBy, source.createdOn);
-        group._id = objRet.resp._id;
+        let group = new Group(source.players, source.admins, source.description, source.photo);
+        group._id = id;
+        group.groupAudit = source.groupAudit
 
         return group;
     }

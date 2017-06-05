@@ -4,10 +4,12 @@ let Routes = require('./Routes');
 let Group = require('../models/Group');
 let GroupRepository = require('../repositories/GroupESRepository');
 let FriendshipRepository = require('../repositories/FriendshipESRepository');
+let PlayerRepository = require('../repositories/PlayerESRepository');
 let moment = require('moment');
 
 let repoFriendship = null;
 let repoGroup = null;
+let repoPlayer = null;
 
 class GroupRoutes extends Routes {
     constructor(esClient) {
@@ -15,6 +17,7 @@ class GroupRoutes extends Routes {
 
         this._addPlayer = this._addPlayer.bind(this);
         this._removePlayer = this._removePlayer.bind(this);
+        this._auditGroup = this._auditGroup.bind(this);
         this._updateGroup = this._updateGroup.bind(this);
         this._getGroup = this._getGroup.bind(this);
         this._getAllGroups = this._getAllGroups.bind(this);
@@ -23,6 +26,7 @@ class GroupRoutes extends Routes {
         this._makeAdminPlayer = this._makeAdminPlayer.bind(this);
         this._checkPlayerMember = this._checkPlayerMember.bind(this);
         this._checkPlayerFriends = this._checkPlayerFriends.bind(this);
+        this._fillGroupsInfo = this._fillGroupsInfo.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(GroupRoutes.INVALID_ES_CLIENT));
@@ -30,16 +34,18 @@ class GroupRoutes extends Routes {
         validator.execute(() => {
             repoGroup = new GroupRepository(esClient);
             repoFriendship = new FriendshipRepository(esClient);
+            repoPlayer = new PlayerRepository(esClient);
         }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
         server.get('/group/:id', super._paramsIsNotNull, this._getGroup, this._checkPlayerMember, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
-        server.get('/group', this._getAllGroups, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: null }) });
-        server.post('/group/create', super._bodyIsNotNull, this._checkPlayerFriends, this._createGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/addPlayer', super._paramsIsNotNull, this._getGroup, this._addPlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/removePlayer', super._paramsIsNotNull, this._getGroup, this._removePlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/makeAdminPlayer', super._paramsIsNotNull, this._getGroup, this._makeAdminPlayer, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id', super._paramsIsNotNull, super._bodyIsNotNull, this._getGroup, this._checkPlayerMember, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group updated' }) });
+        server.get('/group', this._getAllGroups, this._fillGroupsInfo, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: null }) });
+        server.put('/group', super._bodyIsNotNull, this._checkPlayerFriends, this._createGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/addPlayer', super._paramsIsNotNull, this._getGroup, this._addPlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/removePlayer', super._paramsIsNotNull, this._getGroup, this._removePlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/makeAdminPlayer', super._paramsIsNotNull, this._getGroup, this._makeAdminPlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.del('/group/:id', super._paramsIsNotNull, this._getGroup, this._deleteGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
     }
 
@@ -74,8 +80,7 @@ class GroupRoutes extends Routes {
     }
 
     _createGroup(req, res, next) {
-
-        let group = new Group(req.body.players, [req.player._id], req.body.description, req.body.photo, req.player._id, new Date());
+        let group = new Group(req.body.players.concat([req.player._id]), [req.player._id], req.body.description, req.body.photo, req.player._id, new Date());
         group.groupAudit = {
             createdBy: req.body.platform || 'MOBILE_APP', //We should store deviceId here
             createdOn: new Date(),
@@ -204,6 +209,28 @@ class GroupRoutes extends Routes {
     }
 
     _updateGroup(req, res, next) {
+        req.group.description = req.body.description;
+        req.group.photo = req.body.photo;
+        req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
+        req.group.groupAudit.modifiedOn = new Date();
+        req.group.groupAudit.modifiedFrom = req.body.platform;
+
+        repoGroup.update(req.group)
+            .then((resp) => {
+                return repoGroup.get(resp.resp._id);
+            })
+            .then((resp) => {
+                req.group = resp.resp;
+                next();
+            }, (cause) => {
+                res.json(404, { code: 404, message: cause, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
+    }
+
+    _auditGroup(req, res, next) {
         req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
         req.group.groupAudit.modifiedOn = new Date();
         req.group.groupAudit.modifiedFrom = req.body.platform;
@@ -218,6 +245,44 @@ class GroupRoutes extends Routes {
             .catch((err) => {
                 res.json(500, { code: 500, message: err, resp: null });
             });
+    }
+
+    _fillGroupsInfo(req, res, next) {
+        let promises = [];
+        for (let i = 0; i < req.groups.length; i++) {
+            promises.push(this._fillGroupInfo(req.groups[i]));
+        }
+
+        Promise.all(promises)
+            .then((groups) => {
+                req.groups = groups;
+                next();
+            });
+    }
+
+    _fillGroupInfo(group) {
+        return new Promise((resolve, reject) => {
+            let promises = [];
+
+            group.players.forEach((p) => {
+                promises.push(repoPlayer.get(p).then((resp) => { return resp.resp; }));
+            });
+
+            Promise.all(promises)
+                .then((allPlayers) => {
+                    for (let i = 0; i < group.players.length; i++) {
+                        let fullPlayer = allPlayers.find((p) => { return p._id === group.players[i] });
+                        group.players[i] = fullPlayer;
+                    }
+
+                    for (let i = 0; i < group.admins.length; i++) {
+                        let fullPlayer = allPlayers.find((p) => { return p._id === group.admins[i] });
+                        group.admins[i] = fullPlayer;
+                    }
+
+                    resolve(group);
+                });
+        });
     }
 
     _isFriend(id, friends) {
