@@ -4,16 +4,18 @@ describe('Club', () => {
   it('Can create a valid Club', () => {
     let aName = 'unClub';
     let aDescription = 'unaDescipcion';
-    let aValidAllowOnlineBooking = new Boolean(true);
     let facilities = [Club.FACILITY_MEN_SHOWERS, Club.FACILITY_MEN_LOCKER_ROOM];
-    let aClub = new Club(aName, aDescription, facilities, aValidAllowOnlineBooking);
-
+    let aValidAllowOnlineBooking = true;
+    let aValidAllowOnlinePayment = true;
+    
+    let aClub = new Club(aName, aDescription, facilities, aValidAllowOnlineBooking, aValidAllowOnlinePayment);
     expect(aClub).toBeDefined();
     expect(aClub.name).toBe(aName);
     expect(aClub.description).toBe(aDescription);
     expect(aClub.facilities).toContain(Club.FACILITY_MEN_SHOWERS);
     expect(aClub.facilities).toContain(Club.FACILITY_MEN_LOCKER_ROOM);
     expect(aClub.allowOnlineBooking).toBe(aValidAllowOnlineBooking);
+    expect(aClub.allowOnlinePayment).toBe(aValidAllowOnlinePayment);
   });
 
   it('Cannot create with an undefined name', () => {
@@ -67,20 +69,38 @@ describe('Club', () => {
   it('Cannot create with undefined allowOnLineBooking', () => {
     let invalidAllowOnLineBooking;
 
-    expect(() => new Club('name', 'description', [], invalidAllowOnLineBooking)).toThrowError(Club.ALLOW_ONLINE_BOOKING);
+    expect(() => new Club('name', 'description', [], invalidAllowOnLineBooking)).toThrowError(Club.INVALID_ALLOW_ONLINE_BOOKING);
   });
 
   it('Cannot create with null allowOnLineBooking', () => {
     let invalidAllowOnLineBooking = null;
 
-    expect(() => new Club('name', 'description', [], invalidAllowOnLineBooking)).toThrowError(Club.ALLOW_ONLINE_BOOKING);
+    expect(() => new Club('name', 'description', [], invalidAllowOnLineBooking)).toThrowError(Club.INVALID_ALLOW_ONLINE_BOOKING);
   });
-
 
   it('Cannot create with invalid allowOnLineBooking', () => {
     let invalidAllowOnLineBooking = 'asdas';
 
-    expect(() => new Club('name', 'description', [], invalidAllowOnLineBooking)).toThrowError(Club.ALLOW_ONLINE_BOOKING);
+    expect(() => new Club('name', 'description', [], invalidAllowOnLineBooking)).toThrowError(Club.INVALID_ALLOW_ONLINE_BOOKING);
+  });
+
+  it('Cannot create with undefined allowOnlinePayment', () => {
+    let invalidAllowOnlinePayment;
+
+    expect(() => new Club('name', 'description', [], true, invalidAllowOnlinePayment)).toThrowError(Club.INVALID_ALLOW_ONLINE_PAYMENT);
+  });
+
+  it('Cannot create with null allowOnlinePayment', () => {
+    let invalidAllowOnlinePayment = null;
+
+    expect(() => new Club('name', 'description', [], true, invalidAllowOnlinePayment)).toThrowError(Club.INVALID_ALLOW_ONLINE_PAYMENT);
+  });
+
+
+  it('Cannot create with invalid allowOnlinePayment', () => {
+    let invalidAllowOnlinePayment = 'asdas';
+
+    expect(() => new Club('name', 'description', [], true, invalidAllowOnlinePayment)).toThrowError(Club.INVALID_ALLOW_ONLINE_PAYMENT);
   });
 
   // it('Cannot create with a undefined Date', () => {
