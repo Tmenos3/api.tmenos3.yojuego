@@ -1,16 +1,19 @@
 import Club from '../../../src/models/Club/Club';
 
 describe('Club', () => {
-  it('Cant create a valid Club', () => {
+  it('Can create a valid Club', () => {
     let aName = 'unClub';
     let aDescription = 'unaDescipcion';
-    let aClub = new Club(aName, aDescription, [Club.FACILITY_MEN_SHOWERS, Club.FACILITY_MEN_LOCKER_ROOM]);
+    let aValidAllowOnlineBooking = new Boolean(true);
+    let facilities = [Club.FACILITY_MEN_SHOWERS, Club.FACILITY_MEN_LOCKER_ROOM];
+    let aClub = new Club(aName, aDescription, facilities, aValidAllowOnlineBooking);
 
     expect(aClub).toBeDefined();
     expect(aClub.name).toBe(aName);
     expect(aClub.description).toBe(aDescription);
     expect(aClub.facilities).toContain(Club.FACILITY_MEN_SHOWERS);
-    expect(aClub.facilities).toContain(Club.FACILITY_MEN_LOCKER_ROOM);    
+    expect(aClub.facilities).toContain(Club.FACILITY_MEN_LOCKER_ROOM);
+    expect(aClub.allowOnlineBooking).toBe(aValidAllowOnlineBooking);
   });
 
   it('Cannot create with an undefined name', () => {
@@ -56,9 +59,28 @@ describe('Club', () => {
   });
 
   it('Cannot create with invalid facilities', () => {
-    let invalidFacilities = [Club.FACILITY_MEN_LOCKER_ROOM, 'nkjbkj'];
+    let invalidFacilities = [Club.FACILITY_MEN_LOCKER_ROOM, 'nkjbkj', Club.FACILITY_MEN_SHOWERS];
 
     expect(() => new Club('name', 'description', invalidFacilities)).toThrowError(Club.INVALID_FACILITIES);
+  });
+
+  it('Cannot create with undefined allowOnLineBooking', () => {
+    let invalidAllowOnLineBooking;
+
+    expect(() => new Club('name', 'description', [], invalidAllowOnLineBooking)).toThrowError(Club.ALLOW_ONLINE_BOOKING);
+  });
+
+  it('Cannot create with null allowOnLineBooking', () => {
+    let invalidAllowOnLineBooking = null;
+
+    expect(() => new Club('name', 'description', [], invalidAllowOnLineBooking)).toThrowError(Club.ALLOW_ONLINE_BOOKING);
+  });
+
+
+  it('Cannot create with invalid allowOnLineBooking', () => {
+    let invalidAllowOnLineBooking = 'asdas';
+
+    expect(() => new Club('name', 'description', [], invalidAllowOnLineBooking)).toThrowError(Club.ALLOW_ONLINE_BOOKING);
   });
 
   // it('Cannot create with a undefined Date', () => {
