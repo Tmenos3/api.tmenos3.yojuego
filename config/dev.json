@@ -44,8 +44,8 @@
     },
     "adminCredentials": [
         {
-            "username": "",
-            "password": ""
+            "username": "admin",
+            "password": "admin"
         }
     ]
 }
