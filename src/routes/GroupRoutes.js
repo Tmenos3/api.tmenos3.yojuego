@@ -27,6 +27,7 @@ class GroupRoutes extends Routes {
         this._checkPlayerMember = this._checkPlayerMember.bind(this);
         this._checkPlayerFriends = this._checkPlayerFriends.bind(this);
         this._fillGroupsInfo = this._fillGroupsInfo.bind(this);
+        this._checkPlayerAdmin = this._checkPlayerAdmin.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(GroupRoutes.INVALID_ES_CLIENT));
@@ -38,6 +39,7 @@ class GroupRoutes extends Routes {
         }, (err) => { throw err; });
     }
 
+    //Add middleware to this particular route to get the corresponding group
     _addAllRoutes(server) {
         server.get('/group/:id', super._paramsIsNotNull, this._getGroup, this._checkPlayerMember, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
         server.post('/group/:id', super._paramsIsNotNull, super._bodyIsNotNull, this._getGroup, this._checkPlayerMember, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group updated' }) });
@@ -46,7 +48,7 @@ class GroupRoutes extends Routes {
         server.post('/group/:id/addPlayer', super._paramsIsNotNull, this._getGroup, this._addPlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.post('/group/:id/removePlayer', super._paramsIsNotNull, this._getGroup, this._removePlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.post('/group/:id/makeAdminPlayer', super._paramsIsNotNull, this._getGroup, this._makeAdminPlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.del('/group/:id', super._paramsIsNotNull, this._getGroup, this._deleteGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.del('/group/:id', super._paramsIsNotNull, this._getGroup, this._checkPlayerAdmin, this._deleteGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
     }
 
     _getGroup(req, res, next) {
@@ -184,6 +186,13 @@ class GroupRoutes extends Routes {
             next();
         else
             res.json(400, { code: 400, message: 'El player no es miembro del group.', resp: null });
+    }
+
+    _checkPlayerAdmin(req, res, next) {
+        if (req.group.isAdmin(req.player._id))
+            next();
+        else
+            res.json(400, { code: 400, message: 'El player no es admin.', resp: null });
     }
 
     _checkPlayerFriends(req, res, next) {
