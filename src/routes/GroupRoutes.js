@@ -53,7 +53,7 @@ class GroupRoutes extends Routes {
         server.post('/group/:id/removePlayer', this._removePlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.post('/group/:id/makeAdminPlayer', this._makeAdminPlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.del('/group/:id', this._checkPlayerAdmin, this._deleteGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/exit', this._checkPlayerMember, this._exitFromGroup, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/exit', this._checkPlayerMember, this._exitFromGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
     }
 
     _addMiddlewares(server) {
@@ -273,7 +273,7 @@ class GroupRoutes extends Routes {
     _auditGroup(req, res, next) {
         req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
         req.group.groupAudit.modifiedOn = new Date();
-        req.group.groupAudit.modifiedFrom = req.body.platform;
+        req.group.groupAudit.modifiedFrom = 'MOBILE_APP';
 
         repoGroup.update(req.group)
             .then((resp) => {
@@ -303,7 +303,23 @@ class GroupRoutes extends Routes {
     _exitFromGroup(req, res, next) {
         req.group.removePlayer(req.player._id);
 
-        next();
+        req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
+        req.group.groupAudit.modifiedOn = new Date();
+        req.group.groupAudit.modifiedFrom = 'MOBILE_APP';
+
+        repoGroup.update(req.group)
+            .then((resp) => {
+                return repoGroup.get(resp.resp._id);
+            })
+            .then((resp) => {
+                req.group = resp.resp;
+                next();
+            }, (cause) => {
+                res.json(404, { code: 404, message: cause, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
     }
 
     _fillGroupInfo(group) {

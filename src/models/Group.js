@@ -30,7 +30,7 @@ class Group {
         if (!this._existsPlayers(playerId))
             this.players.push(playerId);
 
-        _removeAdmin(playerId);
+        this._removeAdmin(playerId);
     }
 
     makeAdmin(adminId, playerId) {
@@ -40,15 +40,12 @@ class Group {
         if (!this._existsInAdmins(playerId))
             this.admins.push(playerId);
 
-        _removePlayer(playerId);
+        this._removePlayer(playerId);
     }
 
-    removePlayer(adminId, playerId) {
-        if (!this._existsInAdmins(adminId))
-            throw new Exception(Group.ACTION_REQUIRE_ADMIN);
-
-        _removePlayer(playerId);
-        _removeAdmin(playerId);
+    removePlayer(playerId) {
+        this._removePlayer(playerId);
+        this._removeAdmin(playerId);
     }
 
     isAdmin(playerId) {
