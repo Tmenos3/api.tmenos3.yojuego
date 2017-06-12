@@ -1,4 +1,4 @@
-import Club from '../../../src/models/Club/Club';
+import Club from '../../../src/models/club/Club';
 
 describe('Club', () => {
   it('Can create a valid Club', () => {
