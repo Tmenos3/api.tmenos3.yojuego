@@ -27,7 +27,7 @@ class Group {
         if (!this._existsInAdmins(adminId))
             throw new Exception(Group.ACTION_REQUIRE_ADMIN);
 
-        if (!this._existsPlayers(playerId))
+        if (!this._existsInPlayers(playerId))
             this.players.push(playerId);
 
         this._removeAdmin(playerId);
