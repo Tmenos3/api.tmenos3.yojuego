@@ -39,11 +39,12 @@ class Group {
 
         if (!this._existsInAdmins(playerId))
             this.admins.push(playerId);
-
-        this._removePlayer(playerId);
     }
 
-    removePlayer(playerId) {
+    removePlayer(adminId, playerId) {
+        if (!this._existsInAdmins(adminId))
+            throw new Exception(Group.ACTION_REQUIRE_ADMIN);
+
         this._removePlayer(playerId);
         this._removeAdmin(playerId);
     }
