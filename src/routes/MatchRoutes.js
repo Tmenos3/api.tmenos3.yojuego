@@ -100,16 +100,20 @@ class MatchRoutes extends Routes {
 
     _sendNotifications(req, res, next) {
         let notifications = this._getMatchInvitations(req.match.pendingPlayers, req.match._id, req.player._id, req.body.platform || 'MOBILE_APP');
-        repoMatchInvitation.addBulk(notifications)
-            .then((resp) => {
-                this._sendPushNotifications(notifications);
-                next();
-            }, (cause) => {
-                res.json(404, { code: 404, message: cause.message, resp: null });
-            })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err.message, resp: null });
-            });
+        if (!notifications.length)
+            next();
+        else {
+            repoMatchInvitation.addBulk(notifications)
+                .then((resp) => {
+                    this._sendPushNotifications(notifications);
+                    next();
+                }, (cause) => {
+                    res.json(404, { code: 404, message: cause.message, resp: null });
+                })
+                .catch((err) => {
+                    res.json(500, { code: 500, message: err.message, resp: null });
+                });
+        }
     }
 
     _getMatch(req, res, next) {
