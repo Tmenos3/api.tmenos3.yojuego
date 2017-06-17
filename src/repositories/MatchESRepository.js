@@ -64,8 +64,10 @@ class MatchESRepository extends ESRepository {
             location: match.location,
             creator: match.creator,
             matchType: match.matchType,
+            status: match.status,
             pendingPlayers: match.pendingPlayers,
             confirmedPlayers: match.confirmedPlayers,
+            canceledPlayers: match.canceledPlayers,
             comments: match.comments,
             matchAudit: {
                 createdBy: match.matchAudit.createdBy,
@@ -86,6 +88,7 @@ class MatchESRepository extends ESRepository {
                 "should": [
                     { "term": { "confirmedPlayers": { "value": playerId } } },
                     { "term": { "pendingPlayers": { "value": playerId } } },
+                    { "term": { "canceledPlayers": { "value": playerId } } },
                     { "term": { "creator": { "value": playerId } } }
                 ],
                 "must": [
@@ -97,10 +100,11 @@ class MatchESRepository extends ESRepository {
     }
 
     _mapMatch(id, source) {
-        let match = new Match(source.title, new Date(source.date), source.fromTime, source.toTime, source.location, source.creator, source.matchType);
+        let match = new Match(source.title, new Date(source.date), source.fromTime, source.toTime, source.location, source.creator, source.matchType, null, source.matchAudit, source.status);
         match._id = id;
         match.confirmedPlayers = source.confirmedPlayers;
         match.pendingPlayers = source.pendingPlayers;
+        match.canceledPlayers = source.canceledPlayers;
 
         return match;
     }

@@ -1,31 +1,31 @@
 let user = {
-  user: {
-    properties: {
-      id: { type: "string", index: "not_analyzed" },
-      password: { type: "string" },
-      type: { type: "string", index: "not_analyzed" },
-      isLogged: { type: "boolean" },
-      token: { type: "string", index: "not_analyzed" },
-      oauth: {
+    user: {
         properties: {
-          authToken: { type: "string", index: "not_analyzed" },
-          refreshToken: { type: "string", index: "not_analyzed" },
-          xxx: { type: "string", index: "not_analyzed" }
+            id: { type: "string", index: "not_analyzed" },
+            password: { type: "string" },
+            type: { type: "string", index: "not_analyzed" },
+            isLogged: { type: "boolean" },
+            token: { type: "string", index: "not_analyzed" },
+            oauth: {
+                properties: {
+                    authToken: { type: "string", index: "not_analyzed" },
+                    refreshToken: { type: "string", index: "not_analyzed" },
+                    xxx: { type: "string", index: "not_analyzed" }
+                }
+            },
+            userAudit: {
+                properties: {
+                    lastAccess: { type: "date" },
+                    createdBy: { type: "string", index: "not_analyzed" },
+                    createdOn: { type: "date" },
+                    createdFrom: { type: "string" },
+                    modifiedBy: { type: "string", index: "not_analyzed" },
+                    modifiedOn: { type: "date" },
+                    modifiedFrom: { type: "string" }
+                }
+            }
         }
-      },
-      userAudit: {
-        properties: {
-          lastAccess: { type: "date" },
-          createdBy: { type: "string", index: "not_analyzed" },
-          createdOn: { type: "date" },
-          createdFrom: { type: "string" },
-          modifiedBy: { type: "string", index: "not_analyzed" },
-          modifiedOn: { type: "date" },
-          modifiedFrom: { type: "string" }
-        }
-      }
     }
-  }
 }
 
 let player = {
@@ -61,9 +61,11 @@ let match = {
             toTime: { type: "string" },
             location: { type: "string" },
             matchType: { type: "integer" },
+            status: { type: "string", index: "not_analyzed" },
             creator: { type: "string", index: "not_analyzed" },
             confirmedPlayers: { type: "string", index: "not_analyzed" },
             pendingPlayers: { type: "string", index: "not_analyzed" },
+            canceledPlayers: { type: "string", index: "not_analyzed" },
             comments: {
                 properties: {
                     id: { type: "integer" },
@@ -112,8 +114,8 @@ let group = {
         properties: {
             description: { type: "string" },
             photo: { type: "string" },
-            players : { type: "string", index: "not_analyzed" },
-            admins : { type: "string", index: "not_analyzed" },
+            players: { type: "string", index: "not_analyzed" },
+            admins: { type: "string", index: "not_analyzed" },
             groupAudit: {
                 properties: {
                     createdBy: { type: "string", index: "not_analyzed" },
@@ -173,12 +175,12 @@ let matchInvitation = {
     }
 }
 
-module.exports = { 
-  user, 
-  player,
-  match,
-  friendship,
-  group,
-  friendshipRequest,
-  matchInvitation
+module.exports = {
+    user,
+    player,
+    match,
+    friendship,
+    group,
+    friendshipRequest,
+    matchInvitation
 }

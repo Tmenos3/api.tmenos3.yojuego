@@ -23,7 +23,7 @@
         "secret": "tmenos3-revolutioningtheinovation",
         "port": 8081,
         "ports": {
-            "databaseBootstrap": 8090,
+            "database": 8090,
             "loginAdmin": 8091
         },
         "pathsWithoutAuthentication": [

@@ -93,19 +93,23 @@ let createPlayer = (esClient, index, user) => {
 
 let createMatch = (esClient, index, player) => {
   return new Promise((resolve, reject) => {
+    let date = new Date();
+    date.setDate(date.getDate() + 10);
     esClient.index({
       index: index,
       type: 'match',
       body: {
         title: 'BOOSTRAPED MATCH',
-        date: new Date().setDate(new Date() + 10),
+        date: date,
         fromTime: '18:00',
         toTime: '19:00',
         location: 'Some court',
         matchType: 5,
+        status: 'PENDING',
         creator: player._id,
         confirmedPlayers: [],
         pendingPlayers: [player._id],
+        canceledPlayers: [],
         comments: [],
         matchAudit: {
           createdBy: 'BOOTSTRAP',
