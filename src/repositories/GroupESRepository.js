@@ -50,8 +50,7 @@ class GroupESRepository extends ESRepository {
                 admins: group.admins,
                 description: group.description,
                 photo: group.photo,
-                groupCreatedBy: group.createdBy,
-                groupCreatedOn: group.createdOn
+                groupAudit: group.groupAudit
             };
             return super.update(group._id, document, 'yojuego', 'group');
         } else {

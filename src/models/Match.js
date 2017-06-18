@@ -7,7 +7,7 @@ var CustomCondition = require('no-if-validator').CustomCondition;
 var IsNumberCondition = require('no-if-validator').IsNumberCondition;
 
 class Match {
-    constructor(title, date, fromTime, toTime, location, creator, matchType, club, auditInfo) {
+    constructor(title, date, fromTime, toTime, location, creator, matchType, club, auditInfo, status) {
         this._existsInPendingPlayers = this._existsInPendingPlayers.bind(this);
         this._existsInConfirmedPlayers = this._existsInConfirmedPlayers.bind(this);
 
@@ -38,37 +38,41 @@ class Match {
             this.creator = creator;
             this.matchType = matchType;
             this.club = club;
-            this.audit = auditInfo;
+            this.status = status || 'PENDING';
+            this.matchAudit = auditInfo;
             this.confirmedPlayers = [];
             this.pendingPlayers = [];
+            this.canceledPlayers = [];
             this.comments = [];
         }, (err) => { throw err; });
     }
 
     addInvitedPlayer(playerId) {
-        // add to pending players
-        // this players have been invited but they are not confirmed yet
-        if (!this._existsInPendingPlayers(playerId)) {
+        if (!this._existsInPendingPlayers(playerId))
             this.pendingPlayers.push(playerId)
-        }
     }
 
     removeInvitedPlayer(playerId) {
-        var position = this.pendingPlayers.indexOf(playerId);
-        if (position > -1) {
+        let position = this.pendingPlayers.indexOf(playerId);
+        if (position > -1)
             this.pendingPlayers.splice(position, 1);
-        }
     }
 
     addConfirmPlayer(playerId) {
-        if (!this._existsInConfirmedPlayers(playerId)) {
+        if (!this._existsInConfirmedPlayers(playerId))
             this.confirmedPlayers.push(playerId);
-            this.removeInvitedPlayer(playerId);
+    }
+
+    removeConfirmedPlayer(playerId) {
+        let position = this.confirmedPlayers.indexOf(playerId);
+        if (position > -1) {
+            this.confirmedPlayers.splice(position, 1);
         }
     }
 
-    removeConfirmPlayer(playerId) {
-        // this player is confirmed and it is going to be remove from de match
+    addCanceledPlayers(playerId) {
+        if (!this._existsInCanceledPlayers(playerId))
+            this.canceledPlayers.push(playerId);
     }
 
     addComment(owner, text, writtenOn) {
@@ -76,31 +80,25 @@ class Match {
     }
 
     updateComment(id, newText) {
-        var indexToUpdate = null;
-        for (var i = 0; i < this.comments.length; i++) {
-            if (this.comments[i].id == id) {
-                indexToUpdate = i;
-            }
-        }
-        if (indexToUpdate != null) {
-            var commentToUpdate = this.comments[indexToUpdate];
+        let indexToRemove = this.comments.findIndex((c) => { return c.id === id });
+        if (indexToUpdate > -1) {
+            let commentToUpdate = this.comments[indexToUpdate];
             commentToUpdate.text = newText;
 
-            this.removeComment(commentToUpdate.id);
+            this.removeComment(commentToUpdate.id, indexToRemove);
             this.comments.push(commentToUpdate);
         }
     }
 
-    removeComment(id) {
-        var indexToRemove = null;
-        for (var i = 0; i < this.comments.length; i++) {
-            if (this.comments[i].id == id) {
-                indexToRemove = i;
-            }
-        }
+    removeComment(id, index) {
+        let indexToRemove = index || this.comments.findIndex((c) => { return c.id === id });
 
-        if (indexToRemove != null)
+        if (indexToRemove > -1)
             this.comments.splice(indexToRemove, 1);
+    }
+
+    cancel() {
+        this.status = 'CANCELED';
     }
 
     _getNewCommentId() {
@@ -119,18 +117,21 @@ class Match {
         for (var i = 0; i < this.pendingPlayers.length; i++) {
             if (this.pendingPlayers[i] == playerId)
                 return true
-
-            return false;
         }
+        return false;
     }
 
     _existsInConfirmedPlayers(playerId) {
         for (var i = 0; i < this.confirmedPlayers.length; i++) {
             if (this.confirmedPlayers[i] == playerId)
                 return true
-
-            return false;
         }
+        return false;
+    }
+
+    _existsInCanceledPlayers(playerId) {
+        let player = this.canceledPlayers.find((p) => { return p === playerId });
+        return player !== undefined;
     }
 
     static INVALID_DATE() {

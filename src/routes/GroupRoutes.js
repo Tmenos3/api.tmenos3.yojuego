@@ -15,11 +15,10 @@ class GroupRoutes extends Routes {
     constructor(esClient) {
         super();
 
-        this._addPlayer = this._addPlayer.bind(this);
+        this._addPlayers = this._addPlayers.bind(this);
         this._removePlayer = this._removePlayer.bind(this);
         this._auditGroup = this._auditGroup.bind(this);
         this._updateGroup = this._updateGroup.bind(this);
-        this._getGroup = this._getGroup.bind(this);
         this._getAllGroups = this._getAllGroups.bind(this);
         this._createGroup = this._createGroup.bind(this);
         this._deleteGroup = this._deleteGroup.bind(this);
@@ -27,6 +26,12 @@ class GroupRoutes extends Routes {
         this._checkPlayerMember = this._checkPlayerMember.bind(this);
         this._checkPlayerFriends = this._checkPlayerFriends.bind(this);
         this._fillGroupsInfo = this._fillGroupsInfo.bind(this);
+        this._checkPlayerAdmin = this._checkPlayerAdmin.bind(this);
+        this._getGroupMiddleware = this._getGroupMiddleware.bind(this);
+        this._addMiddlewares = this._addMiddlewares.bind(this);
+        this._checkParams = this._checkParams.bind(this);
+        this._exitFromGroup = this._exitFromGroup.bind(this);
+        this._returnGroup = this._returnGroup.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(GroupRoutes.INVALID_ES_CLIENT));
@@ -39,30 +44,68 @@ class GroupRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.get('/group/:id', super._paramsIsNotNull, this._getGroup, this._checkPlayerMember, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
-        server.post('/group/:id', super._paramsIsNotNull, super._bodyIsNotNull, this._getGroup, this._checkPlayerMember, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group updated' }) });
+        this._addMiddlewares(server);
+
+        server.get('/group/:id', this._checkPlayerMember, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
+        server.post('/group/:id', super._bodyIsNotNull, this._checkPlayerMember, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group updated' }) });
         server.get('/group', this._getAllGroups, this._fillGroupsInfo, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: null }) });
         server.put('/group', super._bodyIsNotNull, this._checkPlayerFriends, this._createGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/addPlayer', super._paramsIsNotNull, this._getGroup, this._addPlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/removePlayer', super._paramsIsNotNull, this._getGroup, this._removePlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.post('/group/:id/makeAdminPlayer', super._paramsIsNotNull, this._getGroup, this._makeAdminPlayer, this._auditGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.del('/group/:id', super._paramsIsNotNull, this._getGroup, this._deleteGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/players', this._checkPlayerAdmin, this._addPlayers, this._updateGroup, this._returnGroup);
+        server.del('/group/:id/player/:playerId', this._removePlayer, this._updateGroup, this._returnGroup);
+        server.post('/group/:id/makeadmin', this._makeAdminPlayer, this._updateGroup, this._returnGroup);
+        server.del('/group/:id', this._checkPlayerAdmin, this._deleteGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.post('/group/:id/exit', this._checkPlayerMember, this._exitFromGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
     }
 
-    _getGroup(req, res, next) {
-        repoGroup.get(req.params.id)
-            .then((groupResp) => {
-                if (!groupResp.resp) {
-                    res.json(404, { code: 404, message: 'Grupo inexistente', resp: null });
-                } else {
-                    req.group = groupResp.resp;
+    _addMiddlewares(server) {
+        server.use(this._checkParams());
+        server.use(this._getGroupMiddleware());
+    }
+
+    _checkParams() {
+        return (req, res, next) => {
+            if ((req.url.split('/')[1]) !== 'group')
+                next();
+            else {
+                if (!(req.url.split('/')[2]))
                     next();
-                }
-            }, (cause) => {
-                res.json(404, { code: 404, message: cause, resp: null });
-            })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
+                else
+                    super._paramsIsNotNull(req, res, next);
+            }
+        }
+    }
+
+    _getGroupMiddleware() {
+        return (req, res, next) => {
+            if ((req.url.split('/')[1]) !== 'group')
+                next();
+            else {
+                if (!(req.url.split('/')[2]))
+                    next();
+                else
+                    repoGroup.get(req.params.id)
+                        .then((groupResp) => {
+                            if (!groupResp.resp) {
+                                res.json(404, { code: 404, message: 'Grupo inexistente', resp: null });
+                            } else {
+                                req.group = groupResp.resp;
+                                next();
+                            }
+                        }, (cause) => {
+                            res.json(404, { code: 404, message: cause, resp: null });
+                        })
+                        .catch((err) => {
+                            res.json(500, { code: 500, message: err, resp: null });
+                        });
+            }
+        }
+    }
+
+    _returnGroup(req, res, next) {
+        this._fillGroupInfo(req.group)
+            .then((group) => {
+                group.groupAudit = undefined;
+                res.json(200, { code: 200, resp: group, message: null })
             });
     }
 
@@ -110,9 +153,9 @@ class GroupRoutes extends Routes {
             });
     }
 
-    _addPlayer(req, res, next) {
+    _addPlayers(req, res, next) {
         try {
-            req.group.addPlayer(req.player._id, req.body.playerId);
+            req.body.players.forEach((p) => { req.group.addPlayer(req.player._id, p); });
             next();
         } catch (error) {
             res.json(404, { code: 404, message: error, resp: null });
@@ -121,7 +164,7 @@ class GroupRoutes extends Routes {
 
     _removePlayer(req, res, next) {
         try {
-            req.group.removePlayer(req.player._id, req.body.playerId);
+            req.group.removePlayer(req.player._id, req.params.playerId);
             next();
         } catch (error) {
             res.json(404, { code: 404, message: error, resp: null });
@@ -138,8 +181,7 @@ class GroupRoutes extends Routes {
     }
 
     _deleteGroup(req, res, next) {
-        let group = req.group;
-        repoGroup.delete(group)
+        repoGroup.delete(req.group)
             .then((resp) => {
                 next();
             }, (cause) => {
@@ -186,6 +228,13 @@ class GroupRoutes extends Routes {
             res.json(400, { code: 400, message: 'El player no es miembro del group.', resp: null });
     }
 
+    _checkPlayerAdmin(req, res, next) {
+        if (req.group.isAdmin(req.player._id))
+            next();
+        else
+            res.json(400, { code: 400, message: 'El player no es admin.', resp: null });
+    }
+
     _checkPlayerFriends(req, res, next) {
         repoFriendship.getByPlayerId(req.player._id)
             .then((resp) => {
@@ -209,8 +258,8 @@ class GroupRoutes extends Routes {
     }
 
     _updateGroup(req, res, next) {
-        req.group.description = req.body.description;
-        req.group.photo = req.body.photo;
+        req.group.description = req.body.description || req.group.description;
+        req.group.photo = req.body.photo || req.group.photo;
         req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
         req.group.groupAudit.modifiedOn = new Date();
         req.group.groupAudit.modifiedFrom = req.body.platform;
@@ -233,7 +282,7 @@ class GroupRoutes extends Routes {
     _auditGroup(req, res, next) {
         req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
         req.group.groupAudit.modifiedOn = new Date();
-        req.group.groupAudit.modifiedFrom = req.body.platform;
+        req.group.groupAudit.modifiedFrom = 'MOBILE_APP';
 
         repoGroup.update(req.group)
             .then((resp) => {
@@ -250,7 +299,12 @@ class GroupRoutes extends Routes {
     _fillGroupsInfo(req, res, next) {
         let promises = [];
         for (let i = 0; i < req.groups.length; i++) {
-            promises.push(this._fillGroupInfo(req.groups[i]));
+            promises.push(this._fillGroupInfo(req.groups[i])
+                .then((group) => {
+                    group.groupAudit = undefined;
+                    return group;
+                })
+            );
         }
 
         Promise.all(promises)
@@ -260,12 +314,40 @@ class GroupRoutes extends Routes {
             });
     }
 
+    _exitFromGroup(req, res, next) {
+        req.group.removePlayer(req.player._id);
+
+        req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
+        req.group.groupAudit.modifiedOn = new Date();
+        req.group.groupAudit.modifiedFrom = 'MOBILE_APP';
+
+        repoGroup.update(req.group)
+            .then((resp) => {
+                return repoGroup.get(resp.resp._id);
+            })
+            .then((resp) => {
+                req.group = resp.resp;
+                next();
+            }, (cause) => {
+                res.json(404, { code: 404, message: cause, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
+    }
+
     _fillGroupInfo(group) {
         return new Promise((resolve, reject) => {
             let promises = [];
 
             group.players.forEach((p) => {
-                promises.push(repoPlayer.get(p).then((resp) => { return resp.resp; }));
+
+                promises.push(
+                    repoPlayer.get(p)
+                        .then((resp) => {
+                            return resp.resp;
+                        })
+                );
             });
 
             Promise.all(promises)

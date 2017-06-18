@@ -77,14 +77,18 @@ class MatchInvitationESRepository extends ESRepository {
         //TEST: return a matchInvitation
         let body = this._getBulkBody(matchInvitationList);
         return new Promise((resolve, reject) => {
-            this.esclient.bulk({ body: body }, (err, resp) => {
-                if (err) {
-                    reject({ code: error.status, message: error.message, resp: error });
-                }
-                else {
-                    resolve({ code: 200, message: null, resp: resp });
-                }
-            });
+            if (!matchInvitationList || !matchInvitationList.length)
+                return resolve({ code: 400, message: 'Invitation list is empty', resp: null });
+            else {
+                this.esclient.bulk({ body: body }, (err, resp) => {
+                    if (err) {
+                        reject({ code: err.status, message: err.message, resp: err });
+                    }
+                    else {
+                        resolve({ code: 200, message: null, resp: resp });
+                    }
+                });
+            }
         });
     }
 
@@ -131,10 +135,10 @@ class MatchInvitationESRepository extends ESRepository {
         let ret = [];
 
         for (let i = 0; i < array.length; i++) {
-            ret.push({'index': { '_index': 'yojuego', '_type': 'matchInvitation' }});
+            ret.push({ 'index': { '_index': 'yojuego', '_type': 'matchInvitation' } });
             ret.push(array[i]);
         }
-        
+
         return ret;
     }
 

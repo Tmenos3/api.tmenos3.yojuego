@@ -1,7 +1,7 @@
 //This should be configured individually for each environment
 process.env.NODE_ENV = 'dev';
 
-let databaseBootstrap = require('./src/services/databaseBootstrap/index');
+let database = require('./src/services/database/index');
 let loginAdmin = require('./src/services/loginAdmin/index');
 let restify = require('restify');
 let configureServer = require('./src/configureServer');
@@ -12,5 +12,5 @@ let esClient = new es.Client({
     log: 'info'
 });
 
-databaseBootstrap(restify, config, esClient)
+database(restify, config, esClient)
 loginAdmin(restify, config, esClient)

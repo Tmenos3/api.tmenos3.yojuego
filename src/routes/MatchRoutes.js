@@ -30,13 +30,20 @@ class MatchRoutes extends Routes {
         this._getMatch = this._getMatch.bind(this);
         this._removePlayer = this._removePlayer.bind(this);
         this._confirmPlayer = this._confirmPlayer.bind(this);
+        this._saveMatch = this._saveMatch.bind(this);
         this._updateMatch = this._updateMatch.bind(this);
         this._populatePendingPlayers = this._populatePendingPlayers.bind(this);
         this._populateConfirmedPlayers = this._populateConfirmedPlayers.bind(this);
+        this._populateCanceledPlayers = this._populateCanceledPlayers.bind(this);
         this._fetchMatchesDetailConfirmedPlayers = this._fetchMatchesDetailConfirmedPlayers.bind(this);
+        this._fetchMatchesDetailCanceledPlayers = this._fetchMatchesDetailCanceledPlayers.bind(this);
         this._fetchPlayersDetail = this._fetchPlayersDetail.bind(this);
         this._sendPushNotifications = this._sendPushNotifications.bind(this);
         this._getDevices = this._getDevices.bind(this);
+        this._returnMatch = this._returnMatch.bind(this);
+        this._fillMatchInfo = this._fillMatchInfo.bind(this);
+        this._exitPlayer = this._exitPlayer.bind(this);
+        this._cancelMatch = this._cancelMatch.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(MatchRoutes.INVALID_ES_CLIENT));
@@ -51,10 +58,67 @@ class MatchRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
-        server.put('/match', super._bodyIsNotNull, this._createMatch, this._sendNotifications, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Match created' }) });
-        server.post('/match/rejectPlayer', super._bodyIsNotNull, this._getMatch, this._removePlayer, this._updateMatch, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Player Removed' }) });
-        server.post('/match/confirmPlayer', super._bodyIsNotNull, this._getMatch, this._confirmPlayer, this._updateMatch, (req, res, next) => { res.json(200, { code: 200, resp: req.match, message: 'Player Confirmed' }) });
-        server.get('/match/upcoming', this._searchByUpcoming, this._populateConfirmedPlayers, this._populatePendingPlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
+        server.put('/match', super._bodyIsNotNull, this._createMatch, this._sendNotifications, this._returnMatch);
+        server.post('/match/:id', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._updateMatch, this._saveMatch, this._returnMatch);
+        server.post('/match/:id/exit', super._paramsIsNotNull, this._getMatch, this._exitPlayer, this._saveMatch, this._returnMatch);
+        server.post('/match/:id/cancel', super._paramsIsNotNull, this._getMatch, this._cancelMatch, this._saveMatch, this._returnMatch);
+        server.post('/match/:id/rejectPlayer', super._paramsIsNotNull, this._getMatch, this._removePlayer, this._saveMatch, this._returnMatch);
+        server.post('/match/:id/confirmPlayer', super._paramsIsNotNull, this._getMatch, this._confirmPlayer, this._saveMatch, this._returnMatch);
+        server.get('/match/upcoming', this._searchByUpcoming, this._populateCanceledPlayers, this._populateConfirmedPlayers, this._populatePendingPlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
+    }
+
+    _returnMatch(req, res, next) {
+        this._fillMatchInfo(req.match)
+            .then((match) => {
+                match.matchAudit = undefined;
+                res.json(200, { code: 200, resp: match, message: null })
+            });
+    }
+
+    _fillMatchInfo(match) {
+        return new Promise((resolve, reject) => {
+            let promises = [];
+
+            match.confirmedPlayers.forEach((p) => {
+                promises.push(
+                    repoPlayer.get(p)
+                        .then((resp) => {
+                            return resp.resp;
+                        })
+                );
+            });
+            match.pendingPlayers.forEach((p) => {
+                promises.push(
+                    repoPlayer.get(p)
+                        .then((resp) => {
+                            return resp.resp;
+                        })
+                );
+            });
+            match.canceledPlayers.forEach((p) => {
+                promises.push(
+                    repoPlayer.get(p)
+                        .then((resp) => {
+                            return resp.resp;
+                        })
+                );
+            });
+
+            Promise.all(promises)
+                .then((allPlayers) => {
+                    for (let i = 0; i < match.confirmedPlayers.length; i++) {
+                        let fullPlayer = allPlayers.find((p) => { return p._id === match.confirmedPlayers[i] });
+                        match.confirmedPlayers[i] = fullPlayer;
+                    }
+
+                    for (let i = 0; i < match.pendingPlayers.length; i++) {
+                        let fullPlayer = allPlayers.find((p) => { return p._id === match.pendingPlayers[i] });
+                        match.pendingPlayers[i] = fullPlayer;
+                    }
+
+                    resolve(match);
+                });
+        });
     }
 
     _createMatch(req, res, next) {
@@ -100,20 +164,24 @@ class MatchRoutes extends Routes {
 
     _sendNotifications(req, res, next) {
         let notifications = this._getMatchInvitations(req.match.pendingPlayers, req.match._id, req.player._id, req.body.platform || 'MOBILE_APP');
-        repoMatchInvitation.addBulk(notifications)
-            .then((resp) => {
-                this._sendPushNotifications(notifications);
-                next();
-            }, (cause) => {
-                res.json(404, { code: 404, message: cause.message, resp: null });
-            })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err.message, resp: null });
-            });
+        if (!notifications.length)
+            next();
+        else {
+            repoMatchInvitation.addBulk(notifications)
+                .then((resp) => {
+                    this._sendPushNotifications(notifications);
+                    next();
+                }, (cause) => {
+                    res.json(404, { code: 404, message: cause.message, resp: null });
+                })
+                .catch((err) => {
+                    res.json(500, { code: 500, message: err.message, resp: null });
+                });
+        }
     }
 
     _getMatch(req, res, next) {
-        repoMatch.get(req.body.matchId)
+        repoMatch.get(req.params.id)
             .then((resp) => {
                 if (resp.code === 404)
                     res.json(404, { code: 404, message: 'Match does not exist.', resp: null });
@@ -134,20 +202,27 @@ class MatchRoutes extends Routes {
         next();
     }
 
+    _exitPlayer(req, res, next) {
+        req.match.removeConfirmedPlayer(req.player._id);
+        req.match.removeInvitedPlayer(req.player._id);
+        req.match.addCanceledPlayers(req.player._id);
+        next();
+    }
+
+    _cancelMatch(req, res, next) {
+        req.match.cancel();
+        next();
+    }
+
     _confirmPlayer(req, res, next) {
         req.match.addConfirmPlayer(req.player._id);
         next();
     }
 
-    _updateMatch(req, res, next) {
-        req.match.matchAudit = {
-            createdBy: req.match.createdBy,
-            createdOn: req.match.createdOn,
-            createdFrom: req.match.createdFrom,
-            modifiedBy: req.player._id,
-            modifiedOn: new Date(),
-            modifiedFrom: req.body.platform || 'MOBILE_APP'
-        }
+    _saveMatch(req, res, next) {
+        req.match.matchAudit.modifiedBy = req.player._id;
+        req.match.matchAudit.modifiedOn = new Date();
+        req.match.matchAudit.modifiedFrom = 'MOBILE_APP';
 
         repoMatch.update(req.match)
             .then((resp) => {
@@ -158,6 +233,27 @@ class MatchRoutes extends Routes {
             .catch((error) => {
                 res.json(500, { code: 500, message: error.message, resp: error });
             })
+    }
+
+    _updateMatch(req, res, next) {
+        let errorMessages = [];
+        if (!req.body.title) errorMessages.push('Title required.');
+        if (!req.body.date) errorMessages.push('Date required.');
+        if (!req.body.fromTime) errorMessages.push('From time required.');
+        if (!req.body.toTime) errorMessages.push('To time required.');
+        if (!req.body.matchType) errorMessages.push('Match type required.');
+
+        if (errorMessages.length)
+            res.json(400, { code: 400, message: 'There are some invalid fields.', resp: errorMessages });
+        else {
+            req.match.title = req.body.title;
+            req.match.date = new Date(req.body.date);
+            req.match.fromTime = req.body.fromTime;
+            req.match.toTime = req.body.toTime;
+            req.match.matchType = parseInt(req.body.matchType);
+
+            next();
+        }
     }
 
     _getArrayFromString(stringList) {
@@ -211,6 +307,19 @@ class MatchRoutes extends Routes {
             });
     }
 
+    _populateCanceledPlayers(req, res, next) {
+        this._fetchMatchesDetailCanceledPlayers(req.matches, 0)
+            .then((ret) => {
+                req.matches = ret;
+                next();
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: 500, message: error, resp: null });
+            });
+    }
+
     _fetchMatchesDetailConfirmedPlayers(arr, pos) {
         return new Promise((resolve, reject) => {
             if (arr.length == pos)
@@ -235,6 +344,21 @@ class MatchRoutes extends Routes {
                     .then((retPlayers) => {
                         arr[pos].pendingPlayers = retPlayers;
                         return this._fetchMatchesDetailPendingPlayers(arr, ++pos)
+                            .then((retMatch) => resolve(retMatch))
+                    });
+            }
+        });
+    }
+
+    _fetchMatchesDetailCanceledPlayers(arr, pos) {
+        return new Promise((resolve, reject) => {
+            if (arr.length == pos)
+                resolve(arr);
+            else {
+                return this._fetchPlayersDetail(arr[pos].canceledPlayers, 0)
+                    .then((retPlayers) => {
+                        arr[pos].canceledPlayers = retPlayers;
+                        return this._fetchMatchesDetailCanceledPlayers(arr, ++pos)
                             .then((retMatch) => resolve(retMatch))
                     });
             }
