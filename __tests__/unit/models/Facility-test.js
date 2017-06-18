@@ -1,14 +1,20 @@
-import Facility from '../../../src/models/club/Facility';
+import { Facility, Grill } from '../../../src/models/club/Facility';
 
 describe('Facilities', () => {
   it('Can create a valid Facilities', () => {
     let aName = 'unNombre';
-    let validAvailable = true;
 
-    let aFacility = new Facility(aName, validAvailable);
+    let aFacility = new Facility(aName);
     expect(aFacility).toBeDefined();
     expect(aFacility.name).toBe(aName);
-    expect(aFacility.available).toBe(validAvailable);
+  });
+
+  it('Can create a valid Facilities', () => {
+    let aName = 'unNombre';
+
+    let aFacility = new Grill();
+    expect(aFacility).toBeDefined();
+    expect(aFacility).toBeInstanceOf(Facility);
   });
 
   it('Cannot create with an undefined name', () => {
@@ -27,23 +33,5 @@ describe('Facilities', () => {
     let invalidName = '    ';
 
     expect(() => new Facility(invalidName)).toThrowError(Facility.INVALID_NAME);
-  });
-
-  it('Cannot create with an undefined available', () => {
-    let invalidAvailable;
-
-    expect(() => new Facility('name', invalidAvailable)).toThrowError(Facility.INVALID_AVAILABLE);
-  });
-
-  it('Cannot create with null available', () => {
-    let invalidAvailable = null;
-
-    expect(() => new Facility('name', invalidAvailable)).toThrowError(Facility.INVALID_AVAILABLE);
-  });
-
-  it('Cannot create with invalid available', () => {
-    let invalidAvailable = 'asdas';
-
-    expect(() => new Facility('name', invalidAvailable)).toThrowError(Facility.INVALID_AVAILABLE);
   });
 })

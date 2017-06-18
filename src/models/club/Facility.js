@@ -4,45 +4,40 @@ let HasNotBlankSpacesCondition = require('no-if-validator').HasNotBlankSpacesCon
 let CustomCondition = require('no-if-validator').CustomCondition;
 
 class Facility {
-    constructor(name, available) {
+    constructor(name) {
         let validator = new Validator();
         validator.addCondition(new HasNotBlankSpacesCondition(name).throw(new Error(Facility.INVALID_NAME)));
-        validator.addCondition(new CustomCondition(() => {
-            return available && available != null && typeof (available) === "boolean";
-        }).throw(new Error(Facility.INVALID_AVAILABLE)));
 
-         validator.execute(() => {
+        validator.execute(() => {
             this.name = name;
-            this.available = available;
         }, (err) => { throw err; });
     }
 
     static get INVALID_NAME() { return 'Invalid name'; }
-    static get INVALID_AVAILABLE() { return 'Invalid available'; }
 }
 
 class Buffet extends Facility {
-    constructor(available) {
-        super('buffet', available);
+    constructor() {
+        super('buffet');
     }
 }
 
 class MenLockers extends Facility {
-    constructor(available) {
-        super('men_lockers', available);
+    constructor() {
+        super('men_lockers');
     }
 }
 
 class WomenLockers extends Facility {
-    constructor(available) {
-        super('women_dressingRoom', available);
+    constructor() {
+        super('women_dressingRoom');
     }
 }
 
 class Grill extends Facility {
-    constructor(available) {
-        super('grill', available);
+    constructor() {
+        super('grill');
     }
 }
 
-module.exports = Facility;
+module.exports = { Facility, Buffet, MenLockers, WomenLockers, Grill };
