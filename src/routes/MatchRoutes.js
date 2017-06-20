@@ -44,6 +44,7 @@ class MatchRoutes extends Routes {
         this._fillMatchInfo = this._fillMatchInfo.bind(this);
         this._exitPlayer = this._exitPlayer.bind(this);
         this._cancelMatch = this._cancelMatch.bind(this);
+        this._invitePlayers = this._invitePlayers.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(MatchRoutes.INVALID_ES_CLIENT));
@@ -58,10 +59,16 @@ class MatchRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
+        //Send notification
         server.put('/match', super._bodyIsNotNull, this._createMatch, this._sendNotifications, this._returnMatch);
+        //Send notification
         server.post('/match/:id', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._updateMatch, this._saveMatch, this._returnMatch);
+        //Send notification in this case?
         server.post('/match/:id/exit', super._paramsIsNotNull, this._getMatch, this._exitPlayer, this._saveMatch, this._returnMatch);
+        //Send notification
         server.post('/match/:id/cancel', super._paramsIsNotNull, this._getMatch, this._cancelMatch, this._saveMatch, this._returnMatch);
+        //Send notification
+        server.post('/match/:id/invite', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._invitePlayers, this._saveMatch, this._returnMatch); 
         server.post('/match/:id/rejectPlayer', super._paramsIsNotNull, this._getMatch, this._removePlayer, this._saveMatch, this._returnMatch);
         server.post('/match/:id/confirmPlayer', super._paramsIsNotNull, this._getMatch, this._confirmPlayer, this._saveMatch, this._returnMatch);
         server.get('/match/upcoming', this._searchByUpcoming, this._populateCanceledPlayers, this._populateConfirmedPlayers, this._populatePendingPlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
@@ -124,7 +131,8 @@ class MatchRoutes extends Routes {
     _createMatch(req, res, next) {
         try {
             var match = new Match(req.body.title, new Date(req.body.date), req.body.fromTime, req.body.toTime, req.body.location, req.player._id, req.body.matchType);
-            match.pendingPlayers = req.body.pendingPlayers.concat([req.player._id]);
+            //Remove duplicates
+            match.pendingPlayers = Array.from(new Set(req.body.pendingPlayers.concat([req.player._id])));
 
             match.matchAudit = {
                 createdBy: req.player._id,
@@ -199,6 +207,13 @@ class MatchRoutes extends Routes {
 
     _removePlayer(req, res, next) {
         req.match.removeInvitedPlayer(req.player._id);
+        next();
+    }
+
+    _invitePlayers(req, res, next) {
+        req.body.players.forEach((p) => {
+            req.match.addInvitedPlayer(p);
+        });
         next();
     }
 
@@ -383,30 +398,30 @@ class MatchRoutes extends Routes {
     }
 
     _sendPushNotifications(notifications) {
-        if (notifications.length) {
-            let players = [];
-            for (let i = 0; i < notifications.length; i++) {
-                players.push(notifications[i].playerId);
-            }
+        // if (notifications.length) {
+        //     let players = [];
+        //     for (let i = 0; i < notifications.length; i++) {
+        //         players.push(notifications[i].playerId);
+        //     }
 
-            try {
-                this._fetchPlayersDetail(players, 0)
-                    .then((retPlayers) => {
-                        let users = [];
-                        for (let i = 0; i < retPlayers.length; i++) {
-                            users.push(retPlayers[i].userid);
-                        }
+        //     try {
+        //         this._fetchPlayersDetail(players, 0)
+        //             .then((retPlayers) => {
+        //                 let users = [];
+        //                 for (let i = 0; i < retPlayers.length; i++) {
+        //                     users.push(retPlayers[i].userid);
+        //                 }
 
-                        return this._getDevices(users, 0)
-                            .then((devices) => {
-                                let pushNotification = new PushNotification(PushNotificationType.INVITED_TO_MATCH, notifications[0].matchId);
-                                notificationService.push(devices, pushNotification);
-                            });
-                    });
-            } catch (error) {
+        //                 return this._getDevices(users, 0)
+        //                     .then((devices) => {
+        //                         let pushNotification = new PushNotification(PushNotificationType.INVITED_TO_MATCH, notifications[0].matchId);
+        //                         notificationService.push(devices, pushNotification);
+        //                     });
+        //             });
+        //     } catch (error) {
 
-            }
-        }
+        //     }
+        // }
     }
 
     _getDevices(arr, pos) {
