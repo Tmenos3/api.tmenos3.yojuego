@@ -68,8 +68,9 @@ class MatchRoutes extends Routes {
         //Send notification
         server.post('/match/:id/cancel', super._paramsIsNotNull, this._getMatch, this._cancelMatch, this._saveMatch, this._returnMatch);
         //Send notification
-        server.post('/match/:id/invite', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._invitePlayers, this._saveMatch, this._returnMatch); 
-        server.post('/match/:id/rejectPlayer', super._paramsIsNotNull, this._getMatch, this._removePlayer, this._saveMatch, this._returnMatch);
+        server.post('/match/:id/invite', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._invitePlayers, this._saveMatch, this._returnMatch);
+        server.del('/match/:id/player/:playerId', super._paramsIsNotNull, this._getMatch, this._removePlayer, this._saveMatch, this._returnMatch);
+        // server.post('/match/:id/rejectPlayer', super._paramsIsNotNull, this._getMatch, this._removePlayer, this._saveMatch, this._returnMatch);
         server.post('/match/:id/confirmPlayer', super._paramsIsNotNull, this._getMatch, this._confirmPlayer, this._saveMatch, this._returnMatch);
         server.get('/match/upcoming', this._searchByUpcoming, this._populateCanceledPlayers, this._populateConfirmedPlayers, this._populatePendingPlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
     }
@@ -206,7 +207,8 @@ class MatchRoutes extends Routes {
     }
 
     _removePlayer(req, res, next) {
-        req.match.removeInvitedPlayer(req.player._id);
+        req.match.removeInvitedPlayer(req.params.playerId);
+        req.match.removeConfirmedPlayer(req.params.playerId);
         next();
     }
 
