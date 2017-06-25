@@ -26,10 +26,15 @@ class GroupESRepository extends ESRepository {
             .then((objRet) => {
                 let groups = [];
 
-                for (let i = 0; i < objRet.resp.length; i++) {
-                    let group = this._mapGroup(objRet.resp[i]._id, objRet.resp[i]._source);
-                    groups.push(group);
-                }
+                groups = objRet.resp.map(g => {
+                    return this._mapGroup(g._id, g._source);
+                    //groups.push(group);
+                });
+
+                // for (let i = 0; i < objRet.resp.length; i++) {
+                //     let group = this._mapGroup(objRet.resp[i]._id, objRet.resp[i]._source);
+                //     groups.push(group);
+                // }
 
                 return { code: 200, message: null, resp: groups };
             }, (error) => { return Promise.reject(error); });
@@ -50,6 +55,7 @@ class GroupESRepository extends ESRepository {
                 admins: group.admins,
                 description: group.description,
                 photo: group.photo,
+                messages: group.messages,
                 groupAudit: group.groupAudit
             };
             return super.update(group._id, document, 'yojuego', 'group');
@@ -70,6 +76,7 @@ class GroupESRepository extends ESRepository {
         let group = new Group(source.players, source.admins, source.description, source.photo);
         group._id = id;
         group.groupAudit = source.groupAudit
+        group.messages = source.messages;
 
         return group;
     }

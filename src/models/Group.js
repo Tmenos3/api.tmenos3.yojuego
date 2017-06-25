@@ -1,6 +1,5 @@
 let Validator = require('no-if-validator').Validator;
-// let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-// let EqualCondition = require('no-if-validator').EqualCondition;
+let Message = require('./Message');
 
 class Group {
     constructor(players, admins, description, photo) {
@@ -10,16 +9,21 @@ class Group {
         this.makeAdmin = this.makeAdmin.bind(this);
         this.removePlayer = this.removePlayer.bind(this);
         this.isAdmin = this.isAdmin.bind(this);
+        this.addMessage = this.addMessage.bind(this);
+        this.updateMessage = this.updateMessage.bind(this);
+        this.removeMessage = this.removeMessage.bind(this);
         this._removePlayer = this._removePlayer.bind(this);
         this._removeAdmin = this._removeAdmin.bind(this);
         this._existsInPlayers = this._existsInPlayers.bind(this);
         this._existsInAdmins = this._existsInAdmins.bind(this);
+        this._getNewMessageId = this._getNewMessageId.bind(this);
 
         validator.execute(() => {
             this.players = players;
             this.admins = admins;
             this.description = description;
             this.photo = photo;
+            this.messages = [];
         }, (err) => { throw err; });
     }
 
@@ -55,6 +59,40 @@ class Group {
 
     isMember(playerId) {
         return this._existsInAdmins(playerId) || this._existsInPlayers(playerId);
+    }
+
+    addMessage(owner, text, writtenOn) {
+        this.messages.push(new Message(this._getNewMessageId(), owner, text, writtenOn));
+    }
+
+    updateMessage(id, newText) {
+        let i = this.messages.findIndex((c) => { return c.id === id });
+        if (i > -1) {
+            let messageToUpdate = this.messages[i];
+            messageToUpdate.text = newText;
+
+            this.removeComment(messageToUpdate.id, i);
+            this.messages.push(messageToUpdate);
+        }
+    }
+
+    removeMessage(id, index) {
+        let i = index || this.messages.findIndex((c) => { return c.id === id });
+
+        if (i > -1)
+            this.messages.splice(i, 1);
+    }
+
+    _getNewMessageId() {
+        let newId = 0;
+
+        for (let i = 0; i < this.messages.length; i++) {
+            if (this.messages[i].id > newId) {
+                newId = this.messages[i].id;
+            }
+        }
+
+        return newId + 1;
     }
 
     _removePlayer(playerId) {

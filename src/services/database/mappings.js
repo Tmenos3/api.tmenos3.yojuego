@@ -116,6 +116,14 @@ let group = {
             photo: { type: "string" },
             players: { type: "string", index: "not_analyzed" },
             admins: { type: "string", index: "not_analyzed" },
+            comments: {
+                properties: {
+                    id: { type: "integer" },
+                    owner: { type: "string" },
+                    text: { type: "string" },
+                    writtenOn: { type: "date" }
+                }
+            },
             groupAudit: {
                 properties: {
                     createdBy: { type: "string", index: "not_analyzed" },
