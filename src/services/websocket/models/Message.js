@@ -1,7 +1,6 @@
 class Message {
-  constructor(type, id, data) {
-    this.type = type;
-    this.id = id;
+  constructor(ids, data) {
+    this.ids = ids;
     this.data = data;
   }
 }

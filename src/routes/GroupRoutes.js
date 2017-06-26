@@ -34,6 +34,7 @@ class GroupRoutes extends Routes {
         this._exitFromGroup = this._exitFromGroup.bind(this);
         this._returnGroup = this._returnGroup.bind(this);
         this._sendMessage = this._sendMessage.bind(this);
+        this._getUserIds = this._getUserIds.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(GroupRoutes.INVALID_ES_CLIENT));
@@ -57,7 +58,10 @@ class GroupRoutes extends Routes {
         server.post('/group/:id/makeadmin', this._makeAdminPlayer, this._updateGroup, this._returnGroup);
         server.del('/group/:id', this._checkPlayerAdmin, this._deleteGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
         server.post('/group/:id/exit', this._checkPlayerMember, this._exitFromGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
-        server.put('/group/:id/message', this._paramsIsNotNull, super._bodyIsNotNull, this._checkPlayerMember, this._sendMessage, this._returnGroup);
+        server.put('/group/:id/message', this._paramsIsNotNull, super._bodyIsNotNull, this._checkPlayerMember, this._sendMessage,
+            (req, res, next) => {
+                res.json(200, { code: 200, resp: req.messageSent, message: 'Message sent.' })
+            });
     }
 
     _addMiddlewares(server) {
@@ -340,10 +344,14 @@ class GroupRoutes extends Routes {
     }
 
     _sendMessage(req, res, next) {
-        req.group.addMessage(req.player._id, req.body.message, new Date());
+        req.messageSent = req.group.addMessage(req.player._id, req.body.message, new Date());
         repoGroup.update(req.group)
             .then((resp) => {
-                this._sendMessageToWebsocket(req.token, req.params.id, req.body.message);
+                let ids = req.group.players.map(p => { return p; });
+                return this._getUserIds(ids);
+            })
+            .then(userIds => {
+                this._sendMessageToWebsocket(userIds, req.params.id, req.messageSent);
                 next();
             }, (cause) => {
                 res.json(404, { code: 404, message: cause, resp: null });
@@ -392,11 +400,19 @@ class GroupRoutes extends Routes {
         return false;
     }
 
-    _sendMessageToWebsocket(token, groupId, message) {
+    _sendMessageToWebsocket(ids, groupId, message) {
+        let body = {
+            ids,
+            data: {
+                groupId,
+                message,
+                type: 'GROUP'
+            }
+        }
         fetch({
-            url: 'http://localhost:8092/websocket/message/' + token + '/group/' + groupId,
+            url: 'http://localhost:8092/websocket/message',
             method: 'PUT',
-            json: { message }
+            json: body
         },
             (err, res, data) => {
                 if (err) {
@@ -408,6 +424,26 @@ class GroupRoutes extends Routes {
                     console.log(data.html_url);
                 }
             });
+    }
+
+    _getUserIds(playerIds) {
+        return new Promise((resolve, reject) => {
+            let promises = [];
+
+            playerIds.forEach((p) => {
+                promises.push(
+                    repoPlayer.get(p)
+                        .then((resp) => {
+                            return resp.resp.userid;
+                        })
+                );
+            });
+
+            Promise.all(promises)
+                .then((allUserIds) => {
+                    resolve(allUserIds);
+                });
+        });
     }
 
     static get INVALID_ES_CLIENT() {

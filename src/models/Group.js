@@ -62,7 +62,9 @@ class Group {
     }
 
     addMessage(owner, text, writtenOn) {
-        this.messages.push(new Message(this._getNewMessageId(), owner, text, writtenOn));
+        let msg = new Message(this._getNewMessageId(), owner, text, writtenOn);
+        this.messages.push(msg);
+        return msg;
     }
 
     updateMessage(id, newText) {

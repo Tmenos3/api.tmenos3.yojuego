@@ -1,7 +1,7 @@
 class Client {
-  constructor(connection, params) {
+  constructor(connection, id) {
     this._connection = connection;
-    this.params = params;
+    this.id = id;
   }
 
   isConnected() {

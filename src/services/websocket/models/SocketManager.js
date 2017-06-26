@@ -15,20 +15,22 @@ class SocketManager {
     let pos = []
     this._clients.forEach((c) => {
       if (c.isClosed())
-        pos.push(i)
+        pos.push(c)
     });
 
     if (pos.length) {
-      p.forEach((p) => {
+      pos.forEach((p) => {
         this._clients.splice(p, 1)
       });
     }
   }
 
   broadcastMessage(message) {
-    this._clients
-      .filter(c => { return c.isConnected() && c.type === message.type && c.id === message.id })
-      .forEach(c => { c.sendMessage(message.data); });
+    message.ids.forEach(i => {
+      this._clients
+        .filter(c => { return c.isConnected() && c.id === i })
+        .forEach(c => { c.sendMessage(message.data); });
+    });
   }
 }
 
