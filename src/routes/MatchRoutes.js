@@ -2,6 +2,7 @@ let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 let Routes = require('./Routes');
 let Match = require('../models/Match');
+let fetch = require('request');
 let PushNotification = require('../models/PushNotification');
 let PushNotificationType = require('../constants/PushNotificationType');
 let MatchInvitation = require('../NotificationService/models/MatchInvitation');
@@ -45,6 +46,9 @@ class MatchRoutes extends Routes {
         this._exitPlayer = this._exitPlayer.bind(this);
         this._cancelMatch = this._cancelMatch.bind(this);
         this._invitePlayers = this._invitePlayers.bind(this);
+        this._getUserIds = this._getUserIds.bind(this);
+        this._sendComment = this._sendComment.bind(this);
+        this._sendMessageToWebsocket = this._sendMessageToWebsocket.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(MatchRoutes.INVALID_ES_CLIENT));
@@ -72,6 +76,10 @@ class MatchRoutes extends Routes {
         server.del('/match/:id/player/:playerId', super._paramsIsNotNull, this._getMatch, this._removePlayer, this._saveMatch, this._returnMatch);
         // server.post('/match/:id/rejectPlayer', super._paramsIsNotNull, this._getMatch, this._removePlayer, this._saveMatch, this._returnMatch);
         server.post('/match/:id/confirmPlayer', super._paramsIsNotNull, this._getMatch, this._confirmPlayer, this._saveMatch, this._returnMatch);
+        server.put('/match/:id/comment', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._sendComment,
+            (req, res, next) => {
+                res.json(200, { code: 200, resp: req.commentSent, message: 'Comment sent.' })
+            });
         server.get('/match/upcoming', this._searchByUpcoming, this._populateCanceledPlayers, this._populateConfirmedPlayers, this._populatePendingPlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
     }
 
@@ -334,6 +342,70 @@ class MatchRoutes extends Routes {
             })
             .catch((error) => {
                 res.json(500, { code: 500, message: error, resp: null });
+            });
+    }
+
+    _sendComment(req, res, next) {
+        req.commentSent = req.match.addComment(req.player._id, req.body.comment, new Date());
+        repoMatch.update(req.match)
+            .then((resp) => {
+                let ids = req.match.pendingPlayers.concat(req.match.confirmedPlayers).map(p => { return p; });
+                return this._getUserIds(ids);
+            })
+            .then(userIds => {
+                this._sendMessageToWebsocket(userIds, req.params.id, req.commentSent);
+                next();
+            }, (cause) => {
+                res.json(404, { code: 404, message: cause, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
+    }
+
+    _getUserIds(playerIds) {
+        return new Promise((resolve, reject) => {
+            let promises = [];
+
+            playerIds.forEach((p) => {
+                promises.push(
+                    repoPlayer.get(p)
+                        .then((resp) => {
+                            return resp.resp.userid;
+                        })
+                );
+            });
+
+            Promise.all(promises)
+                .then((allUserIds) => {
+                    resolve(allUserIds);
+                });
+        });
+    }
+
+    _sendMessageToWebsocket(ids, matchId, comment) {
+        let body = {
+            ids,
+            data: {
+                matchId,
+                comment,
+                type: 'MATCH'
+            }
+        }
+        fetch({
+            url: 'http://localhost:8092/websocket/message',
+            method: 'PUT',
+            json: body
+        },
+            (err, res, data) => {
+                if (err) {
+                    console.log('Error:', err);
+                } else if (res.statusCode !== 200) {
+                    console.log('Status:', res.statusCode);
+                } else {
+                    // data is already parsed as JSON:
+                    console.log(data.html_url);
+                }
             });
     }
 

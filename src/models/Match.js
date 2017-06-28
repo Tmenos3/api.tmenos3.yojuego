@@ -76,7 +76,9 @@ class Match {
     }
 
     addComment(owner, text, writtenOn) {
-        this.comments.push(new MatchComment(this._getNewCommentId(), owner, text, writtenOn));
+        let comment = new MatchComment(this._getNewCommentId(), owner, text, writtenOn);
+        this.comments.push(comment);
+        return comment;
     }
 
     updateComment(id, newText) {
