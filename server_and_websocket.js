@@ -10,6 +10,7 @@ let client = new es.Client({
     log: 'info'
 });
 let websocket = require('./src/services/websocket/index');
+let notifications = require('./src/services/notifications/index');
 
 let server = restify.createServer();
 
@@ -20,3 +21,4 @@ server.listen(config.serverConfig.port, function () {
 });
 
 websocket(restify, config, client);
+notifications(restify, config, client);

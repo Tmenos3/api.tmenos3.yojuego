@@ -1,7 +1,7 @@
-var configureServer = require('./configureServer');
+let configureServer = require('./configureServer');
 
 module.exports = (restify, config, esClient) => {
-  var server = restify.createServer({ name: "database" });
+  let server = restify.createServer({ name: "database" });
 
   configureServer(server, restify, esClient, config);
 

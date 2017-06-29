@@ -1,4 +1,5 @@
 let addRoutes = require('./addRoutes');
+let verifyClaims = require('./middlewares').verifyClaims;
 
 module.exports = configureServer = (server, restify, esClient, config, socketManager) => {
     server.use(restify.bodyParser());
@@ -10,6 +11,6 @@ module.exports = configureServer = (server, restify, esClient, config, socketMan
 
         next()
     })
-
+    server.use(verifyClaims());
     addRoutes(server, config, socketManager);
 }
