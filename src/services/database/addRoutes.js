@@ -29,7 +29,6 @@ module.exports = (server, esClient) => {
     checkIndexName,
     (req, res, next) => {
       createIndex(esClient, req.params.index)
-        .then((resp) => { return createMappings(esClient, req.params.index) })
         .then((resp) => { res.json(200, { resp }) })
         .catch((error) => res.json(500, { error }));
     });
