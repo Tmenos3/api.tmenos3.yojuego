@@ -14,4 +14,4 @@ let esClient = new es.Client({
 
 database(restify, config, esClient)
 loginAdmin(restify, config, esClient)
-notifications(restify, config)
+notifications(restify, config, esClient)

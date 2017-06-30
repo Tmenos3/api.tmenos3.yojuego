@@ -1,5 +1,5 @@
 let createMappings = require('../mappings/yojuego');
-let createIndex = require('../mappings/createIndex');
+let createIndex = require('./createIndex');
 
 module.exports = (esClient) => {
   return createIndex(esClient, 'yojuego')

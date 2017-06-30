@@ -1,7 +1,6 @@
 let createIndex = require('./createIndex');
 let deleteIndex = require('./deleteIndex');
 let bootstrapIndex = require('./bootstrapIndex');
-let createMappings = require('./createMappings');
 
 let checkIndexName = (req, res, next) => {
   if (!req.params.index) res.json(400, { error: 'invalid index name.' })
