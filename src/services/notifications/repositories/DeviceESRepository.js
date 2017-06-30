@@ -1,4 +1,4 @@
-let ESRepository = require('./ESRepository');
+let ESRepository = require('../../common/repository/ESRepository');
 let Device = require('../models/Device');
 
 class DeviceESRepository extends ESRepository {
@@ -21,10 +21,10 @@ class DeviceESRepository extends ESRepository {
             }, (error) => { return Promise.reject(error); });
     }
 
-    getByUserId(userId) {
+    getByUserId(userid) {
         //TEST: not null, not undefined
         //TEST: instance of string both
-        return super.getBy(this._getQueryByUserId(userId), 'notifications', 'device')
+        return super.getBy(this._getQueryByUserId(userid), 'notifications', 'device')
             .then((objRet) => {
                 let devices = [];
 
@@ -37,15 +37,31 @@ class DeviceESRepository extends ESRepository {
             }, (error) => { return Promise.reject(error); });
     }
 
-    getByDeviceId(deviceId) {
+    getByDeviceId(deviceid) {
         //TEST: not null, not undefined
         //TEST: instance of string both
-        return super.getBy(this._getQueryByDeviceId(deviceId), 'notifications', 'device')
+        return super.getBy(this._getQueryByDeviceId(deviceid), 'notifications', 'device')
             .then((objRet) => {
                 if (objRet.resp.length < 1)
                     return { code: 404, message: 'No devices were found.', resp: null };
 
                 let device = this._map(objRet.resp[0]._id, objRet.resp[0]._source);
+                return { code: 200, message: null, resp: device };
+            }, (error) => { return Promise.reject(error); });
+    }
+
+    getByDeviceIdAndType(deviceid, type) {
+        //TEST: not null, not undefined
+        //TEST: instance of string both
+        return super.getBy(this._getQueryByDeviceIdAndType(deviceid, type), 'notifications', 'device')
+            .then((objRet) => {
+                let device = null;
+
+                for (let i = 0; i < objRet.resp.length; i++) {
+                    device = this._map(objRet.resp[i]._id, objRet.resp[i]._source);
+                    break;
+                }
+
                 return { code: 200, message: null, resp: device };
             }, (error) => { return Promise.reject(error); });
     }
@@ -99,7 +115,7 @@ class DeviceESRepository extends ESRepository {
             userid: device.userid,
             deviceid: device.deviceid,
             type: device.type,
-            userAudit: {
+            deviceAudit: {
                 createdBy: device.deviceAudit.createdBy,
                 createdOn: device.deviceAudit.createdOn,
                 createdFrom: device.deviceAudit.createdFrom,
@@ -112,21 +128,32 @@ class DeviceESRepository extends ESRepository {
         return document;
     }
 
-    _getQueryByUserId(userId) {
+    _getQueryByUserId(userid) {
         return {
             "bool": {
                 "filter": [
-                    { "term": { "userid": userId } }
+                    { "term": { "userid": userid } }
                 ]
             }
         };
     }
 
-    _getQueryByDeviceId(deviceId) {
+    _getQueryByDeviceId(deviceid) {
         return {
             "bool": {
                 "filter": [
-                    { "term": { "deviceid": deviceId } }
+                    { "term": { "deviceid": deviceid } }
+                ]
+            }
+        };
+    }
+
+    _getQueryByDeviceIdAndType(deviceid, type) {
+        return {
+            "bool": {
+                "filter": [
+                    { "term": { "deviceid": deviceid } },
+                    { "term": { "type": type } }
                 ]
             }
         };
