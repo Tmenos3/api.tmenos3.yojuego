@@ -1,20 +1,20 @@
 var ESRepository = require('./ESRepository');
 var Club = require('../models/club/Club');
-var Event = require('../models/club/Event');
-var Facilities = require('../models/club/Facilities');
-var Calendar = require('../models/club/Calendar');
-var Field = require('../models/club/Field');
-var ContactInfo = require('../models/club/ContactInfo');
+// var Event = require('../models/club/Event');
+var Facility = require('../models/club/Facility');
+// var Calendar = require('../models/club/Calendar');
+// var Field = require('../models/club/Field');
+// var ContactInfo = require('../models/club/ContactInfo');
 
 class ClubESRepository extends ESRepository {
     constructor(client) {
         super(client);
 
-        this._mapCalendar = this._mapCalendar.bind(this);
-        this._mapContactInfo = this._mapContactInfo.bind(this);
-        this._mapFields = this._mapFields.bind(this);
+        // this._mapCalendar = this._mapCalendar.bind(this);
+        // this._mapContactInfo = this._mapContactInfo.bind(this);
+        // this._mapFields = this._mapFields.bind(this);
         this._mapFacilities = this._mapFacilities.bind(this);
-        this._getNewClub = this._getNewClub.bind(this);
+        // this._getNewClub = this._getNewClub.bind(this);
     }
 
     get(clubId) {
@@ -92,49 +92,57 @@ class ClubESRepository extends ESRepository {
         });
     }
 
-    _mapCalendar(calendar) {
-        let events = [];
+    // _mapCalendar(calendar) {
+    //     let events = [];
 
-        for (let i = 0; i < calendar.events.length; i++) {
-            let event = new Event(calendar.events[i].date, calendar.events[i].time, calendar.events[i].matchId)
-        }
+    //     for (let i = 0; i < calendar.events.length; i++) {
+    //         let event = new Event(calendar.events[i].date, calendar.events[i].time, calendar.events[i].matchId)
+    //     }
 
-        return new Calendar(events);
-    }
+    //     return new Calendar(events);
+    // }
 
-    _mapContactInfo(contactInfo) {
-        return new ContactInfo(contactInfo.mail, contactInfo.telephones, contactInfo.location);
-    }
+    // _mapContactInfo(contactInfo) {
+    //     return new ContactInfo(contactInfo.mail, contactInfo.telephones, contactInfo.location);
+    // }
 
-    _mapFields(fields) {
-        let ret = [];
+    // _mapFields(fields) {
+    //     let ret = [];
 
-        for (let i = 0; i < fields.length; i++) {
-            let field = new Field(fields[i].groundType, fields[i].roofed, fields[i].size, fields[i].value, fields[i].minToBook);
-            ret.push(field);
-        }
+    //     for (let i = 0; i < fields.length; i++) {
+    //         let field = new Field(fields[i].groundType, fields[i].roofed, fields[i].size, fields[i].value, fields[i].minToBook);
+    //         ret.push(field);
+    //     }
 
-        return ret;
-    }
+    //     return ret;
+    // }
 
-    _mapFacilities(facilities) {
-        return new Facilities(facilities.buffet, facilities.parking, facilities.wifi, facilities.dressingRoom);
+    _mapFacilities(collection) {
+        let facilities = [];
+
+        map.forEach(function (facility) {
+            facilities.push(Facility.get(facility));
+        }, this);
+
+        return facilities;
     }
 
     _getNewClub(source) {
-        return new Club(source.description,
+        return new Club(
+            source.name,
+            source.description,
             this._mapFacilities(source.facilities),
-            this._mapFields(source.fields),
-            source.allowOnLineBooking,
-            source.allowOnLinePayment,
-            source.cancelingTimeForFree,
-            this._mapContactInfo(source.contactInfo),
-            this._mapCalendar(source.calendar));
+            source.allowOnlineBooking,
+            source.allowOnlinePayment,
+            source.freeCancellationTime
+        );
     }
 
     static get INVALID_CLUB() {
         return "Invalid club";
     }
+
+    static get INVALID_INSTANCE_CLUB() { return 'Invalid intance club'; }
 }
 
 module.exports = ClubESRepository;
