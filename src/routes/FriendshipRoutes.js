@@ -49,7 +49,7 @@ class FriendshipRoutes extends Routes {
         server.post('/friendship/create', super._bodyIsNotNull, this._createFriendship, this._createFriendshipRequest, this._returnFriendship);
         server.post('/friendship/accept', super._bodyIsNotNull, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._acceptFriendship, this._addNewFriend, this._returnFriendship);
         server.post('/friendship/reject', super._bodyIsNotNull, this._getFriendship, this._checkPending, this._checkFriendFriendship, this._rejectFriendship, this._returnFriendship);
-        server.del('/friendship', super._bodyIsNotNull, this._getFriendship, this._checkPlayerFriendship, this._deleteFriendship, this._updateFriendshipsByFriend, this._returnFriendship);
+        server.del('/friendship/:id', super._paramsIsNotNull, this._getFriendship, this._checkPlayerFriendship, this._deleteFriendship, this._updateFriendshipsByFriend, this._returnFriendship);
     }
 
     _returnFriendship(req, res, next) {

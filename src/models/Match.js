@@ -1,27 +1,27 @@
 'use strict'
-var MatchComment = require('./MatchComment');
-var Validator = require('no-if-validator').Validator;
-var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
-var CustomCondition = require('no-if-validator').CustomCondition;
-var IsNumberCondition = require('no-if-validator').IsNumberCondition;
+let MatchComment = require('./MatchComment');
+let Validator = require('no-if-validator').Validator;
+let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+let InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
+let CustomCondition = require('no-if-validator').CustomCondition;
+let IsNumberCondition = require('no-if-validator').IsNumberCondition;
 
 class Match {
     constructor(title, date, fromTime, toTime, location, creator, matchType, club, auditInfo, status) {
         this._existsInPendingPlayers = this._existsInPendingPlayers.bind(this);
         this._existsInConfirmedPlayers = this._existsInConfirmedPlayers.bind(this);
 
-        var validator = new Validator();
+        let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(title).throw(new Error(Match.INVALID_TITLE)));
         validator.addCondition(new NotNullOrUndefinedCondition(date).throw(new Error(Match.INVALID_DATE)));
         validator.addCondition(new NotNullOrUndefinedCondition(fromTime).throw(new Error(Match.INVALID_TIME)));
         validator.addCondition(new CustomCondition(() => {
-            var regex = /([01]\d|2[0-3]):([0-5]\d)/;
+            let regex = /([01]\d|2[0-3]):([0-5]\d)/;
             return regex.test(fromTime)
         }).throw(new Error(Match.INVALID_TIME_FORMAT)));
         validator.addCondition(new NotNullOrUndefinedCondition(toTime).throw(new Error(Match.INVALID_TIME)));
         validator.addCondition(new CustomCondition(() => {
-            var regex = /([01]\d|2[0-3]):([0-5]\d)/;
+            let regex = /([01]\d|2[0-3]):([0-5]\d)/;
             return regex.test(toTime)
         }).throw(new Error(Match.INVALID_TIME_FORMAT)));
         validator.addCondition(new NotNullOrUndefinedCondition(location).throw(new Error(Match.INVALID_LOCATION)));
@@ -76,7 +76,9 @@ class Match {
     }
 
     addComment(owner, text, writtenOn) {
-        this.comments.push(new MatchComment(this._getNewCommentId(), owner, text, writtenOn));
+        let comment = new MatchComment(this._getNewCommentId(), owner, text, writtenOn);
+        this.comments.push(comment);
+        return comment;
     }
 
     updateComment(id, newText) {
@@ -102,9 +104,9 @@ class Match {
     }
 
     _getNewCommentId() {
-        var newId = 0
+        let newId = 0
 
-        for (var i = 0; i < this.comments.length; i++) {
+        for (let i = 0; i < this.comments.length; i++) {
             if (this.comments[i].id > newId) {
                 newId = this.comments[i].id;
             }
@@ -114,7 +116,7 @@ class Match {
     }
 
     _existsInPendingPlayers(playerId) {
-        for (var i = 0; i < this.pendingPlayers.length; i++) {
+        for (let i = 0; i < this.pendingPlayers.length; i++) {
             if (this.pendingPlayers[i] == playerId)
                 return true
         }
@@ -122,7 +124,7 @@ class Match {
     }
 
     _existsInConfirmedPlayers(playerId) {
-        for (var i = 0; i < this.confirmedPlayers.length; i++) {
+        for (let i = 0; i < this.confirmedPlayers.length; i++) {
             if (this.confirmedPlayers[i] == playerId)
                 return true
         }

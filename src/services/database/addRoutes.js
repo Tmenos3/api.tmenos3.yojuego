@@ -1,7 +1,6 @@
 let createIndex = require('./createIndex');
 let deleteIndex = require('./deleteIndex');
 let bootstrapIndex = require('./bootstrapIndex');
-let createMappings = require('./createMappings');
 
 let checkIndexName = (req, res, next) => {
   if (!req.params.index) res.json(400, { error: 'invalid index name.' })
@@ -29,7 +28,6 @@ module.exports = (server, esClient) => {
     checkIndexName,
     (req, res, next) => {
       createIndex(esClient, req.params.index)
-        .then((resp) => { return createMappings(esClient, req.params.index) })
         .then((resp) => { res.json(200, { resp }) })
         .catch((error) => res.json(500, { error }));
     });

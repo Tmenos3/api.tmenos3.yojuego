@@ -24,7 +24,9 @@
         "port": 8081,
         "ports": {
             "database": 8090,
-            "loginAdmin": 8091
+            "loginAdmin": 8091,
+            "websocket": 8092,
+            "notifications": 8093
         },
         "pathsWithoutAuthentication": [
             "/",

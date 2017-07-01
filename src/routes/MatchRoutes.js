@@ -2,6 +2,7 @@ let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 let Routes = require('./Routes');
 let Match = require('../models/Match');
+let fetch = require('request');
 let PushNotification = require('../models/PushNotification');
 let PushNotificationType = require('../constants/PushNotificationType');
 let MatchInvitation = require('../NotificationService/models/MatchInvitation');
@@ -44,6 +45,10 @@ class MatchRoutes extends Routes {
         this._fillMatchInfo = this._fillMatchInfo.bind(this);
         this._exitPlayer = this._exitPlayer.bind(this);
         this._cancelMatch = this._cancelMatch.bind(this);
+        this._invitePlayers = this._invitePlayers.bind(this);
+        this._getUserIds = this._getUserIds.bind(this);
+        this._sendComment = this._sendComment.bind(this);
+        this._sendMessageToWebsocket = this._sendMessageToWebsocket.bind(this);
 
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(MatchRoutes.INVALID_ES_CLIENT));
@@ -58,12 +63,23 @@ class MatchRoutes extends Routes {
     }
 
     _addAllRoutes(server) {
+        //Send notification
         server.put('/match', super._bodyIsNotNull, this._createMatch, this._sendNotifications, this._returnMatch);
+        //Send notification
         server.post('/match/:id', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._updateMatch, this._saveMatch, this._returnMatch);
+        //Send notification in this case?
         server.post('/match/:id/exit', super._paramsIsNotNull, this._getMatch, this._exitPlayer, this._saveMatch, this._returnMatch);
+        //Send notification
         server.post('/match/:id/cancel', super._paramsIsNotNull, this._getMatch, this._cancelMatch, this._saveMatch, this._returnMatch);
-        server.post('/match/:id/rejectPlayer', super._paramsIsNotNull, this._getMatch, this._removePlayer, this._saveMatch, this._returnMatch);
+        //Send notification
+        server.post('/match/:id/invite', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._invitePlayers, this._saveMatch, this._returnMatch);
+        server.del('/match/:id/player/:playerId', super._paramsIsNotNull, this._getMatch, this._removePlayer, this._saveMatch, this._returnMatch);
+        // server.post('/match/:id/rejectPlayer', super._paramsIsNotNull, this._getMatch, this._removePlayer, this._saveMatch, this._returnMatch);
         server.post('/match/:id/confirmPlayer', super._paramsIsNotNull, this._getMatch, this._confirmPlayer, this._saveMatch, this._returnMatch);
+        server.put('/match/:id/comment', super._paramsIsNotNull, super._bodyIsNotNull, this._getMatch, this._sendComment,
+            (req, res, next) => {
+                res.json(200, { code: 200, resp: req.commentSent, message: 'Comment sent.' })
+            });
         server.get('/match/upcoming', this._searchByUpcoming, this._populateCanceledPlayers, this._populateConfirmedPlayers, this._populatePendingPlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.matches, message: null }) });
     }
 
@@ -124,7 +140,8 @@ class MatchRoutes extends Routes {
     _createMatch(req, res, next) {
         try {
             var match = new Match(req.body.title, new Date(req.body.date), req.body.fromTime, req.body.toTime, req.body.location, req.player._id, req.body.matchType);
-            match.pendingPlayers = req.body.pendingPlayers.concat([req.player._id]);
+            //Remove duplicates
+            match.pendingPlayers = Array.from(new Set(req.body.pendingPlayers.concat([req.player._id])));
 
             match.matchAudit = {
                 createdBy: req.player._id,
@@ -198,7 +215,15 @@ class MatchRoutes extends Routes {
     }
 
     _removePlayer(req, res, next) {
-        req.match.removeInvitedPlayer(req.player._id);
+        req.match.removeInvitedPlayer(req.params.playerId);
+        req.match.removeConfirmedPlayer(req.params.playerId);
+        next();
+    }
+
+    _invitePlayers(req, res, next) {
+        req.body.players.forEach((p) => {
+            req.match.addInvitedPlayer(p);
+        });
         next();
     }
 
@@ -320,6 +345,70 @@ class MatchRoutes extends Routes {
             });
     }
 
+    _sendComment(req, res, next) {
+        req.commentSent = req.match.addComment(req.player._id, req.body.comment, new Date());
+        repoMatch.update(req.match)
+            .then((resp) => {
+                let ids = req.match.pendingPlayers.concat(req.match.confirmedPlayers).map(p => { return p; });
+                return this._getUserIds(ids);
+            })
+            .then(userIds => {
+                this._sendMessageToWebsocket(userIds, req.params.id, req.commentSent);
+                next();
+            }, (cause) => {
+                res.json(404, { code: 404, message: cause, resp: null });
+            })
+            .catch((err) => {
+                res.json(500, { code: 500, message: err, resp: null });
+            });
+    }
+
+    _getUserIds(playerIds) {
+        return new Promise((resolve, reject) => {
+            let promises = [];
+
+            playerIds.forEach((p) => {
+                promises.push(
+                    repoPlayer.get(p)
+                        .then((resp) => {
+                            return resp.resp.userid;
+                        })
+                );
+            });
+
+            Promise.all(promises)
+                .then((allUserIds) => {
+                    resolve(allUserIds);
+                });
+        });
+    }
+
+    _sendMessageToWebsocket(ids, matchId, comment) {
+        let body = {
+            ids,
+            data: {
+                matchId,
+                comment,
+                type: 'MATCH'
+            }
+        }
+        fetch({
+            url: 'http://localhost:8092/websocket/message',
+            method: 'PUT',
+            json: body
+        },
+            (err, res, data) => {
+                if (err) {
+                    console.log('Error:', err);
+                } else if (res.statusCode !== 200) {
+                    console.log('Status:', res.statusCode);
+                } else {
+                    // data is already parsed as JSON:
+                    console.log(data.html_url);
+                }
+            });
+    }
+
     _fetchMatchesDetailConfirmedPlayers(arr, pos) {
         return new Promise((resolve, reject) => {
             if (arr.length == pos)
@@ -383,30 +472,30 @@ class MatchRoutes extends Routes {
     }
 
     _sendPushNotifications(notifications) {
-        if (notifications.length) {
-            let players = [];
-            for (let i = 0; i < notifications.length; i++) {
-                players.push(notifications[i].playerId);
-            }
+        // if (notifications.length) {
+        //     let players = [];
+        //     for (let i = 0; i < notifications.length; i++) {
+        //         players.push(notifications[i].playerId);
+        //     }
 
-            try {
-                this._fetchPlayersDetail(players, 0)
-                    .then((retPlayers) => {
-                        let users = [];
-                        for (let i = 0; i < retPlayers.length; i++) {
-                            users.push(retPlayers[i].userid);
-                        }
+        //     try {
+        //         this._fetchPlayersDetail(players, 0)
+        //             .then((retPlayers) => {
+        //                 let users = [];
+        //                 for (let i = 0; i < retPlayers.length; i++) {
+        //                     users.push(retPlayers[i].userid);
+        //                 }
 
-                        return this._getDevices(users, 0)
-                            .then((devices) => {
-                                let pushNotification = new PushNotification(PushNotificationType.INVITED_TO_MATCH, notifications[0].matchId);
-                                notificationService.push(devices, pushNotification);
-                            });
-                    });
-            } catch (error) {
+        //                 return this._getDevices(users, 0)
+        //                     .then((devices) => {
+        //                         let pushNotification = new PushNotification(PushNotificationType.INVITED_TO_MATCH, notifications[0].matchId);
+        //                         notificationService.push(devices, pushNotification);
+        //                     });
+        //             });
+        //     } catch (error) {
 
-            }
-        }
+        //     }
+        // }
     }
 
     _getDevices(arr, pos) {

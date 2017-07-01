@@ -3,8 +3,9 @@ process.env.NODE_ENV = 'dev';
 
 let database = require('./src/services/database/index');
 let loginAdmin = require('./src/services/loginAdmin/index');
+let websocket = require('./src/services/websocket/index');
+let notifications = require('./src/services/notifications/index');
 let restify = require('restify');
-let configureServer = require('./src/configureServer');
 let config = require('config');
 let es = require('elasticsearch');
 let esClient = new es.Client({
@@ -14,3 +15,5 @@ let esClient = new es.Client({
 
 database(restify, config, esClient)
 loginAdmin(restify, config, esClient)
+websocket(restify, config, esClient)
+notifications(restify, config, esClient)
