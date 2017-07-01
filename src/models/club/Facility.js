@@ -15,7 +15,7 @@ class Facility {
 
     static get INVALID_NAME() { return 'Invalid name'; }
 
-    static get get(facility) {
+    static get(facility) {
         switch (facility.name) {
             case BUFFET:
                 return new Buffet();

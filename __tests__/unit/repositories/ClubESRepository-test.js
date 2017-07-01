@@ -2,14 +2,14 @@ import ClubESRepository from '../../../src/repositories/ClubESRepository';
 import Club from '../../../src/models/club/Club';
 
 describe('ClubESRepository', () => {
-    let getMockedClient = (err, ret) => {
-        return {
-            get: jest.fn((criteria, callback) => { callback(err, ret); }),
-            search: jest.fn((criteria, callback) => { callback(err, ret); }),
-            index: jest.fn((criteria, callback) => { callback(err, ret); }),
-            update: jest.fn((document, callback) => { callback(err, ret) })
-        }
-    };
+    // let getMockedClient = (err, ret) => {
+    //     return {
+    //         get: jest.fn((criteria, callback) => { callback(err, ret); }),
+    //         search: jest.fn((criteria, callback) => { callback(err, ret); }),
+    //         index: jest.fn((criteria, callback) => { callback(err, ret); }),
+    //         update: jest.fn((document, callback) => { callback(err, ret) })
+    //     }
+    // };
 
     pit('Can get a club', () => {
         // let club = new Club('club', new Date(2016, 1, 1), '19:00', '20:00', 'location', 'alkjsd_fiaopusdn', 'clubType');
@@ -47,18 +47,18 @@ describe('ClubESRepository', () => {
     //         }, (err) => expect(true).toEqual(false));
     // });
 
-    pit('Cannot add a club if it is not instanceOf Club', () => {
-        let notInstanceOfClub = {};
-        let client = getMockedClient(false, { _id: 'id', _source: {} });
+    // pit('Cannot add a club if it is not instanceOf Club', () => {
+    //     let notInstanceOfClub = {};
+    //     let client = getMockedClient(false, { _id: 'id', _source: {} });
 
-        let repo = new ClubESRepository(client);
-        return repo.add(notInstanceOfClub)
-            .then((resp) => (err) => expect(true).toEqual(false),
-            (err) => {
-                expect(err.code).toEqual(410);
-                expect(err.message).toEqual(ClubESRepository.INVALID_INSTANCE_CLUB);
-            });
-    });
+    //     let repo = new ClubESRepository(client);
+    //     return repo.add(notInstanceOfClub)
+    //         .then((resp) => (err) => expect(true).toEqual(false),
+    //         (err) => {
+    //             expect(err.code).toEqual(410);
+    //             expect(err.message).toEqual(ClubESRepository.INVALID_INSTANCE_CLUB);
+    //         });
+    // });
 
     // pit('Cannot update a club if it is not instanceOf Club', () => {
     //     let notInstanceOfClub = {};
