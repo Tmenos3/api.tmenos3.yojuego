@@ -52,7 +52,7 @@ class GroupRoutes extends Routes {
         server.get('/group/:id', this._checkPlayerMember, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group created' }) });
         server.post('/group/:id', super._bodyIsNotNull, this._checkPlayerMember, this._updateGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: 'Group updated' }) });
         server.get('/group', this._getAllGroups, this._fillGroupsInfo, (req, res, next) => { res.json(200, { code: 200, resp: req.groups, message: null }) });
-        server.put('/group', super._bodyIsNotNull, this._checkPlayerFriends, this._createGroup, (req, res, next) => { res.json(200, { code: 200, resp: req.group, message: null }) });
+        server.put('/group', super._bodyIsNotNull, this._checkPlayerFriends, this._createGroup, this._returnGroup);
         server.post('/group/:id/players', this._checkPlayerAdmin, this._addPlayers, this._updateGroup, this._returnGroup);
         server.del('/group/:id/player/:playerId', this._removePlayer, this._updateGroup, this._returnGroup);
         server.post('/group/:id/makeadmin', this._makeAdminPlayer, this._updateGroup, this._returnGroup);

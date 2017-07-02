@@ -1,16 +1,17 @@
-var Routes = require('./Routes');
-var config = require('config');
-var User = require('../models/User');
-var UserESRepository = require('../repositories/UserESRepository');
-var Validator = require('no-if-validator').Validator;
-var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-var userRepo = null;
-
+let Routes = require('./Routes');
+let config = require('config');
+let fetch = require('request');
+let User = require('../models/User');
+let UserESRepository = require('../repositories/UserESRepository');
+let Validator = require('no-if-validator').Validator;
+let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+let userRepo = null;
 
 class UserRoute extends Routes {
     constructor(esClient) {
         super();
-        var validator = new Validator();
+
+        let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(UserRoute.INVALID_ES_CLIENT));
 
         validator.execute(() => {
@@ -26,6 +27,9 @@ class UserRoute extends Routes {
             (res, req, next) => {
                 res.json(200, { return: req.return });
             });
+
+        server.put('/user/device/:type', this._paramsIsNotNull, this._bodyIsNotNull, this._registerDevice);
+        server.post('/user/device/:type', this._paramsIsNotNull, this._bodyIsNotNull, this._updateDevice);
     }
 
     _validateRequest(req, res, next) {
@@ -57,6 +61,53 @@ class UserRoute extends Routes {
             })
             .catch((err) => {
                 res.json(500, { code: 500, message: err, resp: null });
+            });
+    }
+
+    _registerDevice(req, res, next) {
+        let body = {
+            userid: req.user._id,
+            deviceid: req.body.deviceid,
+            type: req.params.type
+        }
+
+        fetch({
+            url: 'http://localhost:8093/notification/register',
+            method: 'PUT',
+            json: body
+        },
+            (err, reponse, data) => {
+                if (err) {
+                    console.log('Error:', err);
+                } else if (reponse.statusCode !== 200) {
+                    res.json(reponse.statusCode, { code: reponse.statusCode, message: 'Something went wrong registering device.', resp: null });
+                } else {
+                    res.json(200, { code: 200, message: 'The device has been registered', resp: null });
+                }
+            });
+    }
+
+    _updateDevice(req, res, next) {
+        let body = {
+            userid: req.user._id,
+            olddeviceid: req.body.olddeviceid,
+            newdeviceid: req.body.newdeviceid,
+            type: req.params.type
+        }
+
+        fetch({
+            url: 'http://localhost:8093/notification/update--',
+            method: 'PUT',
+            json: body
+        },
+            (err, reponse, data) => {
+                if (err) {
+                    console.log('Error:', err);
+                } else if (reponse.statusCode !== 200) {
+                    res.json(reponse.statusCode, { code: reponse.statusCode, message: 'Something went wrong updating device.', resp: null });
+                } else {
+                    res.json(200, { code: 200, message: 'The device has been updated', resp: null });
+                }
             });
     }
 

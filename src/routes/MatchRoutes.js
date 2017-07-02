@@ -5,13 +5,12 @@ let Match = require('../models/Match');
 let fetch = require('request');
 let PushNotification = require('../models/PushNotification');
 let PushNotificationType = require('../constants/PushNotificationType');
-let MatchInvitation = require('../NotificationService/models/MatchInvitation');
+let MatchInvitation = require('../models/MatchInvitation');
 let MatchRepository = require('../repositories/MatchESRepository');
 let PlayerRepository = require('../repositories/PlayerESRepository');
-let MatchInvitationRepository = require('../NotificationService/repositories/MatchInvitationESRepository');
+let MatchInvitationRepository = require('../repositories/MatchInvitationESRepository');
 let DeviceESRepository = require('../repositories/DeviceESRepository');
 let moment = require('moment');
-let NotificationService = require('../NotificationService/NotificationService');
 
 let repoMatch = null;
 let repoMatchInvitation = null;
@@ -20,7 +19,7 @@ let repoDevices = null;
 let notificationService = null;
 
 class MatchRoutes extends Routes {
-    constructor(esClient) {
+    constructor(esClient, notiServParam) {
         super();
 
         this._createMatch = this._createMatch.bind(this);
@@ -58,7 +57,7 @@ class MatchRoutes extends Routes {
             repoMatchInvitation = new MatchInvitationRepository(esClient);
             repoPlayer = new PlayerRepository(esClient);
             repoDevices = new DeviceESRepository(esClient);
-            notificationService = new NotificationService();
+            notificationService = notiServParam;
         }, (err) => { throw err; });
     }
 

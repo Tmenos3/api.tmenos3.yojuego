@@ -1,6 +1,6 @@
 let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-let Routes = require('../common/routes/Routes');
+let Routes = require('../../common/Routes');
 let AndroidNotification = require('./models/AndroidNotification');
 let IOsNotification = require('./models/IOsNotification');
 let Device = require('./models/Device');
@@ -139,15 +139,17 @@ class ServiceRoutes extends Routes {
             promises.push(
                 this._deviceRepo.getByUserId(userid)
                     .then((resp) => {
-                        return { userid, device: resp.resp };
+                        return { userid, devices: resp.resp };
                     })
             );
         });
 
         Promise.all(promises)
             .then((rets) => {
-                req.errors = rets.filter(r => { return !r.device }).map(e => { return r.userid });
-                req.devices = rets.filter(r => { return r.device !== null }).map(e => { return r.device });
+                req.errors = rets.filter(r => { return !r.devices }).map(e => { return e.userid });
+                req.devices = [].concat.apply([], rets.filter(r => { return r.devices !== null }).map(e => {
+                    return e.devices.map(ee => { return ee });
+                }));
 
                 next();
             });

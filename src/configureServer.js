@@ -8,7 +8,7 @@ let getUser = require('./serverMiddlewares/getUser');
 let checkUserToken = require('./serverMiddlewares/checkUserToken');
 let getPlayerByUserId = require('./serverMiddlewares/getPlayerByUserId');
 
-let configureServer = (server, restify, client) => {
+let configureServer = (server, restify, client, notificationService) => {
     server.use(restify.bodyParser());
     server.use(restify.queryParser());
     server.use(jwtRestify({ secret: config.serverConfig.secret }).unless({ path: config.serverConfig.pathsWithoutAuthentication }));
@@ -21,7 +21,7 @@ let configureServer = (server, restify, client) => {
         done(null, player);
     });
 
-    router.addAll(server, passport, client, jwt);
+    router.addAll(server, passport, client, jwt, notificationService);
 }
 
 module.exports = configureServer;

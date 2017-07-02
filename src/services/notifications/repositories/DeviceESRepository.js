@@ -1,4 +1,4 @@
-let ESRepository = require('../../common/repository/ESRepository');
+let ESRepository = require('../../../common/ESRepository');
 let Device = require('../models/Device');
 
 class DeviceESRepository extends ESRepository {
