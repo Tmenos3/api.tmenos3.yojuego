@@ -140,34 +140,35 @@ class FriendshipRoutes extends Routes {
                 if (!resp.resp) {
                     res.json(404, { code: 404, message: "Tu amigo todavia no se registro.", resp: null });
                 } else {
-                    req.friend = resp.resp;
-                    let friendship = new Friendship(req.player._id, resp.resp._id, 'CREATED', req.body.email);
-                    friendship.friendshipAudit = {
-                        createdBy: req.player._id, //We should store deviceId here
-                        createdOn: new Date(),
-                        createdFrom: req.body.platform || 'MOBILE_APP',
-                        modifiedBy: null,
-                        modifiedOn: null,
-                        modifiedFrom: null
-                    }
-                    repoFriendship.add(friendship)
-                        .then((resp) => {
-                            repoFriendship.get(resp.resp._id)
-                                .then((friendshipResp) => {
-                                    req.friendship = friendshipResp.resp;
-                                    next();
-                                }, (cause) => {
-                                    res.json(404, { code: 404, message: cause, resp: null });
-                                })
-                                .catch((err) => {
-                                    res.json(500, { code: 500, message: err, resp: null });
-                                });
-                        }, (err) => {
-                            res.json(404, { code: 404, message: cause, resp: null });
+                    repoFriendship.getByPlayerIdAndFriendId(req.player._id, resp.resp._id)
+                        .then(respFriendship => {
+                            if (respFriendship.resp)
+                                res.json(400, { code: 400, message: 'Ya son amigos.', resp: null });
+                            else {
+                                req.friend = resp.resp;
+                                let friendship = new Friendship(req.player._id, resp.resp._id, 'CREATED', req.body.email);
+                                friendship.friendshipAudit = {
+                                    createdBy: req.player._id, //We should store deviceId here
+                                    createdOn: new Date(),
+                                    createdFrom: req.body.platform || 'MOBILE_APP',
+                                    modifiedBy: null,
+                                    modifiedOn: null,
+                                    modifiedFrom: null
+                                }
+                                repoFriendship.add(friendship)
+                                    .then((resp) => {
+                                        repoFriendship.get(resp.resp._id)
+                                            .then((friendshipResp) => {
+                                                req.friendship = friendshipResp.resp;
+                                                next();
+                                            }, (cause) => {
+                                                res.json(404, { code: 404, message: cause, resp: null });
+                                            })
+                                    }, (err) => {
+                                        res.json(404, { code: 404, message: cause, resp: null });
+                                    })
+                            }
                         })
-                        .catch((err) => {
-                            res.json(500, { code: 500, message: err, resp: null });
-                        });
                 }
             }, (cause) => {
                 res.json(404, { code: 404, message: cause, resp: null });
@@ -251,7 +252,7 @@ class FriendshipRoutes extends Routes {
 
     _sendNotification(req, res, next) {
         let data = {
-            type: 'FRIENDSHIP_REQUEST',
+            type: 'NEW_FRIENDSHIP_REQUEST',
             id: req.friendshipRequest._id
         }
         notificationService.send([req.friend.userid], data)

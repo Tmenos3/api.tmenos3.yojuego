@@ -46,13 +46,26 @@ class FriendshipRequestRoutes extends Routes {
         server.get('/friendshiprequest', this._getPendingFriendshipRequests, this._populateFriendships, this._populatePlayers, (req, res, next) => { res.json(200, { code: 200, resp: req.friendshipRequests, message: null }) });
         server.post('/friendshiprequest/:id/markasread', super._paramsIsNotNull, this._getFriendshipRequest, this._checkPlayer, this._markAsRead, this._returnFriendshipRequest);
         server.del('/friendshiprequest/:id', super._paramsIsNotNull, this._getFriendshipRequest, this._checkPlayer, this._delete, this._returnFriendshipRequest);
+        server.get('/friendshiprequest/:id', super._paramsIsNotNull, this._getFriendshipRequest, this._returnFriendshipRequest);
         server.post('/friendshiprequest/:id/accept', super._paramsIsNotNull, this._getFriendshipRequest, this._checkPending, this._checkFriendFriendshipRequest, this._acceptFriendshipRequest, this._addNewFriend, this._updateSenderFriendship, this._returnFriendshipRequest);
         server.post('/friendshiprequest/:id/reject', super._paramsIsNotNull, this._getFriendshipRequest, this._checkPending, this._checkFriendFriendshipRequest, this._rejectFriendshipRequest, this._returnFriendshipRequest);
     }
 
     _returnFriendshipRequest(req, res, next) {
-        req.friendshipRequest.friendshipRequestAudit = undefined;
-        res.json(200, { code: 200, resp: req.friendshipRequest, message: null });
+        this._fetchFriendshipsDetail([req.friendshipRequest], 0)
+            .then((ret) => {
+                return this._fetchPlayersDetail(ret, 0);
+            })
+            .then((ret) => {
+                req.friendshipRequest = ret[0];
+                req.friendshipRequest.friendshipRequestAudit = undefined;
+                res.json(200, { code: 200, resp: req.friendshipRequest, message: null });
+            }, (cause) => {
+                res.json(400, { code: 400, message: cause, resp: null });
+            })
+            .catch((error) => {
+                res.json(500, { code: 500, message: cause, resp: null });
+            });
     }
 
     _checkFriendFriendshipRequest(req, res, next) {

@@ -37,6 +37,20 @@ class FriendshipESRepository extends ESRepository {
             }, (error) => { return Promise.reject(error); });
     }
 
+    getByPlayerIdAndFriendId(playerId, friendId) {
+        return super.getBy(this._getQueryByPlayerIdAndFriendId(playerId, friendId), 'yojuego', 'friendship')
+            .then((objRet) => {
+                let friendship = null;
+
+                for (let i = 0; i < objRet.resp.length; i++) {
+                    friendship = this._mapFriendship(objRet.resp[i]._id, objRet.resp[i]._source);
+                    break;
+                }
+
+                return { code: 200, message: null, resp: friendship };
+            }, (error) => { return Promise.reject(error); });
+    }
+
     getByFriendId(friendId) {
         return super.getBy(this._getQueryByFriendId(friendId), 'yojuego', 'friendship')
             .then((objRet) => {
@@ -110,6 +124,17 @@ class FriendshipESRepository extends ESRepository {
             "bool": {
                 "filter": [
                     { "term": { "playerId": playerId } }
+                ]
+            }
+        };
+    }
+
+    _getQueryByPlayerIdAndFriendId(playerId, friendId) {
+        return {
+            "bool": {
+                "filter": [
+                    { "term": { "playerId": playerId } },
+                    { "term": { "friendId": friendId } }
                 ]
             }
         };
