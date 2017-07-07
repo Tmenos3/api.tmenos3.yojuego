@@ -26,7 +26,8 @@
             "database": 8090,
             "loginAdmin": 8091,
             "websocket": 8092,
-            "notifications": 8093
+            "notifications": 8093,
+            "friendship": 8094
         },
         "pathsWithoutAuthentication": [
             "/",

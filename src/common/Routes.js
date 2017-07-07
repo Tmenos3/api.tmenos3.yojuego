@@ -2,7 +2,7 @@ let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 
 class Routes {
-    constructor() { 
+    constructor() {
         this._addAllRoutes = this._addAllRoutes.bind(this);
         this._bodyIsNotNull = this._bodyIsNotNull.bind(this);
         this._paramsIsNotNull = this._paramsIsNotNull.bind(this);

@@ -10,16 +10,14 @@ let AuthRoutes = require('./AuthRoutes');
 let ResetPasswordRoutes = require('./ResetPasswordRoutes');
 let UserRoute = require('./UserRoute');
 let ClubRoutes = require('./ClubRoutes');
-// let DeviceRegistrationRoutes = require('./DeviceRegistrationRoutes');
 let FriendshipRequestRoutes = require('./FriendshipRequestRoutes');
 
 class Router {
     constructor() { }
 
     addAll(server, passport, esClient, jwt, notificationService) {
-        // new DeviceRegistrationRoutes(esClient).add(server);
         new InvitationRoutes(esClient).add(server);
-        new FriendshipRoutes(esClient, notificationService).add(server);
+        new FriendshipRoutes().add(server);
         new GroupRoutes(esClient).add(server);
         new LogInRoutes(esClient, jwt).add(server);
         new LogOutRoutes(esClient).add(server);

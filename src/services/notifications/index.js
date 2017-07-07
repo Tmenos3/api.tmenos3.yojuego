@@ -1,6 +1,6 @@
 let configureServer = require('./configureServer');
 let NotificationService = require('./services/NotificationService');
-let Configuration = require('./models/Configuration');
+let Configuration = require('../../models/Configuration');
 let DeviceRepository = require('./repositories/DeviceESRepository');
 
 module.exports = (restify, config, esClient) => {
