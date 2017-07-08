@@ -1,42 +1,73 @@
 let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 let EqualCondition = require('no-if-validator').EqualCondition;
+let CustomCondition = require('no-if-validator').CustomCondition;
 
 class Friendship {
-    constructor(playerId, friendId, status, email) {
+    constructor(playerId, friendId, status, email, auditInfo) {
         let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(playerId).throw(new Error(Friendship.INVALID_PLAYER)));
-        validator.addCondition(new NotNullOrUndefinedCondition(friendId).throw(new Error(Friendship.INVALID_FRIEND)));
-        validator.addCondition(new NotNullOrUndefinedCondition(status).throw(new Error(Friendship.INVALID_STATUS)));
-        validator.addCondition(new NotNullOrUndefinedCondition(email).throw(new Error(Friendship.INVALID_MAIL)));
-        validator.addCondition(new EqualCondition(playerId, friendId).not().throw(new Error(Friendship.INCONSISTENT_PLAYER_FRIEND)));
+        validator.addCondition(new NotNullOrUndefinedCondition(playerId).throw(new Error(Friendship.ERRORS.INVALID_PLAYER)));
+        validator.addCondition(new NotNullOrUndefinedCondition(friendId).throw(new Error(Friendship.ERRORS.INVALID_FRIEND)));
+        validator.addCondition(new NotNullOrUndefinedCondition(status).throw(new Error(Friendship.ERRORS.INVALID_STATUS)));
+        validator.addCondition(new NotNullOrUndefinedCondition(email).throw(new Error(Friendship.ERRORS.INVALID_MAIL)));
+        validator.addCondition(new EqualCondition(playerId, friendId).not().throw(new Error(Friendship.ERRORS.INCONSISTENT_PLAYER_FRIEND)));
+        validator.addCondition(new CustomCondition(() => { return this._isValidStatus(status); }).throw(new Error(Friendship.ERRORS.STATUS_NOT_ALLOWED)));
 
         validator.execute(() => {
             this.playerId = playerId;
             this.friendId = friendId;
             this.email = email;
             this.status = status;
+            this.auditInfo = auditInfo || null;
         }, (err) => { throw err; });
     }
- 
-    static get INVALID_PLAYER() {
-        return "El PLAYER es indefinido, nulo ó no es del tipo integer.";
+
+    isAccepted() {
+        return this.status === Friendship.STATUS.ACCEPTED;
     }
 
-    static get INVALID_FRIEND() {
-        return "El FRIEND es indefinido, nulo ó no es del tipo integer.";
+    isRejected() {
+        return this.status === Friendship.STATUS.REJECTED;
     }
 
-    static get INVALID_STATUS() {
-        return "El status no puede ser null ni undefined.";
+    isDeleted() {
+        return this.status === Friendship.STATUS.DELETED;
     }
 
-    static get INVALID_MAIL() {
-        return "El mail no puede ser null ni undefined.";
+    accept() {
+        this.status = Friendship.STATUS.ACCEPTED;
     }
 
-    static get INCONSISTENT_PLAYER_FRIEND() {
-        return "El friend y el player no pueden ser iguales.";
+    reject() {
+        this.status = Friendship.STATUS.REJECTED;
+    }
+
+    delete() {
+        this.status = Friendship.STATUS.DELETED;
+    }
+
+    _isValidStatus(status) {
+        return Friendship.STATUS[status] !== null && Friendship.STATUS[status] !== undefined;
+    }
+
+    static get ERRORS() {
+        return {
+            INVALID_PLAYER: "El PLAYER es indefinido, nulo ó no es del tipo integer.",
+            INVALID_FRIEND: "El FRIEND es indefinido, nulo ó no es del tipo integer.",
+            INVALID_STATUS: "El status no puede ser null ni undefined.",
+            INVALID_MAIL: "El mail no puede ser null ni undefined.",
+            INCONSISTENT_PLAYER_FRIEND: "El friend y el player no pueden ser iguales.",
+            STATUS_NOT_ALLOWED: "Status no permitido."
+        }
+    }
+
+    static get STATUS() {
+        return {
+            ACCEPTED: "ACCEPTED",
+            REJECTED: "REJECTED",
+            DELETED: "DELETED",
+            CREATED: "CREATED"
+        }
     }
 }
 

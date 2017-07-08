@@ -96,13 +96,13 @@ class FriendshipESRepository extends ESRepository {
             friendId: friendship.friendId,
             status: friendship.status,
             email: friendship.email,
-            friendshipAudit: {
-                createdBy: friendship.friendshipAudit.createdBy,
-                createdOn: friendship.friendshipAudit.createdOn,
-                createdFrom: friendship.friendshipAudit.createdFrom,
-                modifiedBy: friendship.friendshipAudit.modifiedBy,
-                modifiedOn: friendship.friendshipAudit.modifiedOn,
-                modifiedFrom: friendship.friendshipAudit.modifiedFrom
+            auditInfo: {
+                createdBy: friendship.auditInfo.createdBy,
+                createdOn: friendship.auditInfo.createdOn,
+                createdFrom: friendship.auditInfo.createdFrom,
+                modifiedBy: friendship.auditInfo.modifiedBy,
+                modifiedOn: friendship.auditInfo.modifiedOn,
+                modifiedFrom: friendship.auditInfo.modifiedFrom
             }
         };
 
@@ -141,9 +141,9 @@ class FriendshipESRepository extends ESRepository {
     }
 
     _mapFriendship(id, source) {
-        let friendship = new Friendship(source.playerId, source.friendId, source.status, source.email);
+        let friendship = new Friendship(source.playerId, source.friendId, source.status, source.email, source.auditInfo);
         friendship._id = id;
-        friendship.friendshipAudit = source.friendshipAudit;
+        // friendship.auditInfo = source.auditInfo;
 
         return friendship;
     }

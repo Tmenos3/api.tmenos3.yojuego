@@ -188,8 +188,8 @@ class FriendshipManager {
   }
 
   _createFriendship(playerId, friendId, email) {
-    let friendship = new Friendship(playerId, friendId, 'CREATED', email);
-    friendship.friendshipAudit = {
+    let friendship = new Friendship(playerId, friendId, Friendship.STATUS.CREATED, email);
+    friendship.auditInfo = {
       createdBy: playerId, //We should store deviceId here
       createdOn: new Date(),
       createdFrom: 'MOBILE_APP',
@@ -227,7 +227,7 @@ class FriendshipManager {
       .then((resp) => {
         if (!resp.resp) return Promise.resolve();
 
-        resp.resp.status = 'DELETED';
+        resp.resp.delete();
         resp.resp.info = null;
 
         return repoFriendship.update(resp.resp);

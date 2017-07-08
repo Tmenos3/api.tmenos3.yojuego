@@ -1,10 +1,11 @@
 let Validator = require('no-if-validator').Validator;
+let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
+let EqualCondition = require('no-if-validator').EqualCondition;
+let CustomCondition = require('no-if-validator').CustomCondition;
 let Message = require('./Message');
 
 class Group {
-    constructor(players, admins, description, photo) {
-        let validator = new Validator();
-
+    constructor(players, admins, description, photo, messages) {
         this.addPlayer = this.addPlayer.bind(this);
         this.makeAdmin = this.makeAdmin.bind(this);
         this.removePlayer = this.removePlayer.bind(this);
@@ -17,40 +18,57 @@ class Group {
         this._existsInPlayers = this._existsInPlayers.bind(this);
         this._existsInAdmins = this._existsInAdmins.bind(this);
         this._getNewMessageId = this._getNewMessageId.bind(this);
+        this._addAdminIfThereAreNoAdmins = this._addAdminIfThereAreNoAdmins.bind(this);
+
+        let validator = new Validator();
+        validator.addCondition(new NotNullOrUndefinedCondition(players).throw(new Error(Group.ERRORS.INVALID_PLAYER_LIST)));
+        validator.addCondition(new CustomCondition(() => { return players instanceof Array }).throw(new Error(Group.ERRORS.INVALID_PLAYER_LIST)));
+        validator.addCondition(new CustomCondition(() => { return players.length > 0 }).throw(new Error(Group.ERRORS.PLAYER_LIST_MUST_CONTAIN_PLAYERS)));
+        validator.addCondition(new NotNullOrUndefinedCondition(admins).throw(new Error(Group.ERRORS.INVALID_ADMIN_LIST)));
+        validator.addCondition(new CustomCondition(() => { return admins instanceof Array }).throw(new Error(Group.ERRORS.INVALID_ADMIN_LIST)));
+        validator.addCondition(new CustomCondition(() => { return admins.length > 0 }).throw(new Error(Group.ERRORS.ADMIN_LIST_MUST_CONTAIN_PLAYERS)));
+        validator.addCondition(new CustomCondition(() => { return Group._areAllPlayers(players, admins); }).throw(new Error(Group.ERRORS.ADMINS_MUST_BE_PLAYERS)));
+        validator.addCondition(new NotNullOrUndefinedCondition(description).throw(new Error(Group.ERRORS.INVALID_DESCRIPTION)));
 
         validator.execute(() => {
-            this.players = players;
-            this.admins = admins;
+            this.players = [...new Set(players)];
+            this.admins = [...new Set(admins)];
             this.description = description;
-            this.photo = photo;
-            this.messages = [];
+            this.photo = photo || null;
+            this.messages = messages || [];
         }, (err) => { throw err; });
     }
 
     addPlayer(adminId, playerId) {
-        if (!this._existsInAdmins(adminId))
-            throw new Exception(Group.ACTION_REQUIRE_ADMIN);
+        let validator = new Validator();
+        validator.addCondition(new CustomCondition(() => { return this.isAdmin(adminId) }).throw(new Error(Group.ERRORS.ACTION_REQUIRE_ADMIN)));
 
-        if (!this._existsInPlayers(playerId))
-            this.players.push(playerId);
-
-        this._removeAdmin(playerId);
+        validator.execute(() => {
+            if (!this.isMember(playerId))
+                this.players.push(playerId);
+        }, (err) => { throw err; });
     }
 
     makeAdmin(adminId, playerId) {
-        if (!this._existsInAdmins(adminId))
-            throw new Exception(Group.ACTION_REQUIRE_ADMIN);
+        let validator = new Validator();
+        validator.addCondition(new CustomCondition(() => { return this.isAdmin(adminId) }).throw(new Error(Group.ERRORS.ACTION_REQUIRE_ADMIN)));
+        validator.addCondition(new CustomCondition(() => { return this.isMember(playerId) }).throw(new Error(Group.ERRORS.PLAYER_IS_NOT_MEMBER)));
 
-        if (!this._existsInAdmins(playerId))
-            this.admins.push(playerId);
+        validator.execute(() => {
+            if (!this.isAdmin(playerId))
+                this.admins.push(playerId);
+        }, (err) => { throw err; });
     }
 
     removePlayer(adminId, playerId) {
-        if (!this._existsInAdmins(adminId))
-            throw new Exception(Group.ACTION_REQUIRE_ADMIN);
+        let validator = new Validator();
+        validator.addCondition(new CustomCondition(() => { return this.isAdmin(adminId) || (adminId === playerId) }).throw(new Error(Group.ERRORS.ACTION_REQUIRE_ADMIN)));
 
-        this._removePlayer(playerId);
-        this._removeAdmin(playerId);
+        validator.execute(() => {
+            this._removePlayer(playerId);
+            this._removeAdmin(playerId);
+            this._addAdminIfThereAreNoAdmins();
+        }, (err) => { throw err; });
     }
 
     isAdmin(playerId) {
@@ -62,27 +80,33 @@ class Group {
     }
 
     addMessage(owner, text, writtenOn) {
-        let msg = new Message(this._getNewMessageId(), owner, text, writtenOn);
-        this.messages.push(msg);
+        let validator = new Validator();
+        validator.addCondition(new CustomCondition(() => { return this.isMember(owner) }).throw(new Error(Group.ERRORS.PLAYER_IS_NOT_MEMBER)));
+
+        let msg = null;
+        validator.execute(() => {
+            msg = new Message(this._getNewMessageId(), owner, text, writtenOn);
+            this.messages.push(msg);
+        }, (err) => { throw err; });
+
         return msg;
     }
 
-    updateMessage(id, newText) {
-        let i = this.messages.findIndex((c) => { return c.id === id });
-        if (i > -1) {
-            let messageToUpdate = this.messages[i];
-            messageToUpdate.text = newText;
+    updateMessage(owner, id, newText, updatedOn) {
+        let messageToUpdate = this.messages.find((c) => { return c.id === id });
+        if (!messageToUpdate) throw new Error(Group.ERRORS.INVALID_GROUP_MESSAGE);
+        if (messageToUpdate.owner !== owner) throw new Error(Group.ERRORS.PLAYER_IS_NOT_OWNER);
 
-            this.removeComment(messageToUpdate.id, i);
-            this.messages.push(messageToUpdate);
-        }
+        messageToUpdate.update(newText, updatedOn);
     }
 
-    removeMessage(id, index) {
-        let i = index || this.messages.findIndex((c) => { return c.id === id });
+    removeMessage(owner, id) {
+        let messageToRemove = this.messages.find((c) => { return c.id === id });
+        if (!messageToRemove) throw new Error(Group.ERRORS.INVALID_GROUP_MESSAGE);
+        if (messageToRemove.owner !== owner) throw new Error(Group.ERRORS.PLAYER_IS_NOT_OWNER);
 
-        if (i > -1)
-            this.messages.splice(i, 1);
+        let i = this.messages.findIndex((c) => { return c.id === id });
+        this.messages.splice(i, 1);
     }
 
     _getNewMessageId() {
@@ -125,8 +149,33 @@ class Group {
         return false;
     }
 
-    static get ACTION_REQUIRE_ADMIN() { return 'La accion require ser ejecutada por un administrador del grupo.'; }
+    _addAdminIfThereAreNoAdmins() {
+        if (this.admins.length === 0 && this.players.length > 0)
+            this.admins.push(this.players[0]);
+    }
 
+    static _areAllPlayers(players, admins) {
+        for (let i = 0; i < admins.length; i++) {
+            if (!players.find(p => { return p === admins[i]; }))
+                return false;
+        }
+        return true;
+    }
+
+    static get ERRORS() {
+        return {
+            INVALID_PLAYER_LIST: 'La lista de players no puede ser null ni undefined, y debe ser un array.',
+            ACTION_REQUIRE_ADMIN: 'La accion require ser ejecutada por un administrador del grupo.',
+            PLAYER_LIST_MUST_CONTAIN_PLAYERS: 'La lista de players debe contener al menos un player.',
+            INVALID_ADMIN_LIST: 'La lista de admins no puede ser null ni undefined, y debe ser un array.',
+            ADMIN_LIST_MUST_CONTAIN_PLAYERS: 'La lista de admins debe contener al menos un admin.',
+            ADMINS_MUST_BE_PLAYERS: 'Los admins deben ser players',
+            INVALID_DESCRIPTION: 'La descripcion no puede ser null ni undefined ni vacio.',
+            PLAYER_IS_NOT_MEMBER: 'EL player no pertenece al grupo',
+            INVALID_GROUP_MESSAGE: 'EL mensaje es invalido.',
+            PLAYER_IS_NOT_OWNER: 'El player no el owner del mensaje.'
+        }
+    }
 }
 
 module.exports = Group;

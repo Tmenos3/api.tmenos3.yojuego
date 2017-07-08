@@ -4,7 +4,7 @@ var NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
 
 class Message {
-    constructor(id, owner, text, writtenOn) {
+    constructor(id, owner, text, writtenOn, updatedOn) {
         var validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(Message.INVALID_ID)));
         validator.addCondition(new NotNullOrUndefinedCondition(owner).throw(new Error(Message.INVALID_OWNER)));
@@ -17,7 +17,13 @@ class Message {
             this.owner = owner;
             this.text = text;
             this.writtenOn = writtenOn;
+            this.updatedOn = updatedOn || null;
         }, (err) => { throw err; });
+    }
+
+    update(newText, updatedOn){
+        this.text = newText;
+        this.updatedOn = updatedOn;
     }
 
     static get INVALID_ID() {

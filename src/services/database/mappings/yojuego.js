@@ -95,7 +95,7 @@ let friendship = {
       friendId: { type: "string", index: "not_analyzed" },
       email: { type: "string", index: "not_analyzed" },
       status: { type: "string", index: "not_analyzed" },
-      friendshipAudit: {
+      auditInfo: {
         properties: {
           createdBy: { type: "string", index: "not_analyzed" },
           createdOn: { type: "date" },

@@ -29,6 +29,7 @@
     "passport-restify": "^1.0.1",
     "restify": "4.1.x",
     "restify-jwt": "^0.4.0",
+    "underscore": "^1.8.3",
     "url-pattern": "^1.0.1",
     "websocket": "^1.0.24"
   },
@@ -37,7 +38,7 @@
     "babel-jest": "*",
     "babel-preset-es2015": "*",
     "babel-preset-react": "*",
-    "jest": "*",
+    "jest": "^20.0.4",
     "moment": "*"
   },
   "repository": {
