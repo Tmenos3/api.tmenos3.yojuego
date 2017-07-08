@@ -1,4 +1,3 @@
-let InvitationRoutes = require('./InvitationRoutes');
 let FriendshipRoutes = require('./FriendshipRoutes');
 let GroupRoutes = require('./GroupRoutes');
 let LogInRoutes = require('./LogInRoutes');
@@ -16,7 +15,6 @@ class Router {
     constructor() { }
 
     addAll(server, passport, esClient, jwt, notificationService) {
-        new InvitationRoutes(esClient).add(server);
         new FriendshipRoutes().add(server);
         new GroupRoutes(esClient).add(server);
         new LogInRoutes(esClient, jwt).add(server);

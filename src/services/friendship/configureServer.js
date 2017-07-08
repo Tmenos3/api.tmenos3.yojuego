@@ -4,7 +4,6 @@ let jwtRestify = require('restify-jwt');
 let getUser = require('../../serverMiddlewares/getUser');
 let checkUserToken = require('../../serverMiddlewares/checkUserToken');
 let getPlayerByUserId = require('../../serverMiddlewares/getPlayerByUserId');
-// let jwt = require('jsonwebtoken');
 
 module.exports = configureServer = (server, restify, config, friendshipManager, esClient) => {
     server.use(restify.bodyParser());

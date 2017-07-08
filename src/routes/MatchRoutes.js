@@ -3,19 +3,15 @@ let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedC
 let Routes = require('./Routes');
 let Match = require('../models/Match');
 let fetch = require('request');
-let PushNotification = require('../models/PushNotification');
-let PushNotificationType = require('../constants/PushNotificationType');
 let MatchInvitation = require('../models/MatchInvitation');
 let MatchRepository = require('../repositories/MatchESRepository');
 let PlayerRepository = require('../repositories/PlayerESRepository');
 let MatchInvitationRepository = require('../repositories/MatchInvitationESRepository');
-let DeviceESRepository = require('../repositories/DeviceESRepository');
 let moment = require('moment');
 
 let repoMatch = null;
 let repoMatchInvitation = null;
 let repoPlayer = null;
-let repoDevices = null;
 let notificationService = null;
 
 class MatchRoutes extends Routes {
@@ -38,8 +34,6 @@ class MatchRoutes extends Routes {
         this._fetchMatchesDetailConfirmedPlayers = this._fetchMatchesDetailConfirmedPlayers.bind(this);
         this._fetchMatchesDetailCanceledPlayers = this._fetchMatchesDetailCanceledPlayers.bind(this);
         this._fetchPlayersDetail = this._fetchPlayersDetail.bind(this);
-        this._sendPushNotifications = this._sendPushNotifications.bind(this);
-        this._getDevices = this._getDevices.bind(this);
         this._returnMatch = this._returnMatch.bind(this);
         this._fillMatchInfo = this._fillMatchInfo.bind(this);
         this._exitPlayer = this._exitPlayer.bind(this);
@@ -56,7 +50,6 @@ class MatchRoutes extends Routes {
             repoMatch = new MatchRepository(esClient);
             repoMatchInvitation = new MatchInvitationRepository(esClient);
             repoPlayer = new PlayerRepository(esClient);
-            repoDevices = new DeviceESRepository(esClient);
             notificationService = notiServParam;
         }, (err) => { throw err; });
     }
@@ -464,50 +457,6 @@ class MatchRoutes extends Routes {
                         arr[pos].playerAudit = undefined;
 
                         return this._fetchPlayersDetail(arr, ++pos)
-                            .then((ret) => resolve(ret));
-                    });
-            }
-        });
-    }
-
-    _sendPushNotifications(notifications) {
-        // if (notifications.length) {
-        //     let players = [];
-        //     for (let i = 0; i < notifications.length; i++) {
-        //         players.push(notifications[i].playerId);
-        //     }
-
-        //     try {
-        //         this._fetchPlayersDetail(players, 0)
-        //             .then((retPlayers) => {
-        //                 let users = [];
-        //                 for (let i = 0; i < retPlayers.length; i++) {
-        //                     users.push(retPlayers[i].userid);
-        //                 }
-
-        //                 return this._getDevices(users, 0)
-        //                     .then((devices) => {
-        //                         let pushNotification = new PushNotification(PushNotificationType.INVITED_TO_MATCH, notifications[0].matchId);
-        //                         notificationService.push(devices, pushNotification);
-        //                     });
-        //             });
-        //     } catch (error) {
-
-        //     }
-        // }
-    }
-
-    _getDevices(arr, pos) {
-        return new Promise((resolve, reject) => {
-            if (arr.length == pos)
-                resolve(arr);
-            else {
-                repoDevices.getByUserId(arr[pos])
-                    .then((response) => {
-                        arr[pos] = response.resp;
-                        arr[pos].deviceAudit = undefined;
-
-                        return this._getDevices(arr, ++pos)
                             .then((ret) => resolve(ret));
                     });
             }

@@ -1,5 +1,3 @@
-YoJuegoUser
-
 import YoJuegoUser from '../../../src/models/YoJuegoUser';
 
 describe('YoJuegoUser', () => {
