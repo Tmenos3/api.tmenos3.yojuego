@@ -111,7 +111,7 @@ class GroupRoutes extends Routes {
     _returnGroup(req, res, next) {
         this._fillGroupInfo(req.group)
             .then((group) => {
-                group.groupAudit = undefined;
+                group.auditInfo = undefined;
                 res.json(200, { code: 200, resp: group, message: null })
             });
     }
@@ -130,8 +130,8 @@ class GroupRoutes extends Routes {
     }
 
     _createGroup(req, res, next) {
-        let group = new Group(req.body.players.concat([req.player._id]), [req.player._id], req.body.description, req.body.photo, req.player._id, new Date());
-        group.groupAudit = {
+        let group = new Group(req.body.players.concat([req.player._id]), [req.player._id], req.body.description, req.body.photo);
+        group.auditInfo = {
             createdBy: req.body.platform || 'MOBILE_APP', //We should store deviceId here
             createdOn: new Date(),
             createdFrom: req.body.platform || 'MOBILE_APP',
@@ -267,9 +267,9 @@ class GroupRoutes extends Routes {
     _updateGroup(req, res, next) {
         req.group.description = req.body.description || req.group.description;
         req.group.photo = req.body.photo || req.group.photo;
-        req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
-        req.group.groupAudit.modifiedOn = new Date();
-        req.group.groupAudit.modifiedFrom = req.body.platform;
+        req.group.auditInfo.modifiedBy = req.player._id; //We should store deviceId here
+        req.group.auditInfo.modifiedOn = new Date();
+        req.group.auditInfo.modifiedFrom = req.body.platform;
 
         repoGroup.update(req.group)
             .then((resp) => {
@@ -287,9 +287,9 @@ class GroupRoutes extends Routes {
     }
 
     _auditGroup(req, res, next) {
-        req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
-        req.group.groupAudit.modifiedOn = new Date();
-        req.group.groupAudit.modifiedFrom = 'MOBILE_APP';
+        req.group.auditInfo.modifiedBy = req.player._id; //We should store deviceId here
+        req.group.auditInfo.modifiedOn = new Date();
+        req.group.auditInfo.modifiedFrom = 'MOBILE_APP';
 
         repoGroup.update(req.group)
             .then((resp) => {
@@ -308,7 +308,7 @@ class GroupRoutes extends Routes {
         for (let i = 0; i < req.groups.length; i++) {
             promises.push(this._fillGroupInfo(req.groups[i])
                 .then((group) => {
-                    group.groupAudit = undefined;
+                    group.auditInfo = undefined;
                     return group;
                 })
             );
@@ -322,11 +322,11 @@ class GroupRoutes extends Routes {
     }
 
     _exitFromGroup(req, res, next) {
-        req.group.removePlayer(req.player._id);
+        req.group.removePlayer(req.player._id, req.player._id);
 
-        req.group.groupAudit.modifiedBy = req.player._id; //We should store deviceId here
-        req.group.groupAudit.modifiedOn = new Date();
-        req.group.groupAudit.modifiedFrom = 'MOBILE_APP';
+        req.group.auditInfo.modifiedBy = req.player._id; //We should store deviceId here
+        req.group.auditInfo.modifiedOn = new Date();
+        req.group.auditInfo.modifiedFrom = 'MOBILE_APP';
 
         repoGroup.update(req.group)
             .then((resp) => {

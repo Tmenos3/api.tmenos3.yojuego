@@ -92,8 +92,7 @@ class SignUpRoutes extends Routes {
             id: req.user._id
         };
         req.token = jwt.sign(claims, config.get('serverConfig').secret);
-        req.user.token = req.token;
-        req.user.isLogged = true;
+        req.user.logIn(req.token);
         next();
     }
 
@@ -107,8 +106,8 @@ class SignUpRoutes extends Routes {
     }
 
     _auditUser(req, res, next) {
-        req.user.userAudit = {
-            lastAccess: new Date(),
+        req.user.lastAccess = new Date();
+        req.user.auditInfo = {
             createdBy: req.body.platform || 'MOBILE_APP',
             createdOn: new Date(),
             createdFrom: req.body.platform || 'MOBILE_APP',

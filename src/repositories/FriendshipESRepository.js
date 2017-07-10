@@ -1,4 +1,4 @@
-let ESRepository = require('./ESRepository');
+let ESRepository = require('../common/ESRepository');
 let Friendship = require('../models/Friendship');
 
 class FriendshipESRepository extends ESRepository {
@@ -96,14 +96,7 @@ class FriendshipESRepository extends ESRepository {
             friendId: friendship.friendId,
             status: friendship.status,
             email: friendship.email,
-            auditInfo: {
-                createdBy: friendship.auditInfo.createdBy,
-                createdOn: friendship.auditInfo.createdOn,
-                createdFrom: friendship.auditInfo.createdFrom,
-                modifiedBy: friendship.auditInfo.modifiedBy,
-                modifiedOn: friendship.auditInfo.modifiedOn,
-                modifiedFrom: friendship.auditInfo.modifiedFrom
-            }
+            auditInfo: friendship.auditInfo
         };
 
         return document;

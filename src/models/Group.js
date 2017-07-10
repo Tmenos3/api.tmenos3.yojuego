@@ -5,7 +5,7 @@ let CustomCondition = require('no-if-validator').CustomCondition;
 let Message = require('./Message');
 
 class Group {
-    constructor(players, admins, description, photo, messages) {
+    constructor(players, admins, description, photo, messages, auditInfo) {
         this.addPlayer = this.addPlayer.bind(this);
         this.makeAdmin = this.makeAdmin.bind(this);
         this.removePlayer = this.removePlayer.bind(this);
@@ -23,10 +23,8 @@ class Group {
         let validator = new Validator();
         validator.addCondition(new NotNullOrUndefinedCondition(players).throw(new Error(Group.ERRORS.INVALID_PLAYER_LIST)));
         validator.addCondition(new CustomCondition(() => { return players instanceof Array }).throw(new Error(Group.ERRORS.INVALID_PLAYER_LIST)));
-        validator.addCondition(new CustomCondition(() => { return players.length > 0 }).throw(new Error(Group.ERRORS.PLAYER_LIST_MUST_CONTAIN_PLAYERS)));
         validator.addCondition(new NotNullOrUndefinedCondition(admins).throw(new Error(Group.ERRORS.INVALID_ADMIN_LIST)));
         validator.addCondition(new CustomCondition(() => { return admins instanceof Array }).throw(new Error(Group.ERRORS.INVALID_ADMIN_LIST)));
-        validator.addCondition(new CustomCondition(() => { return admins.length > 0 }).throw(new Error(Group.ERRORS.ADMIN_LIST_MUST_CONTAIN_PLAYERS)));
         validator.addCondition(new CustomCondition(() => { return Group._areAllPlayers(players, admins); }).throw(new Error(Group.ERRORS.ADMINS_MUST_BE_PLAYERS)));
         validator.addCondition(new NotNullOrUndefinedCondition(description).throw(new Error(Group.ERRORS.INVALID_DESCRIPTION)));
 
@@ -36,6 +34,7 @@ class Group {
             this.description = description;
             this.photo = photo || null;
             this.messages = messages || [];
+            this.auditInfo = auditInfo || null;
         }, (err) => { throw err; });
     }
 

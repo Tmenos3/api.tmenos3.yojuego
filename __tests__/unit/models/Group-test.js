@@ -16,11 +16,6 @@ describe('Group', () => {
         expect(() => new Group(nonArrayPlayerList, ['asdfasdf'], 'description', 'photo', [])).toThrowError(Group.ERRORS.INVALID_PLAYER_LIST);
     });
 
-    it('Must have at least one player', () => {
-        let noPlayersList = [];
-        expect(() => new Group(noPlayersList, ['asdfasdf'], 'description', 'photo', [])).toThrowError(Group.ERRORS.PLAYER_LIST_MUST_CONTAIN_PLAYERS);
-    });
-
     it('Cannot create with a undefined admin list', () => {
         let anUndefinedAdminList;
         expect(() => new Group(['asdfa'], anUndefinedAdminList, 'description', 'photo', [])).toThrowError(Group.ERRORS.INVALID_ADMIN_LIST);
@@ -34,11 +29,6 @@ describe('Group', () => {
     it('Cannot create with a non array admin list', () => {
         let nonArrayAdminList = {};
         expect(() => new Group(['asdfa'], nonArrayAdminList, 'description', 'photo', [])).toThrowError(Group.ERRORS.INVALID_ADMIN_LIST);
-    });
-
-    it('Must have at least one admin', () => {
-        let noAdminList = [];
-        expect(() => new Group(['asdfa'], noAdminList, 'description', 'photo', [])).toThrowError(Group.ERRORS.ADMIN_LIST_MUST_CONTAIN_PLAYERS);
     });
 
     it('Admins must be players', () => {

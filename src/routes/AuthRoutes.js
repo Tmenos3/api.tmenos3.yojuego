@@ -75,10 +75,10 @@ class AuthRoutes {
     }
 
     _getUserAndPlayer(req, res, next){
-        req.user.userAudit = undefined;
+        req.user.lastAccess = undefined;
         req.user.password = undefined;
         req.user.token = undefined;
-        req.player.playerAudit = undefined;
+        req.player.auditInfo = undefined;
 
         let resp = {
             token: req.token,
@@ -185,15 +185,15 @@ class AuthRoutes {
                     player.nickName = req.providerInfo.nickName;
                     player.photo = req.providerInfo.photo;
                     player.email = req.providerInfo.email;
-                    player.playerAudit.modifiedBy = 'MOBILE_APP';
-                    player.playerAudit.modifiedOn = new Date();
-                    player.playerAudit.modifiedFrom = 'MOBILE_APP';
+                    player.auditInfo.modifiedBy = 'MOBILE_APP';
+                    player.auditInfo.modifiedOn = new Date();
+                    player.auditInfo.modifiedFrom = 'MOBILE_APP';
 
                     return repoPlayer.update(player);
                 } else {
                     try {
                         let player = new Player(req.providerInfo.firstName, req.providerInfo.lastName, req.providerInfo.nickName, req.user._id, req.providerInfo.email, req.providerInfo.photo, null);
-                        player.playerAudit = {
+                        player.auditInfo = {
                             createdBy: 'MOBILE_APP', //We should store deviceId here
                             createdOn: new Date(),
                             createdFrom: 'MOBILE_APP',
@@ -226,21 +226,19 @@ class AuthRoutes {
             id: req.user._id
         };
         req.token = jwt.sign(claims, config.get('serverConfig').secret);
-        req.user.token = req.token;
-        req.user.isLogged = true;
+        req.user.logIn(req.token);
         next();
     }
 
     _auditUser(req, res, next) {
         if (!req.isNewUser) {
-            req.user.userAudit.lastAccess = new Date();
-            req.user.userAudit.modifiedBy = 'MOBILE_APP';
-            req.user.userAudit.modifiedOn = new Date();
-            req.user.userAudit.modifiedFrom = 'MOBILE_APP';
+            req.user.lastAccess = new Date();
+            req.user.auditInfo.modifiedBy = 'MOBILE_APP';
+            req.user.auditInfo.modifiedOn = new Date();
+            req.user.auditInfo.modifiedFrom = 'MOBILE_APP';
         } else {
-            req.user.userAudit = {
-                lastAccess: new Date(),
-                lastToken: req.token,
+            req.user.lastAccess = new Date(),
+            req.user.auditInfo = {
                 createdBy: 'MOBILE_APP',
                 createdOn: new Date(),
                 createdFrom: 'MOBILE_APP',

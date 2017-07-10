@@ -1,67 +1,14 @@
 let Routes = require('./Routes');
-let config = require('config');
 let fetch = require('request');
-let User = require('../models/User');
-let UserESRepository = require('../repositories/UserESRepository');
-let Validator = require('no-if-validator').Validator;
-let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
-let userRepo = null;
 
 class UserRoute extends Routes {
     constructor(esClient) {
         super();
-
-        let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(esClient).throw(UserRoute.INVALID_ES_CLIENT));
-
-        validator.execute(() => {
-            userRepo = new UserESRepository(esClient);
-        }, (err) => { throw err; });
     }
 
     _addAllRoutes(server) {
-        server.get('/user/validate',
-            this._validateRequest,
-            this._validateMailFormat,
-            this._validateIfUserExists,
-            (res, req, next) => {
-                res.json(200, { return: req.return });
-            });
-
-        server.put('/user/device/:type', this._paramsIsNotNull, this._bodyIsNotNull, this._registerDevice);
-        server.post('/user/device/:type', this._paramsIsNotNull, this._bodyIsNotNull, this._updateDevice);
-    }
-
-    _validateRequest(req, res, next) {
-        if (req.params == null || req.params == undefined) {
-            res.json(400, { code: 400, message: 'Body must be defined.', resp: null });
-        } else {
-            next();
-        }
-    }
-
-    _validateMailFormat(req, res, next) {
-        if (User.isValidMail(req.params.email)) {
-            next();
-        } else {
-            res.json(400, { code: 400, message: 'Invalid eMail format', resp: false });
-        }
-    }
-
-    _validateIfUserExists(req, res, next) {
-        userRepo.getByIdAndType(req.params.email, 'yojuego')
-            .then((response) => {
-                if (response.resp) {
-                    res.json(400, { code: 400, message: 'La cuenta está en uso.', resp: null });
-                } else {
-                    next();
-                }
-            }, (err) => {
-                res.json(400, { code: 400, message: err, resp: null });
-            })
-            .catch((err) => {
-                res.json(500, { code: 500, message: err, resp: null });
-            });
+        server.put('/user/device/:type', super._paramsIsNotNull, super._bodyIsNotNull, this._registerDevice);
+        server.post('/user/device/:type', super._paramsIsNotNull, super._bodyIsNotNull, this._updateDevice);
     }
 
     _registerDevice(req, res, next) {

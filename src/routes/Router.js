@@ -10,6 +10,7 @@ let ResetPasswordRoutes = require('./ResetPasswordRoutes');
 let UserRoute = require('./UserRoute');
 let ClubRoutes = require('./ClubRoutes');
 let FriendshipRequestRoutes = require('./FriendshipRequestRoutes');
+let InvitationRoutes = require('./InvitationRoutes');
 
 class Router {
     constructor() { }
@@ -27,6 +28,7 @@ class Router {
         new ResetPasswordRoutes(esClient, jwt).add(server);
         new UserRoute(esClient).add(server);
         new FriendshipRequestRoutes(esClient).add(server);
+        new InvitationRoutes(esClient).add(server);
     }
 }
 

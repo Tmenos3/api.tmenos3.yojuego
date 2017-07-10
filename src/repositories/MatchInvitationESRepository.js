@@ -1,4 +1,4 @@
-let ESRepository = require('./ESRepository');
+let ESRepository = require('../common/ESRepository');
 let MatchInvitation = require('../models/MatchInvitation');
 
 class MatchInvitationESRepository extends ESRepository {

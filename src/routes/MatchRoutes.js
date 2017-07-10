@@ -133,9 +133,13 @@ class MatchRoutes extends Routes {
         try {
             var match = new Match(req.body.title, new Date(req.body.date), req.body.fromTime, req.body.toTime, req.body.location, req.player._id, req.body.matchType);
             //Remove duplicates
-            match.pendingPlayers = Array.from(new Set(req.body.pendingPlayers.concat([req.player._id])));
+            // match.pendingPlayers = Array.from(new Set(req.body.pendingPlayers.concat([req.player._id])));
+            let pendingPlayers = Array.from(new Set(req.body.pendingPlayers.concat([req.player._id])));
+            pendingPlayers.forEach(p => {
+                match.invitePlayer(req.player._id, p);
+            });
 
-            match.matchAudit = {
+            match.auditInfo = {
                 createdBy: req.player._id,
                 createdOn: new Date(),
                 createdFrom: req.body.platform || 'MOBILE_APP',
@@ -207,22 +211,24 @@ class MatchRoutes extends Routes {
     }
 
     _removePlayer(req, res, next) {
-        req.match.removeInvitedPlayer(req.params.playerId);
-        req.match.removeConfirmedPlayer(req.params.playerId);
+        // req.match.removeInvitedPlayer(req.params.playerId);
+        // req.match.removeConfirmedPlayer(req.params.playerId);
+        req.match.cancelPlayer(req.params.playerId);
         next();
     }
 
     _invitePlayers(req, res, next) {
         req.body.players.forEach((p) => {
-            req.match.addInvitedPlayer(p);
+            req.match.invitePlayer(req.player._id, p);
         });
         next();
     }
 
     _exitPlayer(req, res, next) {
-        req.match.removeConfirmedPlayer(req.player._id);
-        req.match.removeInvitedPlayer(req.player._id);
-        req.match.addCanceledPlayers(req.player._id);
+        // req.match.removeConfirmedPlayer(req.player._id);
+        // req.match.removeInvitedPlayer(req.player._id);
+        // req.match.addCanceledPlayers(req.player._id);
+        req.match.cancelPlayer(req.player._id);
         next();
     }
 
@@ -237,9 +243,9 @@ class MatchRoutes extends Routes {
     }
 
     _saveMatch(req, res, next) {
-        req.match.matchAudit.modifiedBy = req.player._id;
-        req.match.matchAudit.modifiedOn = new Date();
-        req.match.matchAudit.modifiedFrom = 'MOBILE_APP';
+        req.match.auditInfo.modifiedBy = req.player._id;
+        req.match.auditInfo.modifiedOn = new Date();
+        req.match.auditInfo.modifiedFrom = 'MOBILE_APP';
 
         repoMatch.update(req.match)
             .then((resp) => {

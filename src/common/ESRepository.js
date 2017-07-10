@@ -1,11 +1,10 @@
-let ElasticSearch = require('elasticsearch');
 let Validator = require('no-if-validator').Validator;
 let NotNullOrUndefinedCondition = require('no-if-validator').NotNullOrUndefinedCondition;
 
 class ESRepository {
     constructor(client) {
         let validator = new Validator();
-        validator.addCondition(new NotNullOrUndefinedCondition(client).throw(new Error(ESRepository.INVALID_CLIENT)));
+        validator.addCondition(new NotNullOrUndefinedCondition(client).throw(new Error(ESRepository.ERRORS.INVALID_CLIENT)));
 
         validator.execute(() => {
             this.esclient = client;
@@ -15,8 +14,8 @@ class ESRepository {
     getAll(index, type) {
         return new Promise((resolve, reject) => {
             let validator = new Validator();
-            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
-            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.ERRORS.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.ERRORS.INVALID_TYPE)));
 
             validator.execute(() => {
                 this.esclient.search({
@@ -46,9 +45,9 @@ class ESRepository {
     get(id, index, type) {
         return new Promise((resolve, reject) => {
             let validator = new Validator();
-            validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.INVALID_ID)));
-            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
-            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+            validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.ERRORS.INVALID_ID)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.ERRORS.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.ERRORS.INVALID_TYPE)));
 
             validator.execute(() => {
                 this.esclient.get({
@@ -58,7 +57,7 @@ class ESRepository {
                 }, (error, response, status) => {
                     if (error) {
                         if (error.status == 404) {
-                            resolve({ code: 404, message: null, resp: null });
+                            resolve({ code: 200, message: null, resp: null });
                         } else {
                             reject({ code: error.status, message: error.message, resp: error });
                         }
@@ -74,9 +73,9 @@ class ESRepository {
     add(document, index, type) {
         return new Promise((resolve, reject) => {
             let validator = new Validator();
-            validator.addCondition(new NotNullOrUndefinedCondition(document).throw(new Error(ESRepository.INVALID_DOCUMENT)));
-            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
-            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+            validator.addCondition(new NotNullOrUndefinedCondition(document).throw(new Error(ESRepository.ERRORS.INVALID_DOCUMENT)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.ERRORS.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.ERRORS.INVALID_TYPE)));
 
             validator.execute(() => {
                 this.esclient.index({
@@ -87,7 +86,7 @@ class ESRepository {
                     if (error) {
                         reject({ code: error.statusCode, message: error.message, resp: error });
                     } else {
-                        resolve({ code: 200, message: ESRepository.DOCUMENT_INSERTED, resp: resp });
+                        resolve({ code: 200, message: ESRepository.MESSAGES.DOCUMENT_INSERTED, resp: resp });
                     }
                 });
             }, (err) => { throw err; });
@@ -99,9 +98,9 @@ class ESRepository {
         //warning: revisar sintaxis.
         return new Promise((resolve, reject) => {
             let validator = new Validator();
-            validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.INVALID_ID)));
-            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
-            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+            validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.ERRORS.INVALID_ID)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.ERRORS.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.ERRORS.INVALID_TYPE)));
 
             this.esclient.delete({
                 index: index,
@@ -111,7 +110,7 @@ class ESRepository {
                 if (error) {
                     reject({ code: error.statusCode, message: error.message, resp: error });
                 } else {
-                    resolve({ code: 200, message: ESRepository.DOCUMENT_INSERTED, resp: resp });
+                    resolve({ code: 200, message: ESRepository.MESSAGES.DOCUMENT_DELETED, resp: resp });
                 }
             });
         }, (err) => { throw err; });
@@ -120,10 +119,10 @@ class ESRepository {
     update(id, document, index, type) {
         return new Promise((resolve, reject) => {
             let validator = new Validator();
-            validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.INVALID_ID)));
-            validator.addCondition(new NotNullOrUndefinedCondition(document).throw(new Error(ESRepository.INVALID_DOCUMENT)));
-            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
-            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+            validator.addCondition(new NotNullOrUndefinedCondition(id).throw(new Error(ESRepository.ERRORS.INVALID_ID)));
+            validator.addCondition(new NotNullOrUndefinedCondition(document).throw(new Error(ESRepository.ERRORS.INVALID_DOCUMENT)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.ERRORS.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.ERRORS.INVALID_TYPE)));
 
             validator.execute(() => {
                 this.esclient.update({
@@ -137,7 +136,7 @@ class ESRepository {
                     if (error) {
                         reject({ code: error.statusCode, message: error.message, resp: error });
                     } else {
-                        resolve({ code: 200, message: ESRepository.DOCUMENT_UPDATED, resp: resp });
+                        resolve({ code: 200, message: ESRepository.MESSAGES.DOCUMENT_UPDATED, resp: resp });
                     }
                 });
             }, (err) => { throw err; });
@@ -147,9 +146,9 @@ class ESRepository {
     getBy(query, index, type) {
         return new Promise((resolve, reject) => {
             let validator = new Validator();
-            validator.addCondition(new NotNullOrUndefinedCondition(query).throw(new Error(ESRepository.INVALID_QUERY)));
-            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.INVALID_INDEX)));
-            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.INVALID_TYPE)));
+            validator.addCondition(new NotNullOrUndefinedCondition(query).throw(new Error(ESRepository.ERRORS.INVALID_QUERY)));
+            validator.addCondition(new NotNullOrUndefinedCondition(index).throw(new Error(ESRepository.ERRORS.INVALID_INDEX)));
+            validator.addCondition(new NotNullOrUndefinedCondition(type).throw(new Error(ESRepository.ERRORS.INVALID_TYPE)));
 
             validator.execute(() => {
                 this.esclient.search({
@@ -173,40 +172,24 @@ class ESRepository {
         });
     }
 
-    static get INVALID_CLIENT() {
-        return "Invalid Client";
+    static get ERRORS() {
+        return {
+            INVALID_CLIENT: 'Invalid ES Client.',
+            INVALID_ID: 'Invalid ID.',
+            INVALID_QUERY: 'Invalid query.',
+            INVALID_DOCUMENT: 'Invalid document.',
+            INVALID_INDEX: 'Invalid index.',
+            INVALID_TYPE: 'Invalid type.',
+            UNEXPECTED_ERROR: 'Unexpected error.'
+        }
     }
 
-    static get INVALID_ID() {
-        return "Invalid id";
-    }
-
-    static get INVALID_QUERY() {
-        return "Invalid query";
-    }
-
-    static get INVALID_DOCUMENT() {
-        return "Invalid document";
-    }
-
-    static get INVALID_INDEX() {
-        return "Invalid index";
-    }
-
-    static get INVALID_TYPE() {
-        return "Invalid type";
-    }
-
-    static get DOCUMENT_INSERTED() {
-        return "Document inserted.";
-    }
-
-    static get DOCUMENT_UPDATED() {
-        return "Document updated.";
-    }
-
-    static get UNEXPECTED_ERROR() {
-        return "Unexpected error.";
+    static get MESSAGES() {
+        return {
+            DOCUMENT_INSERTED: 'Document inserted.',
+            DOCUMENT_UPDATED: 'Document updated.',
+            DOCUMENT_DELETED: 'Document deleted.',
+        }
     }
 }
 

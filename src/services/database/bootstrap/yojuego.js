@@ -6,15 +6,11 @@ let createUser = (esClient, index) => {
       body: {
         id: 'user@yojuego.com',
         password: '123456',
-        type: 'yojuego',
+        type: 'YOJUEGO',
         isLogged: false,
         token: null,
-        oauth: {
-          authToken: null,
-          refreshToken: null
-        },
-        userAudit: {
-          lastAccess: null,
+        lastAccess: null,
+        auditInfo: {
           createdBy: 'BOOTSTRAP',
           createdOn: new Date(),
           createdFrom: 'BOOTSTRAP',
@@ -59,7 +55,7 @@ let createPlayer = (esClient, index, user) => {
         email: user.id,
         phone: null,
         userid: user._id,
-        playerAudit: {
+        auditInfo: {
           createdBy: 'BOOTSTRAP',
           createdOn: new Date(),
           createdFrom: 'BOOTSTRAP',

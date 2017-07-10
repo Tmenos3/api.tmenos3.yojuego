@@ -40,7 +40,7 @@ class LogOutRoutes extends Routes {
     }
 
     _validateLogin(req, res, next) {
-        if (!req.user.isLogged) {
+        if (!req.user.isLoggedIn()) {
             res.json(400, { code: 400, message: 'El usuario no ha iniciado session.', resp: null });
         } else {
             next();
@@ -48,12 +48,11 @@ class LogOutRoutes extends Routes {
     }
 
     _clearToken(req, res, next) {
-        req.user.isLogged = false;
-        req.user.token = null;
-        req.user.userAudit.lastAccess = new Date();
-        req.user.userAudit.modifiedBy = 'MOBILE_APP'; //We should store deviceId here
-        req.user.userAudit.modifiedOn = new Date();
-        req.user.userAudit.modifiedFrom = 'MOBILE_APP';
+        req.user.logOut();
+        req.user.lastAccess = new Date();
+        req.user.auditInfo.modifiedBy = 'MOBILE_APP'; //We should store deviceId here
+        req.user.auditInfo.modifiedOn = new Date();
+        req.user.auditInfo.modifiedFrom = 'MOBILE_APP';
 
         userRepo.update(req.user)
             .then((resp) => {

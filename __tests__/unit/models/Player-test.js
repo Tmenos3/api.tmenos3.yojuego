@@ -1,135 +1,230 @@
 import Player from '../../../src/models/Player';
-import PlayerAdminState from '../../../src/constants/PlayerAdminState';
 
 describe('Player', () => {
-  it('Cannot create with an undefined nickName', () => {
-    var anUndefinedNickName;
+  it('Cannot create with an undefined first name', () => {
+    let undefinedFirstName;
 
-    expect(() => new Player(anUndefinedNickName)).toThrowError(Player.INVALID_NICKNAME);
+    expect(() => new Player(undefinedFirstName, 'lastName', 'nickName', 'userid', 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_FIRSTNAME);
   });
 
-  it('Cannot create with a null nickName', () => {
-    var aNullNickName = null;
+  it('Cannot create with a null first name', () => {
+    let aNullFirstName = null;
 
-    expect(() => new Player(aNullNickName)).toThrowError(Player.INVALID_NICKNAME);
+    expect(() => new Player(aNullFirstName, 'lastName', 'nickName', 'userid', 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_FIRSTNAME);
   });
 
-  it('Cannot create with blank spaces in nickName', () => {
-    var aNickNameWithBlankSpace = 'nick name';
+  it('Cannot create with an empty first name', () => {
+    let emptyFirstName = '';
 
-    expect(() => new Player(aNickNameWithBlankSpace)).toThrowError(Player.INVALID_NICKNAME_HAS_BLANKSPACES);
+    expect(() => new Player(emptyFirstName, 'lastName', 'nickName', 'userid', 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_FIRSTNAME);
   });
 
-  it('NickName must be more than 5 characters', () => {
-    var aShortNickName = 'ni';
+  it('Cannot create with an undefined last name', () => {
+    let undefinedLastName;
 
-    expect(() => new Player(aShortNickName, new Date(2010, 10, 10), 'nuevo')).toThrowError(Player.INVALID_NICKNAME_IS_SHORT);
+    expect(() => new Player('firstName', undefinedLastName, 'nickName', 'userid', 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_LASTNAME);
   });
 
-  it('Cannot create with an undefined birthDate', () => {
-    var anUndefinedBirthDate;
-    expect(() => new Player('aPlayer', anUndefinedBirthDate)).toThrowError(Player.INVALID_BIRTHDATE);
+  it('Cannot create with a null last name', () => {
+    let aNullLastName = null;
+
+    expect(() => new Player('firstName', aNullLastName, 'nickName', 'userid', 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_LASTNAME);
   });
 
-  it('Cannot create with a null birthDate', () => {
-    var aNullBirthDate = null;
+  it('Cannot create with an empty last name', () => {
+    let emptyLastName = '';
 
-    expect(() => new Player('aPlayer', aNullBirthDate)).toThrowError(Player.INVALID_BIRTHDATE);
+    expect(() => new Player('firstName', emptyLastName, 'nickName', 'userid', 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_LASTNAME);
   });
 
-  it('Cannot create with a dateBirth if it is not date type', () => {
-    var anInvalidadBirthDateType = 'no soy tipo date';
+  it('Cannot create with an undefined nick name', () => {
+    let undefinedNickName;
 
-    expect(() => new Player('aPlayer', anInvalidadBirthDateType)).toThrowError(Player.INVALID_DATE_TYPE);
+    expect(() => new Player('firstName', 'lastName', undefinedNickName, 'userid', 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_NICKNAME);
   });
 
-  it('Cannot create with a null state', () => {
-    var aNullState = null;
-    expect(() => new Player('aPlayer', new Date(2010, 10, 10), aNullState)).toThrowError(Player.INVALID_STATE);
+  it('Cannot create with a null nick name', () => {
+    let aNullNickName = null;
+
+    expect(() => new Player('firstName', 'lastName', aNullNickName, 'userid', 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_NICKNAME);
   });
 
-  it('Cannot create with an undefined state', () => {
-    var anUndefinedState;
+  it('Cannot create with an empty nick name', () => {
+    let emptyNickName = '';
 
-    expect(() => new Player('aPlayer', new Date(2010, 10, 10), anUndefinedState)).toThrowError(Player.INVALID_STATE);
-  });
-
-  it('Cannot create with an undefined adminState', () => {
-    var anUndefinedAdminState;
-    expect(() => new Player('aPlayer', new Date(2010, 10, 10), 'Hi, I am using Yo Juego', anUndefinedAdminState)).toThrowError(Player.INVALID_ADMIN_STATE);
-  });
-
-  it('Cannot create with a null adminState', () => {
-    var anNullAdminState;
-    expect(() => new Player('aPlayer', new Date(2010, 10, 10), 'Hi, I am using Yo Juego', anNullAdminState)).toThrowError(Player.INVALID_ADMIN_STATE);
+    expect(() => new Player('firstName', 'lastName', emptyNickName, 'userid', 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_NICKNAME);
   });
 
   it('Cannot create with a null userID', () => {
-    var aNullUserID = null;
-    expect(() => new Player('aPlayer', new Date(2010, 10, 10), 'Hi, I am using Yo Juego', 'adminState', aNullUserID)).toThrowError(Player.INVALID_USERID);
+    let aNullUserID = null;
+    expect(() => new Player('firstName', 'lastName', 'nickName', aNullUserID, 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_USERID);
   });
 
   it('Cannot create with an undefined UserID', () => {
-    var anUndefinedUser;
-    expect(() => new Player('aPlayer', new Date(2010, 10, 10), 'Hi, I am using Yo Juego', 'adminState', anUndefinedUser)).toThrowError(Player.INVALID_USERID);
+    let anUndefinedUser;
+    expect(() => new Player('firstName', 'lastName', 'nickName', anUndefinedUser, 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_USERID);
+  });
+
+  it('Cannot create with an empty UserID', () => {
+    let emptyUserId = '';
+    expect(() => new Player('firstName', 'lastName', 'nickName', emptyUserId, 'mail@mail.com')).toThrowError(Player.ERRORS.INVALID_USERID);
+  });
+
+  it('Cannot create with a null email', () => {
+    let aNullEmail = null;
+    expect(() => new Player('firstName', 'lastName', 'nickName', 'userid', aNullEmail)).toThrowError(Player.ERRORS.INVALID_EMAIL);
+  });
+
+  it('Cannot create with an undefined email', () => {
+    let anUndefinedEmail;
+    expect(() => new Player('firstName', 'lastName', 'nickName', 'userid', anUndefinedEmail)).toThrowError(Player.ERRORS.INVALID_EMAIL);
+  });
+
+  it('Cannot create with an empty email', () => {
+    let emptyEmail = '';
+    expect(() => new Player('firstName', 'lastName', 'nickName', 'userid', emptyEmail)).toThrowError(Player.ERRORS.INVALID_EMAIL);
+  });
+
+  it('Cannot create with an bad formatted email', () => {
+    expect(() => new Player('firstName', 'lastName', 'nickName', 'userid', 'badFormattedEmail')).toThrowError(Player.ERRORS.INVALID_EMAIL);
   });
 
   it('Can create a valid Player', () => {
-    var aNickName = 'nickName';
-    var aBirthDate = new Date(2010, 10, 10);
-    var aState = 'Hi, I am using Yo Juego';
-    var anAdminState = PlayerAdminState.enabled;
-    var anUserID = '1';
-    var player = new Player(aNickName, aBirthDate, aState, anAdminState, anUserID);
+    let firstName = 'firstName';
+    let lastName = 'lastName';
+    let nickName = 'nickName';
+    let userId = 'userId';
+    let email = 'mail@mail.com';
+    let player = new Player(firstName, lastName, nickName, userId, email);
 
-    expect(player.nickName).toBe(aNickName);
-    expect(player.birthDate).toBe(aBirthDate);
-    expect(player.state).toBe(aState);
-    expect(player.adminState).toBe(anAdminState);
-    expect(player.userid).toBe(anUserID);
-    expect(player.teamMates.length).toEqual(0);
+    expect(player.firstName).toBe(firstName);
+    expect(player.lastName).toBe(lastName);
+    expect(player.nickName).toBe(nickName);
+    expect(player.userid).toBe(userId);
+    expect(player.email).toBe(email);
+    expect(player.phone).toBeNull();
+    expect(player.photo).toBeNull();
   });
 
-  it('Can add a teammate if it does not exist', () => {
-    var nonExistantTeamMateId = 'ihna8rt7q09';
-    var player = new Player('aNickName', new Date(2010, 10, 10), 'aState', 'anAdminState', 'anUserID');
-
-    player.addTeamMate(nonExistantTeamMateId);
-
-    expect(player.teamMates.length).toEqual(1);
-    expect(player.teamMates.indexOf(nonExistantTeamMateId)).toBeGreaterThanOrEqual(-1);
+  it('Cannot set a new first name to undefined', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setFirstName(undefined)).toThrowError(Player.ERRORS.INVALID_FIRSTNAME);
   });
 
-  it('If teammate exists player does not add it again', () => {
-    var existantTeamMateId = 'ihna8rt7q09';
-    var player = new Player('aNickName', new Date(2010, 10, 10), 'aState', 'anAdminState', 'anUserID');
-
-    player.addTeamMate(existantTeamMateId);
-    player.addTeamMate(existantTeamMateId);
-
-    expect(player.teamMates.length).toEqual(1);
-    expect(player.teamMates.indexOf(existantTeamMateId)).toBeGreaterThanOrEqual(-1);
+  it('Cannot set a new first name to null', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setFirstName(null)).toThrowError(Player.ERRORS.INVALID_FIRSTNAME);
   });
 
-  it('Can remove a teammate if it exists', () => {
-    var existantTeamMateId = 'ihna8rt7q09';
-    var player = new Player('aNickName', new Date(2010, 10, 10), 'aState', 'anAdminState', 'anUserID');
-
-    player.addTeamMate(existantTeamMateId);
-
-    player.removeTeamMate(existantTeamMateId);
-
-    expect(player.teamMates.length).toEqual(0);
-    expect(player.teamMates.indexOf(existantTeamMateId)).toEqual(-1);
+  it('Cannot set a new first name to empty', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setFirstName('')).toThrowError(Player.ERRORS.INVALID_FIRSTNAME);
   });
 
-  it('If teammate does not exist player does not remove it', () => {
-    var nonExistantTeamMateId = 'ihna8rt7q09';
-    var player = new Player('aNickName', new Date(2010, 10, 10), 'aState', 'anAdminState', 'anUserID');
+  it('Cannot set a new last name to undefined', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setLastName(undefined)).toThrowError(Player.ERRORS.INVALID_LASTNAME);
+  });
 
-    player.removeTeamMate(nonExistantTeamMateId);
-    
-    expect(player.teamMates.length).toEqual(0);
-    expect(player.teamMates.indexOf(nonExistantTeamMateId)).toBeGreaterThanOrEqual(-1);
+  it('Cannot set a new last name to null', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setLastName(null)).toThrowError(Player.ERRORS.INVALID_LASTNAME);
+  });
+
+  it('Cannot set a new last name to empty', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setLastName('')).toThrowError(Player.ERRORS.INVALID_LASTNAME);
+  });
+
+  it('Cannot set a new nick name to undefined', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setNickName(undefined)).toThrowError(Player.ERRORS.INVALID_NICKNAME);
+  });
+
+  it('Cannot set a new nick name to null', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setNickName(null)).toThrowError(Player.ERRORS.INVALID_NICKNAME);
+  });
+
+  it('Cannot set a new nick name to empty', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setNickName('')).toThrowError(Player.ERRORS.INVALID_NICKNAME);
+  });
+
+  it('Cannot set a new email to undefined', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setEmail(undefined)).toThrowError(Player.ERRORS.INVALID_EMAIL);
+  });
+
+  it('Cannot set a new email to null', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setEmail(null)).toThrowError(Player.ERRORS.INVALID_EMAIL);
+  });
+
+  it('Cannot set a new email to empty', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setEmail('')).toThrowError(Player.ERRORS.INVALID_EMAIL);
+  });
+
+  it('Cannot set a new email with an invalid format', () => {
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    expect(() => player.setEmail('badFormattedEmail')).toThrowError(Player.ERRORS.INVALID_EMAIL);
+  });
+
+  it('Can set a new first name', () => {
+    let newFirstName = 'newFirstName';
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    player.setFirstName(newFirstName);
+
+    expect(player.firstName).toBe(newFirstName);
+  });
+
+  it('Can set a new last name', () => {
+    let newLastName = 'newLastName';
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    player.setLastName(newLastName);
+
+    expect(player.lastName).toBe(newLastName);
+  });
+
+  it('Can set a new nick name', () => {
+    let newNickName = 'newNickName';
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    player.setNickName(newNickName);
+
+    expect(player.nickName).toBe(newNickName);
+  });
+
+  it('Can set a new email', () => {
+    let newEmail = 'new_email@mail.com';
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    player.setEmail(newEmail);
+
+    expect(player.email).toBe(newEmail);
+  });
+
+  it('Can set a new photo', () => {
+    let newPhoto = 'newPhoto';
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    player.setPhoto(newPhoto);
+
+    expect(player.photo).toBe(newPhoto);
+  });
+
+  it('Can set a phone', () => {
+    let newPhone = 'newPhone';
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com');
+    player.setPhone(newPhone);
+
+    expect(player.phone).toBe(newPhone);
+  });
+
+  it('Can create a valid Player with photo and phone', () => {
+    let photo = 'myPhoto';
+    let phone = 'myPhone';
+    let player = new Player('firstName', 'lastName', 'nickName', 'userId', 'mail@mail.com', photo, phone);
+
+    expect(player.phone).toBe(phone);
+    expect(player.photo).toBe(photo);
   });
 });

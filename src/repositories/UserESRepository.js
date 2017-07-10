@@ -1,9 +1,8 @@
-let ESRepository = require('./ESRepository');
+let ESRepository = require('../common/ESRepository');
 let User = require('../models/User');
 let FacebookUser = require('../models/FacebookUser');
 let GoogleUser = require('../models/GoogleUser');
 let YoJuegoUser = require('../models/YoJuegoUser');
-let UserType = require('../constants/UserType');
 
 class UserESRepository extends ESRepository {
     constructor(client) {
@@ -27,8 +26,9 @@ class UserESRepository extends ESRepository {
     }
 
     getByIdAndType(id, type) {
-        //TEST: not null, not undefined
-        //TEST: instance of string both
+        if (!id) return Promise.reject({ code: 410, message: UserESRepository.ERRORS.INVALID_ID, resp: null })
+        if (!type) return Promise.reject({ code: 410, message: UserESRepository.ERRORS.INVALID_TYPE, resp: null })
+
         return super.getBy(this._getQueryByIdAndType(id, type), 'yojuego', 'user')
             .then((objRet) => {
                 if (objRet.resp.length < 1)
@@ -40,37 +40,32 @@ class UserESRepository extends ESRepository {
     }
 
     add(user) {
-        //TEST: not null, not undefined
-        //TEST: instance of User
-        //TEST: return a user
+        if (!(user instanceof User)) return Promise.reject({ code: 410, message: UserESRepository.ERRORS.INVALID_INSTANCE_USER, resp: null });
+
         return super.add(user, 'yojuego', 'user')
             .then((resp) => {
                 let newUser = this._mapUser(resp.resp._id, user);
-                return { code: 200, message: UserESRepository.DOCUMENT_INSERTED, resp: newUser };
+                return { code: 200, message: UserESRepository.MESSAGES.DOCUMENT_INSERTED, resp: newUser };
             }, (error) => { return Promise.reject(error); });
     }
 
     update(user) {
-        //TEST: not null, not undefined
-        //TEST: instance of User
         if (user instanceof User) {
             let document = this._getDocument(user);
             return super.update(user._id, document, 'yojuego', 'user')
                 .then((resp) => {
-                    return { code: 200, message: UserESRepository.DOCUMENT_UPDATED, resp: user };
+                    return { code: 200, message: UserESRepository.MESSAGES.DOCUMENT_UPDATED, resp: user };
                 }, (error) => { return Promise.reject(error); });
         } else {
-            return Promise.reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER, resp: null });
+            return Promise.reject({ code: 410, message: UserESRepository.ERRORS.INVALID_INSTANCE_USER, resp: null });
         }
     }
 
     delete(user) {
-        //TEST: not null, not undefined
-        //TEST: instance of User
         if (user instanceof User) {
             return super.delete(user._id, 'yojuego', 'user');
         } else {
-            return Promise.reject({ code: 410, message: UserESRepository.INVALID_INSTANCE_USER, resp: null });
+            return Promise.reject({ code: 410, message: UserESRepository.ERRORS.INVALID_INSTANCE_USER, resp: null });
         }
     }
 
@@ -78,19 +73,19 @@ class UserESRepository extends ESRepository {
         let user = null;
 
         switch (source.type) {
-            case UserType.facebook:
+            case User.TYPES.FACEBOOK:
                 user = new FacebookUser(source.id, source.isLogged, source.token);
                 break;
-            case UserType.google:
+            case User.TYPES.GOOGLE:
                 user = new GoogleUser(source.id, source.isLogged, source.token);
                 break;
-            case UserType.yoJuego:
+            case User.TYPES.YOJUEGO:
                 user = new YoJuegoUser(source.id, source.password, source.isLogged, source.token);
                 break;
         }
 
         user._id = id;
-        user.userAudit = source.userAudit;
+        user.auditInfo = source.auditInfo;
 
         return user;
     }
@@ -101,18 +96,11 @@ class UserESRepository extends ESRepository {
             id: user.id,
             isLogged: user.isLogged,
             token: user.token,
-            userAudit: {
-                lastAccess: user.userAudit.lastAccess,
-                createdBy: user.userAudit.createdBy,
-                createdOn: user.userAudit.createdOn,
-                createdFrom: user.userAudit.createdFrom,
-                modifiedBy: user.userAudit.modifiedBy,
-                modifiedOn: user.userAudit.modifiedOn,
-                modifiedFrom: user.userAudit.modifiedFrom
-            }
+            lastAccess: user.lastAccess,
+            auditInfo: user.auditInfo
         };
 
-        if (user.type == UserType.yoJuego) {
+        if (user.type == User.TYPES.YOJUEGO) {
             document.password = user.password;
         }
 
@@ -130,12 +118,12 @@ class UserESRepository extends ESRepository {
         };
     }
 
-    static get INVALID_USER() {
-        return "Invalid User";
-    }
-
-    static get INVALID_INSTANCE_USER() {
-        return 'This instance is not a user';
+    static get ERRORS() {
+        let errors = ESRepository.ERRORS;
+        errors.INVALID_INSTANCE_USER = 'This instance is not a user';
+        errors.INVALID_ID = 'El id no puede ser null ni undefined';
+        errors.INVALID_TYPE = 'El type no puede ser null ni undefined';
+        return errors;
     }
 }
 

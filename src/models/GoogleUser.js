@@ -1,10 +1,8 @@
-'use strict'
-var UserType = require('../constants/UserType');
-var User = require('./User');
+let User = require('./User');
 
 class GoogleUser extends User {
     constructor(id, isLogged, token, oauthInfo) {
-        super(UserType.google, id, isLogged, token, oauthInfo);
+        super(User.TYPES.GOOGLE, id, isLogged, token, oauthInfo);
     }
 }
 

@@ -1,4 +1,4 @@
-let ESRepository = require('./ESRepository');
+let ESRepository = require('../common/ESRepository');
 let FriendshipRequest = require('../models/FriendshipRequest');
 
 class FriendshipRequestESRepository extends ESRepository {

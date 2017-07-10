@@ -1,7 +1,7 @@
-var ESRepository = require('./ESRepository');
-var Player = require('../models/Player');
-var Validator = require('no-if-validator').Validator;
-var InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
+let ESRepository = require('../common/ESRepository');
+let Player = require('../models/Player');
+let Validator = require('no-if-validator').Validator;
+let InstanceOfCondition = require('no-if-validator').InstanceOfCondition;
 
 class PlayerESRepository extends ESRepository {
     constructor(client) {
@@ -26,6 +26,8 @@ class PlayerESRepository extends ESRepository {
     }
 
     getByUserId(userid) {
+        if (!userid) return Promise.reject({ code: 410, message: PlayerESRepository.ERRORS.INVALID_USERID, resp: null });
+
         return super.getBy(this._getQueryByUserId(userid), 'yojuego', 'player')
             .then((objRet) => {
                 if (objRet.resp.length < 1) {
@@ -40,7 +42,8 @@ class PlayerESRepository extends ESRepository {
     }
 
     getByEmail(email) {
-        //TEST: full test require
+        if (!email) return Promise.reject({ code: 410, message: PlayerESRepository.ERRORS.INVALID_EMAIL, resp: null });
+
         return super.getBy(this._getQueryByEmail(email), 'yojuego', 'player')
             .then((objRet) => {
                 if (objRet.resp.length < 1) {
@@ -56,7 +59,7 @@ class PlayerESRepository extends ESRepository {
         if (player instanceof Player) {
             return super.add(player, 'yojuego', 'player');
         } else {
-            return Promise.reject({ code: 410, message: PlayerESRepository.INVALID_INSTANCE_PLAYER });
+            return Promise.reject({ code: 410, message: PlayerESRepository.ERRORS.INVALID_INSTANCE_PLAYER });
         }
     }
 
@@ -64,14 +67,22 @@ class PlayerESRepository extends ESRepository {
         if (player instanceof Player) {
             return super.update(player._id, this._getDocument(player), 'yojuego', 'player');
         } else {
-            return Promise.reject({ code: 410, message: PlayerESRepository.INVALID_INSTANCE_PLAYER });
+            return Promise.reject({ code: 410, message: PlayerESRepository.ERRORS.INVALID_INSTANCE_PLAYER });
+        }
+    }
+
+    delete(player) {
+        if (player instanceof Player) {
+            return super.delete(player._id, 'yojuego', 'player');
+        } else {
+            return Promise.reject({ code: 410, message: PlayerESRepository.ERRORS.INVALID_INSTANCE_PLAYER });
         }
     }
 
     _mapPlayer(id, source) {
         let player = new Player(source.firstName, source.lastName, source.nickName, source.userid, source.email, source.photo, source.phone);
         player._id = id
-        player.playerAudit = source.playerAudit;
+        player.auditInfo = source.auditInfo;
 
         return player;
     }
@@ -85,14 +96,7 @@ class PlayerESRepository extends ESRepository {
             photo: player.photo,
             phone: player.phone,
             userid: player.userid,
-            playerAudit: {
-                createdBy: player.playerAudit.createdBy,
-                createdOn: player.playerAudit.createdOn,
-                createdFrom: player.playerAudit.createdFrom,
-                modifiedBy: player.playerAudit.modifiedBy,
-                modifiedOn: player.playerAudit.modifiedOn,
-                modifiedFrom: player.playerAudit.modifiedFrom
-            }
+            auditInfo: player.auditInfo
         };
 
         return document;
@@ -118,8 +122,12 @@ class PlayerESRepository extends ESRepository {
         };
     }
 
-    static get INVALID_INSTANCE_PLAYER() {
-        return 'This instance is not a player';
+    static get ERRORS() {
+        let errors = ESRepository.ERRORS;
+        errors.INVALID_INSTANCE_PLAYER = 'This instance is not a player';
+        errors.INVALID_USERID = 'El user id no puede ser null ni undefined';
+        errors.INVALID_EMAIL = 'El email no puede ser null ni undefined';
+        return errors;
     }
 }
 

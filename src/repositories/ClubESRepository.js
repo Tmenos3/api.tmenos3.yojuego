@@ -1,4 +1,4 @@
-var ESRepository = require('./ESRepository');
+var ESRepository = require('../common/ESRepository');
 var Club = require('../models/club/Club');
 var Event = require('../models/club/Event');
 var Facilities = require('../models/club/Facilities');

@@ -13,6 +13,7 @@ class FriendshipManager {
     this._createFriendshipRequest = this._createFriendshipRequest.bind(this);
     this._sendNotification = this._sendNotification.bind(this);
     this._updateFriendFriendship = this._updateFriendFriendship.bind(this);
+    this._fillFriendInfo = this._fillFriendInfo.bind(this);
 
     this._validator = new Validator();
     this._validator.addCondition(new NotNullOrUndefinedCondition(repoFriendship).throw(new Error(FriendshipManager.INVALID_FRIENDSHIP_REPO)));
@@ -39,7 +40,10 @@ class FriendshipManager {
             return this._checkPlayerFriendship(friendship, playerId);
           })
           .then(friendship => {
-            friendship.friendshipAudit = undefined;
+            return this._fillFriendInfo(friendship);
+          })
+          .then(friendship => {
+            friendship.auditInfo = undefined;
             resolve(friendship);
           })
           .catch(error => {
@@ -56,15 +60,25 @@ class FriendshipManager {
 
       this._validator.execute(() => {
         this._repoFriendship.getByPlayerId(playerId)
-          .then((resp) => {
-            let frienships = [];
-            if (resp.resp) {
-              frienships = resp.resp.map(r => {
-                r.friendshipAudit = undefined;
+          .then(resp => {
+            let promises = [];
+
+            resp.resp.forEach(f => {
+              promises.push(
+                this._fillFriendInfo(f)
+              );
+            });
+
+            return Promise.all(promises);
+          })
+          .then((friendships) => {
+            if (friendships) {
+              friendships = friendships.map(r => {
+                r.auditInfo = undefined;
                 return r;
               });
             }
-            resolve(frienships);
+            resolve(friendships);
           })
           .catch((error) => {
             reject(error);
@@ -90,6 +104,9 @@ class FriendshipManager {
             return this._createFriendship(playerId, friend._id, email)
           })
           .then((friendshipResp) => {
+            return this._fillFriendInfo(friendshipResp)
+          })
+          .then((friendshipResp) => {
             friendship = friendshipResp;
             return this._createFriendshipRequest(playerId, friendship._id, friend._id);
           })
@@ -101,7 +118,7 @@ class FriendshipManager {
             return this._sendNotification(data, friend._id);
           })
           .then(friendshipResp => {
-            friendship.friendshipAudit = undefined;
+            friendship.auditInfo = undefined;
             resolve(friendship);
           })
           .catch(error => {
@@ -138,7 +155,7 @@ class FriendshipManager {
             return this._sendNotification(data, friendship.friendId);
           })
           .then(() => {
-            friendship.friendshipAudit = undefined;
+            friendship.auditInfo = undefined;
             resolve(friendship);
           })
           .catch(error => {
@@ -232,6 +249,29 @@ class FriendshipManager {
 
         return repoFriendship.update(resp.resp);
       });
+  }
+
+  _fillFriendInfo(friendship) {
+    if (!friendship.isAccepted()) {
+      friendship.info = {
+        photo: null,
+        firstName: null,
+        lastName: null,
+        phone: null
+      }
+      return Promise.resolve(friendship);
+    } else {
+      return this._repoPlayer.get(friendship.friendId)
+        .then(resp => {
+          friendship.info = {
+            photo: resp.resp.photo,
+            firstName: resp.resp.lastName,
+            lastName: resp.resp.firstName,
+            phone: resp.resp.phone
+          }
+          return Promise.resolve(friendship);
+        });
+    }
   }
 
   _sendNotification(data, userid) {

@@ -1,40 +1,36 @@
-let ESRepository = require('./ESRepository');
+let ESRepository = require('../common/ESRepository');
 let Group = require('../models/Group');
 
 class GroupESRepository extends ESRepository {
     constructor(client) {
         super(client);
 
-        this._mapGroup = this._mapGroup.bind(this);
+        this._map = this._map.bind(this);
         this._getQueryByPlayerId = this._getQueryByPlayerId.bind(this);
     }
 
     get(groupId) {
         return super.get(groupId, 'yojuego', 'group')
             .then((objRet) => {
-                if (objRet.code == 404) {
-                    return { code: 404, message: 'Group does not exist', resp: null };
+                if (objRet.code === 200 && !objRet.resp) {
+                    return { code: 200, message: 'Group does not exist', resp: null };
                 } else {
-                    let group = this._mapGroup(objRet.resp._id, objRet.resp._source);
+                    let group = this._map(objRet.resp._id, objRet.resp._source);
                     return { code: 200, message: null, resp: group };
                 }
             }, (error) => { return Promise.reject(error); });
     }
 
     getByPlayerId(playerId) {
+        if (!playerId) return Promise.reject({ code: 410, message: GroupESRepository.ERRORS.INVALID_PLAYERID, resp: null })
+
         return super.getBy(this._getQueryByPlayerId(playerId), 'yojuego', 'group')
             .then((objRet) => {
                 let groups = [];
 
                 groups = objRet.resp.map(g => {
-                    return this._mapGroup(g._id, g._source);
-                    //groups.push(group);
+                    return this._map(g._id, g._source);
                 });
-
-                // for (let i = 0; i < objRet.resp.length; i++) {
-                //     let group = this._mapGroup(objRet.resp[i]._id, objRet.resp[i]._source);
-                //     groups.push(group);
-                // }
 
                 return { code: 200, message: null, resp: groups };
             }, (error) => { return Promise.reject(error); });
@@ -42,9 +38,13 @@ class GroupESRepository extends ESRepository {
 
     add(group) {
         if (group instanceof Group) {
-            return super.add(group, 'yojuego', 'group');
+            return super.add(group, 'yojuego', 'group')
+                .then((resp) => {
+                    let newGroup = this._map(resp.resp._id, group);
+                    return { code: 200, message: GroupESRepository.MESSAGES.DOCUMENT_INSERTED, resp: newGroup };
+                }, (error) => { return Promise.reject(error); });
         } else {
-            return Promise.reject({ code: 410, message: GroupESRepository.INVALID_INSTANCE_GROUP });
+            return Promise.reject({ code: 410, message: GroupESRepository.ERRORS.INVALID_INSTANCE_GROUP });
         }
     }
 
@@ -56,11 +56,15 @@ class GroupESRepository extends ESRepository {
                 description: group.description,
                 photo: group.photo,
                 messages: group.messages,
-                groupAudit: group.groupAudit
+                auditInfo: group.auditInfo
             };
-            return super.update(group._id, document, 'yojuego', 'group');
+            return super.update(group._id, document, 'yojuego', 'group')
+                .then((resp) => {
+                    let newGroup = this._map(resp.resp._id, group);
+                    return { code: 200, message: GroupESRepository.MESSAGES.DOCUMENT_UPDATED, resp: newGroup };
+                }, (error) => { return Promise.reject(error); });
         } else {
-            return Promise.reject({ code: 410, message: GroupESRepository.INVALID_INSTANCE_GROUP });
+            return Promise.reject({ code: 410, message: GroupESRepository.ERRORS.INVALID_INSTANCE_GROUP });
         }
     }
 
@@ -68,15 +72,14 @@ class GroupESRepository extends ESRepository {
         if (group instanceof Group) {
             return super.delete(group._id, 'yojuego', 'group');
         } else {
-            return Promise.reject({ code: 410, message: GroupESRepository.INVALID_INSTANCE_GROUP });
+            return Promise.reject({ code: 410, message: GroupESRepository.ERRORS.INVALID_INSTANCE_GROUP });
         }
     }
 
-    _mapGroup(id, source) {
-        let group = new Group(source.players, source.admins, source.description, source.photo);
+    _map(id, source) {
+        let group = new Group(source.players, source.admins, source.description, source.photo, source.messages);
         group._id = id;
-        group.groupAudit = source.groupAudit
-        group.messages = source.messages;
+        group.auditInfo = source.auditInfo
 
         return group;
     }
@@ -92,8 +95,11 @@ class GroupESRepository extends ESRepository {
         };
     }
 
-    static get INVALID_INSTANCE_GROUP() {
-        return "Invalid group";
+    static get ERRORS() {
+        let errors = ESRepository.ERRORS;
+        errors.INVALID_INSTANCE_GROUP = 'This instance is not a group.';
+        errors.INVALID_PLAYERID = 'El player id no puede ser null ni undefined.';
+        return errors;
     }
 }
 module.exports = GroupESRepository;

@@ -63,10 +63,10 @@ class LogInRoutes extends Routes {
     }
 
     _sendResponse(req, res, next) {
-        req.user.userAudit = undefined;
+        req.user.auditInfo = undefined;
         req.user.password = undefined;
         req.user.token = undefined;
-        req.player.playerAudit = undefined;
+        req.player.auditInfo = undefined;
 
         let resp = {
             token: req.token,
@@ -110,7 +110,7 @@ class LogInRoutes extends Routes {
     }
 
     _validateLogin(req, res, next) {
-        userRepo.getByIdAndType(req.body.email, 'yojuego')
+        userRepo.getByIdAndType(req.body.email, User.TYPES.YOJUEGO)
             .then((response) => {
                 if (!response.resp) {
                     res.json(400, { code: 400, message: 'Nombre de usuario o contraseña incorrecto', resp: null });
@@ -136,8 +136,7 @@ class LogInRoutes extends Routes {
             id: req.user._id
         };
         req.token = jwt.sign(claims, config.get('serverConfig').secret);
-        req.user.token = req.token;
-        req.user.isLogged = true;
+        req.user.logIn(req.token);
         next();
     }
 
@@ -154,10 +153,10 @@ class LogInRoutes extends Routes {
     }
 
     _auditUser(req, res, next) {
-        req.user.userAudit.lastAccess = new Date();
-        req.user.userAudit.modifiedBy = req.body.platform || 'MOBILE_APP'; //We should store deviceId here
-        req.user.userAudit.modifiedOn = new Date();
-        req.user.userAudit.modifiedFrom = req.body.platform || 'MOBILE_APP';
+        req.user.lastAccess = new Date();
+        req.user.auditInfo.modifiedBy = req.body.platform || 'MOBILE_APP'; //We should store deviceId here
+        req.user.auditInfo.modifiedOn = new Date();
+        req.user.auditInfo.modifiedFrom = req.body.platform || 'MOBILE_APP';
 
         userRepo.update(req.user)
             .then((resp) => {

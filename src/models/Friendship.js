@@ -11,7 +11,7 @@ class Friendship {
         validator.addCondition(new NotNullOrUndefinedCondition(status).throw(new Error(Friendship.ERRORS.INVALID_STATUS)));
         validator.addCondition(new NotNullOrUndefinedCondition(email).throw(new Error(Friendship.ERRORS.INVALID_MAIL)));
         validator.addCondition(new EqualCondition(playerId, friendId).not().throw(new Error(Friendship.ERRORS.INCONSISTENT_PLAYER_FRIEND)));
-        validator.addCondition(new CustomCondition(() => { return this._isValidStatus(status); }).throw(new Error(Friendship.ERRORS.STATUS_NOT_ALLOWED)));
+        validator.addCondition(new CustomCondition(() => { return Friendship._isValidStatus(status); }).throw(new Error(Friendship.ERRORS.STATUS_NOT_ALLOWED)));
 
         validator.execute(() => {
             this.playerId = playerId;
@@ -46,7 +46,7 @@ class Friendship {
         this.status = Friendship.STATUS.DELETED;
     }
 
-    _isValidStatus(status) {
+    static _isValidStatus(status) {
         return Friendship.STATUS[status] !== null && Friendship.STATUS[status] !== undefined;
     }
 

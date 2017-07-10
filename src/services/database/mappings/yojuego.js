@@ -1,3 +1,14 @@
+let auditInfo = {
+  properties: {
+    createdBy: { type: "string", index: "not_analyzed" },
+    createdOn: { type: "date" },
+    createdFrom: { type: "string" },
+    modifiedBy: { type: "string", index: "not_analyzed" },
+    modifiedOn: { type: "date" },
+    modifiedFrom: { type: "string" }
+  }
+};
+
 let user = {
   user: {
     properties: {
@@ -6,24 +17,8 @@ let user = {
       type: { type: "string", index: "not_analyzed" },
       isLogged: { type: "boolean" },
       token: { type: "string", index: "not_analyzed" },
-      oauth: {
-        properties: {
-          authToken: { type: "string", index: "not_analyzed" },
-          refreshToken: { type: "string", index: "not_analyzed" },
-          xxx: { type: "string", index: "not_analyzed" }
-        }
-      },
-      userAudit: {
-        properties: {
-          lastAccess: { type: "date" },
-          createdBy: { type: "string", index: "not_analyzed" },
-          createdOn: { type: "date" },
-          createdFrom: { type: "string" },
-          modifiedBy: { type: "string", index: "not_analyzed" },
-          modifiedOn: { type: "date" },
-          modifiedFrom: { type: "string" }
-        }
-      }
+      lastAccess: { type: "date" },
+      auditInfo: auditInfo
     }
   }
 }
@@ -38,16 +33,7 @@ let player = {
       email: { type: "string", index: "not_analyzed" },
       phone: { type: "string", index: "not_analyzed" },
       userid: { type: "string", index: "not_analyzed" },
-      playerAudit: {
-        properties: {
-          createdBy: { type: "string", index: "not_analyzed" },
-          createdOn: { type: "date" },
-          createdFrom: { type: "string" },
-          modifiedBy: { type: "string", index: "not_analyzed" },
-          modifiedOn: { type: "date" },
-          modifiedFrom: { type: "string" }
-        }
-      }
+      auditInfo: auditInfo
     }
   }
 }
@@ -74,16 +60,7 @@ let match = {
           writtenOn: { type: "date" }
         }
       },
-      matchAudit: {
-        properties: {
-          createdBy: { type: "string", index: "not_analyzed" },
-          createdOn: { type: "date" },
-          createdFrom: { type: "string" },
-          modifiedBy: { type: "string", index: "not_analyzed" },
-          modifiedOn: { type: "date" },
-          modifiedFrom: { type: "string" }
-        }
-      }
+      auditInfo: auditInfo
     }
   }
 }
@@ -95,16 +72,7 @@ let friendship = {
       friendId: { type: "string", index: "not_analyzed" },
       email: { type: "string", index: "not_analyzed" },
       status: { type: "string", index: "not_analyzed" },
-      auditInfo: {
-        properties: {
-          createdBy: { type: "string", index: "not_analyzed" },
-          createdOn: { type: "date" },
-          createdFrom: { type: "string" },
-          modifiedBy: { type: "string", index: "not_analyzed" },
-          modifiedOn: { type: "date" },
-          modifiedFrom: { type: "string" }
-        }
-      }
+      auditInfo: auditInfo
     }
   }
 }
@@ -124,16 +92,7 @@ let group = {
           writtenOn: { type: "date" }
         }
       },
-      groupAudit: {
-        properties: {
-          createdBy: { type: "string", index: "not_analyzed" },
-          createdOn: { type: "date" },
-          createdFrom: { type: "string" },
-          modifiedBy: { type: "string", index: "not_analyzed" },
-          modifiedOn: { type: "date" },
-          modifiedFrom: { type: "string" }
-        }
-      }
+      auditInfo: auditInfo
     }
   }
 }

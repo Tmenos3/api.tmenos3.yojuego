@@ -27,6 +27,7 @@
     "passport-google-oauth20": "^1.0.0",
     "passport-local": "^1.0.0",
     "passport-restify": "^1.0.1",
+    "request": "^2.81.0",
     "restify": "4.1.x",
     "restify-jwt": "^0.4.0",
     "underscore": "^1.8.3",
